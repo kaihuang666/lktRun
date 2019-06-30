@@ -1,14 +1,19 @@
 package com.kai.lktMode;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.app.AlertDialog;
+import android.app.AppOpsManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -18,7 +23,9 @@ import java.util.List;
 public class LabActivity extends AppCompatActivity {
     private ListLabAdapter adapter;
     private List<Item> items=new ArrayList<>();
-    private String[] checks={"autoBoot","autoLock","gameMode"};
+    private List<Item> gameItems=new ArrayList<>();
+    private String[] checks={"autoBoot","custom","autoLock","gameMode"};
+    private ListGameAdapter gameAdapter;;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,9 +41,32 @@ public class LabActivity extends AppCompatActivity {
             @Override
             public void onClick(int i) {
                 switch (i){
-                    case 0:showDialog("打开<开机自启>每次开机将会自动切换到默认模式；该操作将会开启一个开机广播接收器，这可能会消耗一些资源；如果你的LKT调度经常出现开机失效的情况，建议你开启此选项。");break;
-                    case 1:showDialog("打开<锁屏自动恢复>每次锁屏会自动切换到省电模式，亮屏后则切换到默认模式；该操作将会开启一个额外的服务来监听熄屏、亮屏操作，这可能会消耗一些资源；如果你经常忘记切换回低功耗调度，强烈建议开启此选项来增加续航。");break;
-                    case 2:Toast.makeText(LabActivity.this,"该功能还存在BUG，暂未开放",Toast.LENGTH_SHORT).show();break;
+                    case 0:showDialog("开机自启模式，会在系统启动后自动切换默认模式。",null);break;
+                    case 1:Intent intent=new Intent(LabActivity.this,CustomActivity.class);startActivity(intent);break;
+                    case 2:showDialog("锁屏沉睡功能，会在你的手机锁屏后进入超低功耗模式，选择进入修改则可以自定义调度和进入延迟", "进入修改", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Intent intent1=new Intent(LabActivity.this,SleepSettingActivity.class);
+                            startActivity(intent1);
+                        }
+                    }, "忽略", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+
+                        }
+                    });break;
+                    case 3:showDialog("功能设计来源于一加游戏模式\n游戏加速功能只能加速限5个横屏游戏；选择进入修改则可以自定义游戏模式的调度和操作。", "进入修改", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Intent intent1=new Intent(LabActivity.this,GameBoostActivity.class);
+                            startActivity(intent1);
+                        }
+                    }, "忽略", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+
+                        }
+                    });break;
                 }
             }
         });
@@ -47,42 +77,107 @@ public class LabActivity extends AppCompatActivity {
                 switch (i){
                     case 1:
                         if (isChecked){
+                            showDialog("自定义调度优先于默认调度，如果你设置自定义调度，请尽量使用本应用切换，避免模式无法记录和读取；推荐使用内核调教导出脚本。",null);
+                        }
+                    case 2:
+                        if (isChecked){
                             Intent intent=new Intent(LabActivity.this,AutoService.class);
+                            intent.setAction("lockOn");
+                            startService(intent);
+                            showDialog("锁屏沉睡功能，会在你的手机锁屏后进入超低功耗模式；选择进入修改则可以自定义调度和进入延迟", "进入修改", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    Intent intent=new Intent(LabActivity.this,SleepSettingActivity.class);
+                                    startActivity(intent);
+                                }
+                            }, "忽略", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+
+                                }
+                            });
+
+                        }else {
+                            Intent intent=new Intent(LabActivity.this,AutoService.class);
+                            intent.setAction("lockOff");
                             startService(intent);
                         }
                         break;
+                    case 3:
+                        if (isChecked){
+                            if (hasPermission()){
+                                Intent intent=new Intent(LabActivity.this,AutoService.class);
+                                intent.setAction("gameOn");
+                                startService(intent);
+                            }else {
+                                Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+                                startActivityForResult(intent,10);
+                            }
+
+                        }else {
+                            Intent intent=new Intent(LabActivity.this,AutoService.class);
+                            intent.setAction("gameOff");
+                            startService(intent);
+                        }
+                       break;
                 }
             }
         });
         updateList();
         initGame();
     }
+    private boolean hasPermission() {
+        AppOpsManager appOps = (AppOpsManager)
+                getSystemService(Context.APP_OPS_SERVICE);
+        int mode = 0;
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+            mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    android.os.Process.myUid(), getPackageName());
+        }
+        return mode == AppOpsManager.MODE_ALLOWED;
+    }
     private void updateList(){
         items.get(0).setChecked((Boolean)Preference.get(LabActivity.this,"autoBoot","Boolean"));
-        items.get(1).setChecked((Boolean)Preference.get(LabActivity.this,"autoLock","Boolean"));
-        items.get(2).setChecked((Boolean)Preference.get(LabActivity.this,"gameMode","Boolean"));
+        items.get(1).setChecked((Boolean)Preference.get(LabActivity.this,"custom","Boolean"));
+        items.get(2).setChecked((Boolean)Preference.get(LabActivity.this,"autoLock","Boolean"));
+        items.get(3).setChecked((Boolean)Preference.get(LabActivity.this,"gameMode","Boolean"));
         adapter.notifyDataSetChanged();
     }
     private void initList(){
         Item item=new Item("开机自启",false);
-        Item item1=new Item("锁屏省电",false);
+        Item item0=new Item("自定义调度",false);
+        Item item1=new Item("锁屏沉睡",false);
         Item item2=new Item("游戏加速",false);
+
         items.add(item);
+        items.add(item0);
         items.add(item1);
         items.add(item2);
     }
     private void initGame(){
-        List<Item> items=new ArrayList<>();
+        gameItems=new ArrayList<>();
         RecyclerView recyclerView=findViewById(R.id.gameList);
-        items.add(new Item("com.tencent.tmgp.sgame",false));
-        items.add(new Item("com.tencent.tmgp.sgame",false));
-        items.add(new Item("com.tencent.tmgp.sgame",false));
-        items.add(new Item("com.tencent.tmgp.sgame",false));
-        items.add(new Item("com.tencent.tmgp.sgame",false));
+        for (String s:Preference.getGames(this)){
+            gameItems.add(new Item(s,false));
+        }
         LinearLayoutManager manager=new LinearLayoutManager(this);
         recyclerView.setLayoutManager(manager);
-        ListGameAdapter adapter=new ListGameAdapter(LabActivity.this,items);
-        recyclerView.setAdapter(adapter);
+        gameAdapter=new ListGameAdapter(LabActivity.this,gameItems,0);
+        recyclerView.setAdapter(gameAdapter);
+        gameAdapter.setBottomClick(new ListGameAdapter.OnBottomClick() {
+            @Override
+            public void onClick() {
+                Intent intent=new Intent(LabActivity.this,AddGameActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
+    private void upcateGames(){
+        gameItems.clear();
+        for (String s:Preference.getGames(this)){
+            gameItems.add(new Item(s,false));
+        }
+        gameAdapter.notifyDataSetChanged();
     }
     private void initToolBar(){
         Toolbar toolbar=findViewById(R.id.simple_toolbar);
@@ -93,16 +188,40 @@ public class LabActivity extends AppCompatActivity {
             }
         });
     }
-    private void showDialog(String str){
+    private void showDialog(String str, DialogInterface.OnClickListener listener){
         new AlertDialog.Builder(LabActivity.this,R.style.AppDialog)
-                .setNegativeButton("了解", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.cancel();
-                    }
-                })
+                .setNegativeButton("了解",listener)
                 .setTitle("功能说明")
                 .setMessage(str)
                 .create().show();
+    }
+    private void showDialog(String str, String positive, DialogInterface.OnClickListener p, String negative, DialogInterface.OnClickListener n){
+        new AlertDialog.Builder(LabActivity.this,R.style.AppDialog)
+                .setNegativeButton(negative,n)
+                .setPositiveButton(positive,p)
+                .setTitle("功能说明")
+                .setMessage(str)
+                .create().show();
+    }
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        upcateGames();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode==10){
+            if (hasPermission()){
+                Intent intent=new Intent(LabActivity.this,AutoService.class);
+                intent.setAction("gameOn");
+                startService(intent);
+            }else {
+                Toast.makeText(LabActivity.this,"需要使用情况访问权限！",Toast.LENGTH_LONG).show();
+                items.get(2).setChecked(false);
+                adapter.notifyItemChanged(2);
+            }
+        }
     }
 }

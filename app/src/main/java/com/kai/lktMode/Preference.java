@@ -2,6 +2,7 @@ package com.kai.lktMode;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.ArraySet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,9 +29,23 @@ public class Preference {
             case "int":return preferences.getInt(key,0);
             case "Boolean":return preferences.getBoolean(key,false);
             case "String":return preferences.getString(key,"");
-            case "StringSet":return preferences.getStringSet(key,null);
+            case "StringSet":return preferences.getStringSet(key,new TreeSet<String>());
             default:return null;
         }
+
+    }
+    public static Object get(Context context,String key,Object defaultValue){
+        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_PRIVATE);
+        if (defaultValue instanceof Boolean){
+            return preferences.getBoolean(key,(Boolean) defaultValue);
+        }else if(defaultValue instanceof String){
+            return preferences.getString(key,String.valueOf(defaultValue));
+        }else if(defaultValue instanceof Integer){
+            return preferences.getInt(key,(int)defaultValue);
+        }else if (defaultValue instanceof List){
+            return preferences.getStringSet(key,new TreeSet<String>());
+        }
+        return null;
 
     }
     public static void clearAll(Context context){
@@ -48,5 +63,8 @@ public class Preference {
         List<String> list = new ArrayList((Set)get(context,"games","StringSet"));
         list.add(packageName);
         save(context,"games",list);
+    }
+    public static List<String> getGames(Context context){
+        return new ArrayList((Set)get(context,"games","StringSet"));
     }
 }

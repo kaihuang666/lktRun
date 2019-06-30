@@ -22,7 +22,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".AddGameActivity"></activity>
+        <activity android:name=".GameBoostActivity"></activity>
+        <activity android:name=".SleepSettingActivity" />
+        <activity
+            android:name=".CustomActivity"
+            android:windowSoftInputMode="stateVisible|adjustResize" />
+        <activity android:name=".AddGameActivity" />
 
         <service
             android:name=".ProtectService"
@@ -51,6 +56,9 @@
         <service
             android:name=".CommandService"
             android:exported="false" />
+        <service
+            android:name=".CustomCommandService"
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"
@@ -78,15 +86,6 @@
             android:exported="true">
             <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".ScreenReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter android:priority="1000">
-                <action android:name="android.intent.action.SCREEN_ON" />
-                <action android:name="android.intent.action.SCREEN_OFF" />
             </intent-filter>
         </receiver>
     </application>

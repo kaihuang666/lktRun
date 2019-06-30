@@ -18,9 +18,14 @@ public class StartReceiver extends BroadcastReceiver {
 
         if(Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())){
             if ((Boolean) Preference.get(context,"autoBoot","Boolean")) {
-                Intent serviceIntent = new Intent(context, CommandService.class);
+                Intent serviceIntent;
+                if ((Boolean) Preference.get(context,"custom","Boolean")){
+                    serviceIntent = new Intent(context, CustomCommandService.class);
+                }else
+                    serviceIntent=new Intent(context,CommandService.class);
                 int mode = (int) Preference.get(context, "default", "int");
                 serviceIntent.putExtra("mode", mode + 1);
+                serviceIntent.putExtra("isShow", false);
                 context.startService(serviceIntent);
                 requestNotification(context, mode);
             }

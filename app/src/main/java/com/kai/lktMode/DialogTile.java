@@ -12,6 +12,7 @@ import android.os.Build;
 import android.provider.Settings;
 import android.service.quicksettings.Tile;
 import android.service.quicksettings.TileService;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -32,7 +33,7 @@ public class DialogTile extends TileService{
     private String[] items=new String[]{"省电模式", "均衡模式", "游戏模式","极限模式"};
     private String[] tileLabels=new String[]{"省电模式", "均衡模式", "游戏模式","极限模式","错误配置"};
     private int[] lalelIds={R.mipmap.battery_tile,R.mipmap.balance_tile,R.mipmap.performance_tile,R.mipmap.turbo_tile,R.mipmap.icon_tile};
-    private ScreenReceiver receiver;
+
     @Override
     public void onStartListening() {
         super.onStartListening();
@@ -48,8 +49,11 @@ public class DialogTile extends TileService{
     public void onCreate() {
         super.onCreate();
         if ((Boolean)Preference.get(getApplicationContext(),"autoLock","Boolean")){
-            Intent intent1=new Intent(getApplicationContext(),AutoService.class);
-            getApplicationContext().startService(intent1);
+            if(!ServiceStatusUtils.isServiceRunning(getApplicationContext(), AutoService.class)){
+                Intent service=new Intent(getApplicationContext(),AutoService.class);
+                startService(service);
+                Log.d("重启服务","success");
+            }
         }
     }
 
@@ -69,6 +73,12 @@ public class DialogTile extends TileService{
 
     }
     private void readMode(){
+        if ((Boolean) Preference.get(getApplicationContext(),"custom","Boolean")){
+            int customMode=(int)Preference.get(this,"customMode","int")-1;
+            showIcon(tileLabels[customMode],lalelIds[customMode]);
+            now=customMode;
+            return;
+        }
         try{
             Shell shell=RootTools.getShell(true);
             shell.add(new Command(1,"grep PROFILE /data/LKT.prop"){
@@ -140,7 +150,7 @@ public class DialogTile extends TileService{
 
     }
 
-    public void showDialog(final int mode){ ;
+    public void showDialog(final int mode){
         AlertDialog dialog=new AlertDialog.Builder(getApplicationContext(),R.style.AppDialog)
                 .setTitle("选择调度模式")
                 .setSingleChoiceItems(items,now, new DialogInterface.OnClickListener() {
@@ -166,9 +176,14 @@ public class DialogTile extends TileService{
         dialog.show();
     }
     private void switchMode(int mode){
-        Intent intent=new Intent(getApplicationContext(),CommandService.class);
-        intent.putExtra("mode",mode+1);
-        startService(intent);
+        Intent serviceIntent;
+        if ((Boolean) Preference.get(getApplicationContext(),"custom","Boolean")){
+            serviceIntent = new Intent(getApplicationContext(), CustomCommandService.class);
+            Preference.save(getApplicationContext(),"customMode",mode+1);
+        }else
+            serviceIntent=new Intent(getApplicationContext(),CommandService.class);
+        serviceIntent.putExtra("mode",mode+1);
+        startService(serviceIntent);
     }
     private void showIcon(String label,int resId){
         Tile tile=getQsTile();

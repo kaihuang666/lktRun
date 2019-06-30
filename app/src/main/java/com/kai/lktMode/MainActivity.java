@@ -26,7 +26,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Message;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -64,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private AlertDialog dialog;
     private ProgressDialog downloadDialog;
     private String[] modeTitle={"省电模式","均衡模式","游戏模式","极限模式"};
+    private String[] modestring={"unsure","Battery","Balanced","Performance","Turbo"};
     private int[] buttonID={R.id.battery,R.id.balance,R.id.performance,R.id.turbo};
     private int[] ensureID={R.id.ensure1,R.id.ensure2,R.id.ensure3,R.id.ensure4};
     private Shell shell;
@@ -81,27 +84,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initDialog();
         initButton();
         getRoot();
-        if ((Boolean)Preference.get(MainActivity.this,"autoLock","Boolean")){
+        if (!ServiceStatusUtils.isServiceRunning(this,AutoService.class)){
             Intent intent=new Intent(this,AutoService.class);
+            intent.setAction("reset");
             startService(intent);
         }
-        if (hasPermission()){
-            //getTopApp(context);
-        }else {
-            Intent i = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-            startActivity(i);
-        }
+
     }
-    private boolean hasPermission() {
-        AppOpsManager appOps = (AppOpsManager)
-                getSystemService(Context.APP_OPS_SERVICE);
-        int mode = 0;
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
-            mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
-                    android.os.Process.myUid(), getPackageName());
-        }
-        return mode == AppOpsManager.MODE_ALLOWED;
-    }
+
 
 
 
@@ -109,6 +99,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void readProp(final boolean isCreate){
         Preference.clearAll(MainActivity.this);
+        if ((Boolean) Preference.get(this,"custom","Boolean")){
+            setBusyBox("已忽略");
+            setVersion("自定义调度");
+            setMode(modestring[(int)Preference.get(this,"customMode","int")]);
+            dialog.dismiss();
+            return;
+        }
         try {
             cmd("mkdir "+Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/");
             Command command=new Command(0,"cp -f /data/LKT.prop "+Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/LKT.prop"){
@@ -555,12 +552,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         TextView mode=(TextView)findViewById(R.id.mode);
-        switch (view.getId()){
-            case R.id.battery:run("lkt 1");mode.setText("省电模式");setButton("省电模式切换中",R.id.battery,R.id.ensure1);break;
-            case R.id.balance:run("lkt 2");mode.setText("均衡模式");setButton("均衡模式切换中",R.id.balance,R.id.ensure2);break;
-            case R.id.performance:run("lkt 3");mode.setText("游戏模式");setButton("游戏模式切换中",R.id.performance,R.id.ensure3);break;
-            case R.id.turbo:run("lkt 4");mode.setText("极限模式");setButton("极限模式切换中",R.id.turbo,R.id.ensure4);break;
-        }
+        if ((Boolean)Preference.get(MainActivity.this,"custom","Boolean")){
+            switch (view.getId()){
+                case R.id.battery:run((String)Preference.get(MainActivity.this,"code1","String"));mode.setText("省电模式");setButton("省电模式切换中",R.id.battery,R.id.ensure1);Preference.save(MainActivity.this,"customMode",1);break;
+                case R.id.balance:run((String)Preference.get(MainActivity.this,"code2","String"));mode.setText("均衡模式");setButton("均衡模式切换中",R.id.balance,R.id.ensure2);Preference.save(MainActivity.this,"customMode",2);break;
+                case R.id.performance:run((String)Preference.get(MainActivity.this,"code3","String"));mode.setText("游戏模式");setButton("游戏模式切换中",R.id.performance,R.id.ensure3);Preference.save(MainActivity.this,"customMode",3);break;
+                case R.id.turbo:run((String)Preference.get(MainActivity.this,"code4","String"));mode.setText("极限模式");setButton("极限模式切换中",R.id.turbo,R.id.ensure4);Preference.save(MainActivity.this,"customMode",4);break;
+            }
+        }else
+            switch (view.getId()){
+                case R.id.battery:run("lkt 1");mode.setText("省电模式");setButton("省电模式切换中",R.id.battery,R.id.ensure1);break;
+                case R.id.balance:run("lkt 2");mode.setText("均衡模式");setButton("均衡模式切换中",R.id.balance,R.id.ensure2);break;
+                case R.id.performance:run("lkt 3");mode.setText("游戏模式");setButton("游戏模式切换中",R.id.performance,R.id.ensure3);break;
+                case R.id.turbo:run("lkt 4");mode.setText("极限模式");setButton("极限模式切换中",R.id.turbo,R.id.ensure4);break;
+            }
     }
     private void run(String cmd){
         //dialog.setMessage("初始化中");

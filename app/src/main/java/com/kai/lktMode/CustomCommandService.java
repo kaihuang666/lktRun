@@ -9,6 +9,9 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.stericson.RootShell.execution.Command;
+import com.stericson.RootTools.RootTools;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -19,16 +22,16 @@ import java.util.TimerTask;
  * <p>
  * TODO: Customize class - update intent actions and extra parameters.
  */
-public class CommandService extends IntentService {
+public class CustomCommandService extends IntentService {
     private String[] modes=new String[]{"省电模式", "均衡模式", "游戏模式","极限模式"};
     Handler msgHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
-            Toast.makeText(CommandService.this, msg.getData().getString("Text"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(CustomCommandService.this, msg.getData().getString("Text"), Toast.LENGTH_SHORT).show();
             super.handleMessage(msg);
         }
     };
-    public CommandService(){
+    public CustomCommandService(){
         super("CommandService");
     }
 
@@ -38,9 +41,9 @@ public class CommandService extends IntentService {
         int mode=intent.getIntExtra("mode",1);
         Log.d("switchTo:",mode+"");
         if (isShow)
-        showToastByMsg(CommandService.this,modes[mode-1]+"切换中",1000);
+        showToastByMsg(CustomCommandService.this,modes[mode-1]+"切换中",1000);
         try{
-            Runtime.getRuntime().exec("su -c lkt "+mode);
+            RootTools.getShell(true).add(new Command(3,(String) Preference.get(getApplicationContext(),"code"+mode,"String")));
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -48,7 +51,7 @@ public class CommandService extends IntentService {
             @Override
             public void run() {
                 if (isShow)
-                showToastByMsg(CommandService.this,"切换完成",1000);
+                showToastByMsg(CustomCommandService.this,"切换完成",1000);
                 msgHandler.removeCallbacksAndMessages(Looper.getMainLooper());
             }
         };

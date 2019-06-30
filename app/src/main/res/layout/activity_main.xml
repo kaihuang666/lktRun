@@ -99,6 +99,7 @@
 
             </LinearLayout>
             <LinearLayout
+                android:layout_marginTop="5dp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
@@ -216,7 +217,6 @@
             android:layout_gravity="left"
             android:fitsSystemWindows="true"
             app:menu="@menu/menu_main">
-
         </com.google.android.material.navigation.NavigationView>
 
     </androidx.drawerlayout.widget.DrawerLayout>

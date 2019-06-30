@@ -84,7 +84,7 @@ public class AppUtils {
      * 获取图标 bitmap
      * @param context
      */
-    public static synchronized Bitmap getBitmap(Context context,String packageName) {
+    public static synchronized Drawable getDrawable(Context context,String packageName) {
         PackageManager packageManager = null;
         ApplicationInfo applicationInfo = null;
         try {
@@ -96,9 +96,7 @@ public class AppUtils {
             applicationInfo = null;
         }
         Drawable d = packageManager.getApplicationIcon(applicationInfo); //xxx根据自己的情况获取drawable
-        BitmapDrawable bd = (BitmapDrawable) d;
-        Bitmap bm = bd.getBitmap();
-        return bm;
+        return d;
     }
 
 }
