@@ -61,9 +61,6 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
         holder.title.setText(item.getTitle());
         holder.edit.setText(item.getSubtitle());
         holder.edit.setOnTouchListener(this);
-        holder.layout.setBackgroundResource(R.drawable.card_background);
-        holder.layout.setBackgroundTintList(ColorStateList.valueOf(context.getResources().getColor(colors[position])));
-        holder.layout.setBackgroundTintMode(PorterDuff.Mode.MULTIPLY);
         holder.run.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

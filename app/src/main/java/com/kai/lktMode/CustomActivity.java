@@ -12,6 +12,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.stericson.RootShell.execution.Command;
@@ -42,6 +44,26 @@ public class CustomActivity extends AppCompatActivity {
         initToolBar();
     }
     private void initList(){
+        Switch custom=(Switch)findViewById(R.id.swicth);
+        custom.setChecked((Boolean) Preference.get(this,"custom","Boolean"));
+        custom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(final CompoundButton compoundButton, boolean b) {
+                if (b){
+                    showDialog("使用自定义调度会禁用默认的LKT调度，你还需要再下面的输入框中输入对应的调度命令", "立即开启", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Preference.save(CustomActivity.this,"custom",true);
+                        }
+                    }, "暂不开启", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            compoundButton.setChecked(false);
+                        }
+                    });
+                }
+            }
+        });
         items.add(new Item("省电",""));
         items.add(new Item("均衡",""));
         items.add(new Item("游戏",""));
@@ -136,5 +158,14 @@ public class CustomActivity extends AppCompatActivity {
             }
         });
     }
+    private void showDialog(String str, String positive, DialogInterface.OnClickListener p, String negative, DialogInterface.OnClickListener n){
+        new AlertDialog.Builder(CustomActivity.this,R.style.AppDialog)
+                .setNegativeButton(negative,n)
+                .setPositiveButton(positive,p)
+                .setTitle("功能说明")
+                .setMessage(str)
+                .create().show();
+    }
+
 
 }

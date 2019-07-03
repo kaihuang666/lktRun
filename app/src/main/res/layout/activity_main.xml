@@ -98,115 +98,89 @@
                 </LinearLayout>
 
             </LinearLayout>
+
+
             <LinearLayout
                 android:layout_marginTop="5dp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:gravity="center"
+                android:gravity="bottom"
                 android:orientation="vertical">
+                <RelativeLayout
+                    android:layout_gravity="bottom"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp">
+                    <Button
+                        android:layout_marginTop="30dp"
+                        android:layout_marginStart="40dp"
+                        android:layout_marginLeft="40dp"
+                        android:layout_alignParentTop="true"
+                        android:layout_alignParentStart="true"
+                        android:layout_alignParentLeft="true"
+                        android:elevation="2dp"
+                        android:id="@+id/battery"
+                        android:textSize="18dp"
+                        android:textColor="#fff"
+                        android:text="省电模式"
+                        android:backgroundTint="@color/colorBattery"
+                        android:background="@drawable/corner_selector"
+                        android:backgroundTintMode="multiply"
+                        android:layout_width="150dp"
+                        android:layout_height="50dp" />
+                    <Button
+                        android:layout_marginTop="30dp"
+                        android:layout_marginEnd="40dp"
+                        android:layout_marginRight="40dp"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentTop="true"
+                        android:elevation="2dp"
+                        android:id="@+id/balance"
+                        android:textSize="18dp"
+                        android:text="均衡模式"
+                        android:textColor="#fff"
+                        android:background="@drawable/corner_selector"
+                        android:backgroundTint="@color/colorBalance"
+                        android:backgroundTintMode="multiply"
+                        android:layout_width="150dp"
+                        android:layout_height="50dp" />
+                    <Button
+                        android:layout_marginBottom="30dp"
+                        android:layout_marginStart="40dp"
+                        android:layout_marginLeft="40dp"
+                        android:layout_alignParentStart="true"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignParentBottom="true"
+                        android:elevation="2dp"
+                        android:id="@+id/performance"
+                        android:textSize="18dp"
+                        android:textColor="#fff"
+                        android:text="游戏模式"
+                        android:background="@drawable/corner_selector"
+                        android:backgroundTint="@color/colorPerformance"
+                        android:backgroundTintMode="multiply"
+                        android:layout_width="150dp"
+                        android:layout_height="50dp" />
+                    <Button
+                        android:layout_marginRight="40dp"
+                        android:layout_marginEnd="40dp"
+                        android:layout_marginBottom="30dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentRight="true"
+                        android:elevation="2dp"
+                        android:id="@+id/turbo"
+                        android:textSize="18dp"
+                        android:typeface="normal"
+                        android:text="极限模式"
+                        android:textColor="#fff"
+                        android:background="@drawable/corner_selector"
+                        android:backgroundTint="@color/colorTurbo"
+                        android:backgroundTintMode="multiply"
+                        android:layout_width="150dp"
+                        android:layout_height="50dp" />
 
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="70dp"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal"
-                android:gravity="center">
-                <Button
-                    android:elevation="2dp"
-                    android:id="@+id/battery"
-                    android:textSize="18dp"
-                    android:textColor="#fff"
-                    android:text="省电模式"
-                    android:layout_marginLeft="20dp"
-                    android:background="@drawable/battery_selector"
-                    android:layout_width="150dp"
-                    android:layout_height="50dp" />
-                <androidx.appcompat.widget.AppCompatImageView
-                    android:visibility="invisible"
-                    android:id="@+id/ensure1"
-                    android:layout_marginLeft="5dp"
-                    android:layout_gravity="center"
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    android:src="@mipmap/ensure"/>
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="70dp"
-                android:layout_marginTop="20dp"
-                android:orientation="horizontal"
-                android:gravity="center">
-                <Button
-                    android:elevation="2dp"
-                    android:id="@+id/balance"
-                    android:textSize="18dp"
-                    android:text="均衡模式"
-                    android:textColor="#fff"
-                    android:layout_marginLeft="20dp"
-                    android:background="@drawable/balance_selector"
-                    android:layout_width="150dp"
-                    android:layout_height="50dp" />
-                <androidx.appcompat.widget.AppCompatImageView
-                    android:visibility="invisible"
-                    android:id="@+id/ensure2"
-                    android:layout_marginLeft="5dp"
-                    android:layout_gravity="center"
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    android:src="@mipmap/ensure"/>
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="70dp"
-                android:layout_marginTop="20dp"
-                android:orientation="horizontal"
-                android:gravity="center">
-                <Button
-                    android:elevation="2dp"
-                    android:id="@+id/performance"
-                    android:textSize="18dp"
-                    android:textColor="#fff"
-                    android:text="游戏模式"
-                    android:layout_marginLeft="20dp"
-                    android:background="@drawable/perform_selector"
-                    android:layout_width="150dp"
-                    android:layout_height="50dp" />
-                <androidx.appcompat.widget.AppCompatImageView
-                    android:id="@+id/ensure3"
-                    android:visibility="invisible"
-                    android:layout_marginLeft="5dp"
-                    android:layout_gravity="center"
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    android:src="@mipmap/ensure"/>
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="70dp"
-                android:layout_marginTop="20dp"
-                android:orientation="horizontal"
-                android:gravity="center">
-                <Button
-                    android:elevation="2dp"
-                    android:id="@+id/turbo"
-                    android:textSize="18dp"
-                    android:typeface="normal"
-                    android:text="极限模式"
-                    android:textColor="#fff"
-                    android:layout_marginLeft="20dp"
-                    android:background="@drawable/turbo_selector"
-                    android:layout_width="150dp"
-                    android:layout_height="50dp" />
-                <androidx.appcompat.widget.AppCompatImageView
-                    android:visibility="invisible"
-                    android:id="@+id/ensure4"
-                    android:layout_marginLeft="5dp"
-                    android:layout_gravity="center"
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    android:src="@mipmap/ensure"/>
-            </LinearLayout>
+                </RelativeLayout>
             </LinearLayout>
         </LinearLayout>
 

@@ -68,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String[] modeTitle={"省电模式","均衡模式","游戏模式","极限模式"};
     private String[] modestring={"unsure","Battery","Balanced","Performance","Turbo"};
     private int[] buttonID={R.id.battery,R.id.balance,R.id.performance,R.id.turbo};
-    private int[] ensureID={R.id.ensure1,R.id.ensure2,R.id.ensure3,R.id.ensure4};
     private Shell shell;
     private String[] permissions={Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.ACCESS_NETWORK_STATE,Manifest.permission.INTERNET};
     private String passage;
@@ -84,14 +83,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initDialog();
         initButton();
         getRoot();
+
+
         if (!ServiceStatusUtils.isServiceRunning(this,AutoService.class)){
             Intent intent=new Intent(this,AutoService.class);
             intent.setAction("reset");
             startService(intent);
+
         }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true){
+                    try {
+                        Thread.sleep(500);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
+                    for (int i = 0; i < 8; i++) {
+                        getCurCpuFreq("cpu" + String.valueOf(i));
+                    }
+                }
+            }
+        }).start();
+
+
 
     }
 
+
+    public void  getCurCpuFreq(final String cpuNum) {
+        String out="N/A";
+        try{
+            RootTools.getShell(true).add(new Command(0,"cat /sys/devices/system/cpu/" + cpuNum +"/cpufreq/scaling_cur_freq"){
+                @Override
+                public void commandOutput(int id, String line) {
+                    super.commandOutput(id, line);
+                    Log.d(cpuNum,""+Integer.parseInt(line)/1000);
+                }
+            });
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 
 
 
@@ -227,10 +262,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void setMode(String str){
         TextView mode=(TextView)findViewById(R.id.mode);
         switch (str){
-            case "Battery":mode.setText("省电模式");setButton("省电模式切换中",R.id.battery,R.id.ensure1);break;
-            case "Balanced":mode.setText("均衡模式");setButton("均衡模式切换中",R.id.balance,R.id.ensure2);break;
-            case "Performance":mode.setText("游戏模式");setButton("游戏模式切换中",R.id.performance,R.id.ensure3);break;
-            case "Turbo":mode.setText("极限模式");setButton("极限模式切换中",R.id.turbo,R.id.ensure4);break;
+            case "Battery":mode.setText("省电模式");setButton("省电模式切换中",R.id.battery);break;
+            case "Balanced":mode.setText("均衡模式");setButton("均衡模式切换中",R.id.balance);break;
+            case "Performance":mode.setText("游戏模式");setButton("游戏模式切换中",R.id.performance);break;
+            case "Turbo":mode.setText("极限模式");setButton("极限模式切换中",R.id.turbo);break;
             case "unsure":mode.setText("未完成开机配置");break;
             default:mode.setText("错误配置");reset();break;
         }
@@ -240,7 +275,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int index=(int)Preference.get(this,"default","int")+1;
         mode.setText(modeTitle[index-1]);
         Toast.makeText(MainActivity.this,"已切换到默认模式",Toast.LENGTH_LONG).show();
-        setButton("配置错误，切换到默认模式",buttonID[index-1],ensureID[index-1]);
+        setButton("配置错误，切换到默认模式",buttonID[index-1]);
         try{
             shell.add(new Command(0,"su -c lkt "+index){
                 @Override
@@ -531,18 +566,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ((Button)findViewById(i)).setOnClickListener(this);
         }
     }
-    private void setButton(String title,int id,int ensureId){
+    private void setButton(String title,int id){
         Button button=findViewById(id);
+        button.setTextColor(getResources().getColor(R.color.colorPress));
         button.setEnabled(false);
         for(int i:buttonID){
             if (i!=id){
+                ((Button)findViewById(i)).setTextColor(getResources().getColor(R.color.colorWhite));
                 ((Button)findViewById(i)).setEnabled(true);
-            }
-        }
-        ((ImageView)findViewById(ensureId)).setVisibility(View.VISIBLE);
-        for(int i:ensureID){
-            if (i!=ensureId){
-                ((ImageView)findViewById(i)).setVisibility(View.INVISIBLE);
             }
         }
         dialog.setMessage(title);
@@ -554,17 +585,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         TextView mode=(TextView)findViewById(R.id.mode);
         if ((Boolean)Preference.get(MainActivity.this,"custom","Boolean")){
             switch (view.getId()){
-                case R.id.battery:run((String)Preference.get(MainActivity.this,"code1","String"));mode.setText("省电模式");setButton("省电模式切换中",R.id.battery,R.id.ensure1);Preference.save(MainActivity.this,"customMode",1);break;
-                case R.id.balance:run((String)Preference.get(MainActivity.this,"code2","String"));mode.setText("均衡模式");setButton("均衡模式切换中",R.id.balance,R.id.ensure2);Preference.save(MainActivity.this,"customMode",2);break;
-                case R.id.performance:run((String)Preference.get(MainActivity.this,"code3","String"));mode.setText("游戏模式");setButton("游戏模式切换中",R.id.performance,R.id.ensure3);Preference.save(MainActivity.this,"customMode",3);break;
-                case R.id.turbo:run((String)Preference.get(MainActivity.this,"code4","String"));mode.setText("极限模式");setButton("极限模式切换中",R.id.turbo,R.id.ensure4);Preference.save(MainActivity.this,"customMode",4);break;
+                case R.id.battery:run((String)Preference.get(MainActivity.this,"code1","String"));mode.setText("省电模式");setButton("省电模式切换中",R.id.battery);Preference.save(MainActivity.this,"customMode",1);break;
+                case R.id.balance:run((String)Preference.get(MainActivity.this,"code2","String"));mode.setText("均衡模式");setButton("均衡模式切换中",R.id.balance);Preference.save(MainActivity.this,"customMode",2);break;
+                case R.id.performance:run((String)Preference.get(MainActivity.this,"code3","String"));mode.setText("游戏模式");setButton("游戏模式切换中",R.id.performance);Preference.save(MainActivity.this,"customMode",3);break;
+                case R.id.turbo:run((String)Preference.get(MainActivity.this,"code4","String"));mode.setText("极限模式");setButton("极限模式切换中",R.id.turbo);Preference.save(MainActivity.this,"customMode",4);break;
             }
         }else
             switch (view.getId()){
-                case R.id.battery:run("lkt 1");mode.setText("省电模式");setButton("省电模式切换中",R.id.battery,R.id.ensure1);break;
-                case R.id.balance:run("lkt 2");mode.setText("均衡模式");setButton("均衡模式切换中",R.id.balance,R.id.ensure2);break;
-                case R.id.performance:run("lkt 3");mode.setText("游戏模式");setButton("游戏模式切换中",R.id.performance,R.id.ensure3);break;
-                case R.id.turbo:run("lkt 4");mode.setText("极限模式");setButton("极限模式切换中",R.id.turbo,R.id.ensure4);break;
+                case R.id.battery:run("lkt 1");mode.setText("省电模式");setButton("省电模式切换中",R.id.battery);break;
+                case R.id.balance:run("lkt 2");mode.setText("均衡模式");setButton("均衡模式切换中",R.id.balance);break;
+                case R.id.performance:run("lkt 3");mode.setText("游戏模式");setButton("游戏模式切换中",R.id.performance);break;
+                case R.id.turbo:run("lkt 4");mode.setText("极限模式");setButton("极限模式切换中",R.id.turbo);break;
             }
     }
     private void run(String cmd){
@@ -586,7 +617,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         timer.schedule(task,3500);
     }
     private void initLKT(){
-        setButton("省电模式切换中",R.id.battery,R.id.ensure1);
+        setButton("省电模式切换中",R.id.battery);
         setMode("Battery");
         dialog.setMessage("初始化中");
         dialog.show();
@@ -644,18 +675,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
                 int ID=menuItem.getItemId();
+                Intent intent;
                 switch (ID){
                     case R.id.setting:
-                        Intent intent=new Intent(MainActivity.this,SettingActivity.class);
+                        intent=new Intent(MainActivity.this,SettingActivity.class);
                         intent.putExtra("passage",passage);
-                        startActivity(intent);
                         //overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                     break;
                     case R.id.lab:
-                        Intent intent1=new Intent(MainActivity.this,LabActivity.class);
-                        startActivity(intent1);
+                        intent=new Intent(MainActivity.this,LabActivity.class);
                         break;
+                    case R.id.about:
+                        intent=new Intent(MainActivity.this,AboutActivity.class);
+                        break;
+                    case R.id.custom:
+                        intent=new Intent(MainActivity.this,CustomActivity.class);
+                        break;
+                        default:intent=new Intent();
                 }
+                startActivity(intent);
                 return true;
             }
         });

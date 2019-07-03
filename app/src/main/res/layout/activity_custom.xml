@@ -16,6 +16,29 @@
         app:navigationIcon="@mipmap/back"
         app:collapseIcon="@mipmap/ensure">
     </androidx.appcompat.widget.Toolbar>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="69dp">
+        <TextView
+            android:id="@+id/list_title"
+            android:textSize="18dp"
+            android:gravity="center"
+            android:text="自定义调度开关"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+        <Switch
+            style="@style/Theme.AppCompat.Light"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="10dp"
+            android:id="@+id/swicth"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:thumb="@drawable/swicth"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp" />
+    </RelativeLayout>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerview"
         android:layout_width="match_parent"

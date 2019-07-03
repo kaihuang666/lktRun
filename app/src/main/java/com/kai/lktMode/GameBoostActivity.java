@@ -3,18 +3,32 @@ package com.kai.lktMode;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.AppOpsManager;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 public class GameBoostActivity extends AppCompatActivity {
     private String[] items=new String[]{"省电模式", "均衡模式", "游戏模式","极限模式"};
     private EditText edit;
+    private ListAddAdapter adapter;
+    private List<Item> settings=new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -22,6 +36,7 @@ public class GameBoostActivity extends AppCompatActivity {
         init();
         initImport();
         initToolBar();
+        initList();
     }
     private void init(){
         edit=(EditText)findViewById(R.id.edit);
@@ -38,6 +53,8 @@ public class GameBoostActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Preference.save(GameBoostActivity.this,"code6",edit.getText().toString());
+                TransTool transTool=new TransTool(GameBoostActivity.this);
+                transTool.save(adapter.getItems());
                 finish();
             }
         });
@@ -51,10 +68,20 @@ public class GameBoostActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 dialogInterface.dismiss();
+                                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    if (!Settings.System.canWrite(GameBoostActivity.this)) {
+                                        Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS,
+                                                Uri.parse("package:" + getPackageName()));
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        startActivityForResult(intent, 10);
+                                    } else {
+                                        //有了权限，你要做什么呢？具体的动作
+                                    }
+                                }
                                 switch (i){
-                                    case 0:break;
-                                    case 1:break;
-                                    case 2:break;
+                                    case 0:adapter.add(new Item("自动亮度",false));break;
+                                    case 1:adapter.add(new Item("亮度","50"));break;
+                                    case 2:adapter.add(new Item("音量","50"));break;
                                 }
                             }
                         })
@@ -103,6 +130,8 @@ public class GameBoostActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 Preference.save(GameBoostActivity.this,"code6",edit.getText().toString());
+                                TransTool transTool=new TransTool(GameBoostActivity.this);
+                                transTool.save(adapter.getItems());
                                 finish();
                             }
                         })
@@ -110,5 +139,24 @@ public class GameBoostActivity extends AppCompatActivity {
                 dialog.show();
             }
         });
+    }
+    private void initList(){
+        TransTool tool=new TransTool(this);
+        settings=tool.getItems(new ArrayList((Set<String>)Preference.get(this,"gameSettings","StringSet")));
+        RecyclerView recyclerView=(RecyclerView)findViewById(R.id.recyclerview);
+        adapter=new ListAddAdapter(this,settings);
+        LinearLayoutManager manager=new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(manager);
+        recyclerView.setAdapter(adapter);
+    }
+    private boolean hasPermission() {
+        AppOpsManager appOps = (AppOpsManager)
+                getSystemService(Context.APP_OPS_SERVICE);
+        int mode = 0;
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+            mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_WRITE_SETTINGS,
+                    android.os.Process.myUid(), getPackageName());
+        }
+        return mode == AppOpsManager.MODE_ALLOWED;
     }
 }

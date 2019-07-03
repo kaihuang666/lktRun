@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <com.liulishuo.magicprogresswidget.MagicProgressBar
+        android:id="@+id/demo_mpc"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        app:mpc_percent="0.8"
+        app:mpc_start_color="@color/mpc_start_color"
+        app:mpc_end_color="@color/mpc_end_color"
+        app:mpc_stroke_width="5dp"
+        app:mpc_default_color="@color/mpc_default_color"/>
+</LinearLayout>

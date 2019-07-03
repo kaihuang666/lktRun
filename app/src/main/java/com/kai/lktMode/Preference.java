@@ -20,6 +20,8 @@ public class Preference {
             editor.putInt(key,((Integer) value).intValue());
         }else if (value instanceof List){
             editor.putStringSet(key,new TreeSet((List<String>) value));
+        }else if (value instanceof Set){
+            editor.putStringSet(key,(Set<String>) value);
         }
         editor.apply();
     }
@@ -59,7 +61,7 @@ public class Preference {
         list.remove(packageName);
         save(context,"games",list);
     }
-    public static void gameAdd(Context context,String packageName){ 
+    public static void gameAdd(Context context,String packageName){
         List<String> list = new ArrayList((Set)get(context,"games","StringSet"));
         list.add(packageName);
         save(context,"games",list);

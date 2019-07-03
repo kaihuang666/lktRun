@@ -137,8 +137,9 @@ public class SettingActivity extends AppCompatActivity {
     private void updateList(){
         //Toast.makeText(this,""+Preference.get(this,"default","int"),Toast.LENGTH_SHORT).show();
         items.clear();
-        Item item=new Item("LKT模块",((Boolean) Preference.get(this,"version","Boolean"))?"已安装":"点击安装");
-        Item item1=new Item("BusyBox模块",((Boolean) Preference.get(this,"busybox","Boolean"))?"已安装":"点击安装");
+
+        Item item=new Item("LKT模块",((Boolean) Preference.get(this,"version","Boolean"))?"已安装":((Boolean)Preference.get(this,"custom","Boolean"))?"自定义调度":"点击安装");
+        Item item1=new Item("BusyBox模块",((Boolean) Preference.get(this,"busybox","Boolean"))?"已安装":((Boolean)Preference.get(this,"custom","Boolean"))?"自定义调度":"点击安装");
         Item item2=new Item("默认模式",modes[(int)Preference.get(this,"default","int")]);
         Item item3=new Item("通知栏磁贴","已授权");
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M){

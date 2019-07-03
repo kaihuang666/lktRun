@@ -156,15 +156,14 @@ public class AutoService extends Service {
                 }
                 if (!getTopApp(context,2).isEmpty()){
                     Toast.makeText(context,"游戏加速开启",Toast.LENGTH_SHORT).show();
+                    TransTool.run(context);
                     runWithDelay(new Handler(Looper.getMainLooper()) {
                         @Override
                         public void handleMessage(Message msg) {
                             if (((String)Preference.get(context,"code6","String")).isEmpty()){
                                 readMode(3,context);
-                                setMode(context,3);
                             }else {
                                 readMode(6,context);
-                                setMode(context,6);
                             }
                             Log.d("game","on");
                             super.handleMessage(msg);
@@ -173,15 +172,21 @@ public class AutoService extends Service {
                 }
             }
             if (ori == 1) {
-                if (getTopApp(context,2).isEmpty())
+                try{
+                    Thread.sleep(1500);
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+                if (getTopApp(context,2).isEmpty()){
                     return;
+                }
                 Toast.makeText(context,"游戏加速关闭",Toast.LENGTH_SHORT).show();
+                TransTool.restore(context);
                 runWithDelay(new Handler(Looper.getMainLooper()) {
                     @Override
                     public void handleMessage(Message msg) {
                         Log.d("game","off");
                         readMode((int) Preference.get(context, "default", "int")+1,context);
-                        setMode(context,(int) Preference.get(context, "default", "int")+1);
                         super.handleMessage(msg);
                     }
                 },5000);
@@ -256,10 +261,9 @@ public class AutoService extends Service {
                         Log.d("上锁","success");
                         if (((String)Preference.get(context,"code5","String")).isEmpty()){
                             readMode(1,context);
-                            setMode(context,1);
+
                         }else {
                             readMode(5,context);
-                            setMode(context,5);
                         }
 
                         super.handleMessage(msg);
@@ -289,7 +293,7 @@ public class AutoService extends Service {
             if (now==i){
                 return;
             }
-
+            setMode(c,i);
             Intent serviceIntent;
             serviceIntent = new Intent(c, CustomCommandService.class);
             serviceIntent.putExtra("mode", i);
