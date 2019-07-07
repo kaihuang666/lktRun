@@ -14,6 +14,10 @@
         android:title="自定义调度"
         android:icon="@mipmap/custom"
         app:showAsAction="ifRoom"/>
+    <item android:id="@+id/game"
+        android:title="游戏加速"
+        android:icon="@mipmap/game"
+        app:showAsAction="ifRoom"/>
     <item android:id="@+id/about"
         android:title="关于"
         android:icon="@mipmap/about"

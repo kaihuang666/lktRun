@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -21,12 +22,15 @@ import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.stericson.RootShell.exceptions.RootDeniedException;
 import com.stericson.RootShell.execution.Command;
 import com.stericson.RootShell.execution.Shell;
 import com.stericson.RootTools.RootTools;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -44,6 +48,7 @@ public class AutoService extends Service {
     private ScreenReceiver receiver;
     private OrientationReciver orientationReciver;
     private static int SERVICE_ID = 0;
+    private LocalBroadcastManager localBroadcastManager;
     public AutoService() {
     }
 
@@ -55,6 +60,7 @@ public class AutoService extends Service {
             super.handleMessage(msg);
         }
     };
+
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -97,8 +103,11 @@ public class AutoService extends Service {
 
                     break;
             }
+
+
         return super.onStartCommand(intent, flags, startId);
     }
+
 
     @Override
     public void onDestroy() {
@@ -111,6 +120,7 @@ public class AutoService extends Service {
         registerReceiver(orientationReciver, intentFilter);
         Log.d("游戏监听","On");
     }
+
     private void unregisrerOrentationReceiver(){
         try {
             unregisterReceiver(orientationReciver);

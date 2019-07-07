@@ -1,59 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".CustomActivity">
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/simple_toolbar"
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorPrimaryDark"
-        app:title="自定义调度"
-        app:subtitle="设置四个挡位"
-        app:navigationIcon="@mipmap/back"
-        app:collapseIcon="@mipmap/ensure">
-    </androidx.appcompat.widget.Toolbar>
-    <RelativeLayout
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            app:layout_scrollFlags="scroll"
+            android:id="@+id/simple_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimaryDark"
+            app:title="自定义调度"
+            app:subtitle="设置四个挡位"
+            app:navigationIcon="@mipmap/back"
+            app:collapseIcon="@mipmap/ensure">
+        </androidx.appcompat.widget.Toolbar>
+        <RelativeLayout
+            android:background="@color/colorWhite"
+            android:layout_width="match_parent"
+            android:layout_height="69dp">
+            <TextView
+                android:id="@+id/list_title"
+                android:textSize="18dp"
+                android:gravity="center"
+                android:text="自定义调度开关"
+                android:layout_marginStart="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent" />
+            <Switch
+                style="@style/Theme.AppCompat.Light"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="10dp"
+                android:id="@+id/swicth"
+                android:layout_centerVertical="true"
+                android:layout_alignParentRight="true"
+                android:thumb="@drawable/swicth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </RelativeLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+    <androidx.core.widget.NestedScrollView
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:layout_width="match_parent"
-        android:layout_height="69dp">
-        <TextView
-            android:id="@+id/list_title"
-            android:textSize="18dp"
-            android:gravity="center"
-            android:text="自定义调度开关"
-            android:layout_marginStart="10dp"
-            android:layout_marginLeft="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent" />
-        <Switch
-            style="@style/Theme.AppCompat.Light"
-            android:layout_marginRight="10dp"
-            android:layout_marginBottom="10dp"
-            android:id="@+id/swicth"
-            android:layout_centerVertical="true"
-            android:layout_alignParentRight="true"
-            android:thumb="@drawable/swicth"
-            android:layout_width="wrap_content"
-            android:layout_height="30dp" />
-    </RelativeLayout>
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerview"
-        android:layout_width="match_parent"
-        android:layout_height="520dp">
-    </androidx.recyclerview.widget.RecyclerView>
-    <Button
-        android:textColor="#fff"
-        android:text="保存并返回"
-        android:textSize="18dp"
-        android:backgroundTintMode="multiply"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/corner_selector"
-        android:backgroundTint="@color/colorPrimaryDark"
-        android:layout_gravity="center"
-        android:id="@+id/save"
-        android:layout_width="120dp"
-        android:layout_height="50dp" />
-</LinearLayout>
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+            </androidx.recyclerview.widget.RecyclerView>
+            <Button
+                android:textColor="#fff"
+                android:text="保存并返回"
+                android:textSize="18dp"
+                android:backgroundTintMode="multiply"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/corner_selector"
+                android:backgroundTint="@color/colorPrimaryDark"
+                android:layout_gravity="center"
+                android:id="@+id/save"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

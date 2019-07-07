@@ -21,8 +21,8 @@ android {
         applicationId "com.kai.lktMode"
         minSdkVersion 22
         targetSdkVersion 29
-        versionCode 11
-        versionName "2.3.4.3"
+        versionCode 14
+        versionName "2.3.4.5.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.release
     }
@@ -31,16 +31,16 @@ android {
         baseline file("lint-baseline.xml")
     }
     buildTypes {
-        /*
+
         release {
 
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
-            signingConfig signingConfigs.release
+            //proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            //signingConfig signingConfigs.release
         }
 
         debug {
             //signingConfig signingConfigs.release
-        }*/
+        }
 
     }
 }
@@ -55,5 +55,5 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-
+    implementation 'com.github.lzyzsd:circleprogress:v1.2.1'
 }

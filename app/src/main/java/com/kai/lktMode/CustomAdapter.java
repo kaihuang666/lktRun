@@ -29,13 +29,11 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
         TextView title;
         EditText edit;
         ImageButton run;
-        RelativeLayout layout;
         public ViewHolder(View v){
             super(v);
             title=v.findViewById(R.id.title);
             edit=v.findViewById(R.id.edit);
             run=v.findViewById(R.id.run);
-            layout=v.findViewById(R.id.layout);
         }
     }
     public CustomAdapter(Context context,List<Item> items,int[] colors){

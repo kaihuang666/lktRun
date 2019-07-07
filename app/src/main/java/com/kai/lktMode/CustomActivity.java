@@ -62,6 +62,10 @@ public class CustomActivity extends AppCompatActivity {
                         }
                     });
                 }
+                else {
+                    compoundButton.setChecked(false);
+                    Preference.save(CustomActivity.this,"custom",false);
+                }
             }
         });
         items.add(new Item("省电",""));

@@ -2,24 +2,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="130dp"
-    android:paddingTop="10dp"
-    android:paddingBottom="10dp"
-    android:paddingStart="5dp"
-    android:paddingLeft="5dp"
-    android:paddingEnd="5dp"
-    android:paddingRight="5dp">
-    <RelativeLayout
+    android:layout_margin="5dp">
+    <LinearLayout
         android:id="@+id/layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/card_background"
         android:backgroundTintMode="src_in">
         <TextView
-            android:layout_centerVertical="true"
             android:id="@+id/title"
             android:layout_marginStart="20dp"
             android:layout_marginLeft="20dp"
             android:ems="1"
+            android:layout_gravity="center_vertical"
             android:textSize="18dp"
             android:text="省电"
             android:layout_width="wrap_content"
@@ -30,6 +25,7 @@
                 android:background="@drawable/bg_edittext_selector"
                 android:textSize="10dp"
                 android:gravity="top|left"
+                android:layout_gravity="center"
                 android:minLines="7"
                 android:scrollbars="vertical"
                 android:maxLines="100"
@@ -37,7 +33,8 @@
                 android:layout_marginLeft="10dp"
                 android:layout_marginStart="10dp"
                 android:layout_centerInParent="true"
-                android:layout_width="280dp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="match_parent" />
         <ImageButton
             android:layout_toRightOf="@+id/edit"
@@ -49,5 +46,5 @@
             android:src="@mipmap/run"
             android:layout_width="50dp"
             android:layout_height="50dp" />
-    </RelativeLayout>
+    </LinearLayout>
 </LinearLayout>

@@ -7,6 +7,9 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.Manifest;
 import android.app.AlarmManager;
@@ -26,6 +29,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
@@ -37,7 +41,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-
+import com.github.lzyzsd.circleprogress.CircleProgress;
 import com.google.android.material.navigation.NavigationView;
 import com.liulishuo.filedownloader.BaseDownloadTask;
 import com.liulishuo.filedownloader.FileDownloadListener;
@@ -48,10 +52,16 @@ import com.stericson.RootShell.execution.Shell;
 import com.stericson.RootTools.RootTools;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
@@ -73,6 +83,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String passage;
     private boolean isLktInstalled=false;
     private boolean isBusyboxInstalled=false;
+    private List<String> cpus=new ArrayList<>();
+    private ProgressAdapter adapter;
+    private int cpuAmount=0;
+    private CircleProgress circleProgress;
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            int[] freq=msg.getData().getIntArray("freq");
+            int mean=msg.getData().getInt("mean");
+            circleProgress.setProgress(mean);
+            adapter.setFreq(freq);
+            adapter.notifyDataSetChanged();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    MainActivity.this.sendMessage();
+                }
+            }).start();
+
+            super.handleMessage(msg);
+        }
+    };
+    private int[] getCpu(){
+        int[] result=new int[cpuAmount];
+        for (int i=0;i<result.length;i++){
+            int cpuFreq0=ProgressAdapter.getCurCpuFreq("cpu"+i);
+            for (int j=0;j<6;j++){
+                int cpuFreq=ProgressAdapter.getCurCpuFreq("cpu"+i);
+                if (cpuFreq<cpuFreq0)
+                    cpuFreq0=cpuFreq;
+            }
+            result[i]=cpuFreq0;
+        }
+        return result;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initDialog();
         initButton();
         getRoot();
-
+        //initCpuInfo();
 
         if (!ServiceStatusUtils.isServiceRunning(this,AutoService.class)){
             Intent intent=new Intent(this,AutoService.class);
@@ -91,43 +136,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startService(intent);
 
         }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true){
-                    try {
-                        Thread.sleep(500);
-                    }catch (Exception e){
-                        e.printStackTrace();
-                    }
+        //Log.d("ssss",getCpuAmount()+"");
 
-                    for (int i = 0; i < 8; i++) {
-                        getCurCpuFreq("cpu" + String.valueOf(i));
-                    }
-                }
-            }
-        }).start();
 
 
 
     }
 
 
-    public void  getCurCpuFreq(final String cpuNum) {
-        String out="N/A";
-        try{
-            RootTools.getShell(true).add(new Command(0,"cat /sys/devices/system/cpu/" + cpuNum +"/cpufreq/scaling_cur_freq"){
-                @Override
-                public void commandOutput(int id, String line) {
-                    super.commandOutput(id, line);
-                    Log.d(cpuNum,""+Integer.parseInt(line)/1000);
-                }
-            });
-        }catch (Exception e){
+
+    public static int getCpuAmount(){
+        int result = 0;
+        DataInputStream dis=null;
+        DataOutputStream dos=null;
+        try {
+            Process p = Runtime.getRuntime().exec("su");// 经过Root处理的android系统即有su命令
+            dos = new DataOutputStream(p.getOutputStream());
+            dis = new DataInputStream(p.getInputStream());
+
+            dos.writeBytes("ls sys/devices/system/cpu|grep -c -E \"cpu[0-9]\"" + "\n");
+            dos.flush();
+            dos.writeBytes("exit\n");
+            dos.flush();
+            String line = dis.readLine();
+            result=Integer.parseInt(line.trim());
+        } catch (Exception e) {
             e.printStackTrace();
+            result =0;
+        }finally {
+            try {
+                dos.close();
+                dis.close();
+            }catch (IOException e){
+                e.printStackTrace();
+            }
         }
+        return result;
     }
-
 
 
 
@@ -482,7 +527,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         dialogInterface.cancel();
                         downloadDialog.show();
                         FileDownloader.getImpl().create("https://files.catbox.moe/9ik95m.zip")
-                                .setPath(Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/",true)
+                                .setPath(Environment.getExternalStorageDirectory().getAbsolutePath()+"/lkt_magisk.zip")
                                 .setForceReDownload(true)
                                 .setCallbackProgressTimes(300)
                                 .setMinIntervalUpdateSpeed(400)
@@ -544,14 +589,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void getRoot(){
         try {
             if (RootTools.isRootAvailable()){
-                dialog.setMessage("获取配置中");
-                dialog.show();
+                //dialog.setMessage("获取配置中");
+                //dialog.show();
                 shell=RootTools.getShell(true);
                 requetPermission();
+                initCpuInfo();
             }else {
                 Runtime.getRuntime().exec("su");
-                dialog.setMessage("正在获取root权限");
-                dialog.show();
+                //dialog.setMessage("正在获取root权限");
+                //dialog.show();
                 shell=RootTools.getShell(true);
                 requetPermission();
             }
@@ -600,6 +646,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     private void run(String cmd){
         //dialog.setMessage("初始化中");
+        //handler.removeMessages(3);
         dialog.show();
         try{
             Command command=new Command(0,cmd);
@@ -612,9 +659,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void run() {
                 dialog.dismiss();
+                //handler.sendEmptyMessage(3);
             }
         };
         timer.schedule(task,3500);
+
     }
     private void initLKT(){
         setButton("省电模式切换中",R.id.battery);
@@ -717,14 +766,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onStop() {
         super.onStop();
-
+        //handler.removeMessages(3);
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
+        //handler.removeMessages(3);
+        //sendMessage();
         try {
             shell=RootTools.getShell(true);
+            //adapter.notifyDataSetChanged();
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -733,7 +785,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        handler.removeMessages(3);
+    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -755,6 +811,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             default:
                 break;
         }
+    }
+    private void initCpuInfo(){
+        circleProgress=(CircleProgress)findViewById(R.id.circle);
+        RecyclerView recyclerView=findViewById(R.id.recyclerview);
+        adapter=new ProgressAdapter(this,cpus);
+        StaggeredGridLayoutManager manager=new StaggeredGridLayoutManager(4,StaggeredGridLayoutManager.VERTICAL);
+        recyclerView.setLayoutManager(manager);
+        recyclerView.setAdapter(adapter);
+        cpuAmount=getCpuAmount();
+        for (int i=0;i<cpuAmount;i++){
+            cpus.add(i,"cpu"+i);
+        }
+        adapter.notifyDataSetChanged();
+        sendMessage();
+
+    }
+    private void sendMessage(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int[] freq=getCpu();
+                int sum=0;
+                for (int i=0;i<cpuAmount;i++){
+                    sum+=(int) 100*freq[i]/adapter.maxfreq[i];
+                }
+                Message message=new Message();
+                Bundle a=new Bundle();
+                a.putIntArray("freq",freq);
+                a.putInt("mean",sum/cpuAmount);
+                message.setData(a);
+                message.what=3;
+                handler.sendMessage(message);
+            }
+        }).start();
     }
 
 }
