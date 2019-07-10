@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".fragment.MainActivity">
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/simple_toolbar"
         android:layout_width="match_parent"
@@ -13,6 +13,14 @@
         android:background="?attr/colorPrimaryDark"
         app:title="调度"
         app:navigationIcon="@mipmap/menu">
+        <TextView
+            android:layout_margin="10dp"
+            android:id="@+id/extra"
+            android:textSize="18dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|end"
+            />
     </androidx.appcompat.widget.Toolbar>
 
     <androidx.drawerlayout.widget.DrawerLayout
@@ -20,169 +28,37 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-
-        <LinearLayout
+        <com.kai.lktMode.ViewPagerSlide
+            android:id="@+id/viewPager"
+            android:name="com.kai.lktMode.fragment.MainFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_marginTop="10dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/card_background"
-                android:text="Hello World!"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                android:orientation="vertical"
-                android:paddingBottom="30dp"
-                android:paddingTop="20dp"
-                android:paddingLeft="25dp"
-                android:paddingStart="25dp"
-                android:gravity="start">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="5dp"
-                    android:gravity="top|start">
-                    <TextView
-                        android:textSize="18dp"
-                        android:text="模式： "
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:id="@+id/mode"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="未安装"
-                        android:textSize="18dp" />
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_marginBottom="5dp"
-                    android:orientation="horizontal"
-                    android:layout_gravity="start|top"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        android:textSize="18dp"
-                        android:text="版本： "
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                    <TextView
-                        android:id="@+id/version"
-                        android:textSize="18dp"
-                        android:text="未安装"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-                <LinearLayout
-                    android:orientation="horizontal"
-                    android:layout_gravity="start|top"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        android:textSize="18dp"
-                        android:text="busybox版本： "
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                    <TextView
-                        android:id="@+id/busybox_version"
-                        android:textSize="18dp"
-                        android:text="未安装"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-
-            </LinearLayout>
-            <com.github.lzyzsd.circleprogress.CircleProgress
-                android:id="@+id/circle"
-                android:layout_margin="8dp"
-                android:layout_gravity="center"
-                android:layout_width="90dp"
-                android:layout_height="90dp"
-                app:circle_progress="0"/>
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerview"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-            </androidx.recyclerview.widget.RecyclerView>
-            <LinearLayout
-                android:layout_marginTop="5dp"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="bottom"
-                android:orientation="vertical">
-                <LinearLayout
-                    android:background="@drawable/card_background"
-                    android:orientation="horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <Button
-                        android:layout_margin="5dp"
-                        android:elevation="2dp"
-                        android:id="@+id/battery"
-                        android:textColor="#fff"
-                        android:text="省电模式"
-                        android:backgroundTint="@color/colorBattery"
-                        android:background="@drawable/corner_selector"
-                        android:backgroundTintMode="multiply"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content" />
-                    <Button
-                        android:layout_margin="5dp"
-                        android:elevation="2dp"
-                        android:id="@+id/balance"
-                        android:text="均衡模式"
-                        android:textColor="#fff"
-                        android:background="@drawable/corner_selector"
-                        android:backgroundTint="@color/colorBalance"
-                        android:backgroundTintMode="multiply"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content" />
-                    <Button
-                        android:layout_margin="5dp"
-                        android:elevation="2dp"
-                        android:id="@+id/performance"
-                        android:textColor="#fff"
-                        android:text="游戏模式"
-                        android:background="@drawable/corner_selector"
-                        android:backgroundTint="@color/colorPerformance"
-                        android:backgroundTintMode="multiply"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content" />
-                    <Button
-                        android:layout_margin="5dp"
-                        android:elevation="2dp"
-                        android:id="@+id/turbo"
-                        android:typeface="normal"
-                        android:text="极限模式"
-                        android:textColor="#fff"
-                        android:background="@drawable/corner_selector"
-                        android:backgroundTint="@color/colorTurbo"
-                        android:backgroundTintMode="multiply"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content" />
-
-                </LinearLayout>
-            </LinearLayout>
-        </LinearLayout>
-
-        <com.google.android.material.navigation.NavigationView
-            android:id="@+id/navigationView"
+            />
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="left"
-            android:fitsSystemWindows="true"
-            app:menu="@menu/menu_main">
-        </com.google.android.material.navigation.NavigationView>
+            android:orientation="vertical">
+            <LinearLayout
+                android:background="@drawable/drawer_background"
+                android:layout_width="300dp"
+                android:layout_height="100dp"
+                android:gravity="center_vertical">
+                <ImageView
+                    android:layout_margin="10dp"
+                    android:src="@mipmap/ic_launcher"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+            <com.google.android.material.navigation.NavigationView
+                android:id="@+id/navigationView"
+                android:layout_width="300dp"
+                android:layout_height="match_parent"
+                android:fitsSystemWindows="true"
+                app:menu="@menu/menu_main">
+            </com.google.android.material.navigation.NavigationView>
+        </LinearLayout>
+
 
     </androidx.drawerlayout.widget.DrawerLayout>
 

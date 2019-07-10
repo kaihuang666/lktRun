@@ -24,6 +24,7 @@ import android.widget.Toast;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.kai.lktMode.fragment.MainFragment;
 import com.stericson.RootShell.exceptions.RootDeniedException;
 import com.stericson.RootShell.execution.Command;
 import com.stericson.RootShell.execution.Shell;
@@ -32,6 +33,7 @@ import com.stericson.RootTools.RootTools;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -216,21 +218,12 @@ public class AutoService extends Service {
             if(Build.VERSION.SDK_INT > Build.VERSION_CODES.Q){
                 List<ActivityManager.RunningTaskInfo> rti = activityManager.getRunningTasks(1);
                 packageName = rti.get(0).topActivity.getPackageName();
-            } else if(Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
-                List<ActivityManager.RunningAppProcessInfo> processes = activityManager.getRunningAppProcesses();
-                if (processes.size() == 0) {
-                    return packageName;
-                }
-                for (ActivityManager.RunningAppProcessInfo process : processes) {
-                    if (process.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
-                        return process.processName;
-                    }
-                }
-            } else if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP){
+            }  else if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1){
                 final long end = System.currentTimeMillis()+1000;
                 final UsageStatsManager usageStatsManager = (UsageStatsManager) context.getSystemService( Context.USAGE_STATS_SERVICE);
                 final UsageEvents events = usageStatsManager.queryEvents((end - i * 1000-2000), end);
                 UsageEvents.Event usageEvent = new UsageEvents.Event();
+                //Log.d("shifou",String.valueOf(usageStatsManager.isAppInactive("com.cmcm.arrowio_cn.nearme.gamecenter")));
                 while (events.hasNextEvent()) {
                     events.getNextEvent(usageEvent);
                     Log.d("ac",usageEvent.getPackageName()+"   "+usageEvent.getEventType());
@@ -275,7 +268,26 @@ public class AutoService extends Service {
                         }else {
                             readMode(5,context);
                         }
-
+                        for (String s:Preference.getSoftwares(context)){
+                            MainFragment.cmd("su -c "+"am force-stop "+s);
+                            if (s.contains("com.tencent.mobileqq")){
+                                Log.d("QQ","服务保活");
+                                try {
+                                    Thread.sleep(1000);
+                                }catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                                MainFragment.cmd("su -c am startservice -n com.tencent.mobileqq/.msf.service.MsfService");
+                            }
+                            if (s.contains("com.tencent.mm")){
+                                try {
+                                    Thread.sleep(1000);
+                                }catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                                MainFragment.cmd("su -c am startservice -n com.tencent.mm/.booter.CoreService");
+                            }
+                        }
                         super.handleMessage(msg);
                     }
                 },(int)Preference.get(context,"sleepDelay",200)*1000);
@@ -361,5 +373,19 @@ public class AutoService extends Service {
         }
         return -1;
 
+    }
+    public void RemoveTask(int taskId,Context context){
+        ActivityManager am=(ActivityManager)context.getSystemService(Context.ACTIVITY_SERVICE);
+
+        try {
+            Class<?> activityManagerClass=Class.forName("android.app.ActivityManager");
+            Method removeTask=activityManagerClass.getDeclaredMethod("removeTask",int.class);
+            removeTask.setAccessible(true);
+            removeTask.invoke(am,taskId);
+        }catch (ClassNotFoundException e){
+            e.printStackTrace();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }

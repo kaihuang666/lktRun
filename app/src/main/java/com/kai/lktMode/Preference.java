@@ -61,12 +61,25 @@ public class Preference {
         list.remove(packageName);
         save(context,"games",list);
     }
+    public static void softwareRemove(Context context,String packageName){
+        List<String> list = new ArrayList((Set)get(context,"softwares","StringSet"));
+        list.remove(packageName);
+        save(context,"softwares",list);
+    }
     public static void gameAdd(Context context,String packageName){
         List<String> list = new ArrayList((Set)get(context,"games","StringSet"));
         list.add(packageName);
         save(context,"games",list);
     }
+    public static void softwareAdd(Context context,String packageName){
+        List<String> list = new ArrayList((Set)get(context,"softwares","StringSet"));
+        list.add(packageName);
+        save(context,"softwares",list);
+    }
     public static List<String> getGames(Context context){
         return new ArrayList((Set)get(context,"games","StringSet"));
+    }
+    public static List<String> getSoftwares(Context context){
+        return new ArrayList((Set)get(context,"softwares","StringSet"));
     }
 }

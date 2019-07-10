@@ -23,7 +23,7 @@
         android:layout_height="30dp">
         <TextView
             android:gravity="center"
-            android:text="指定应用自动启动"
+            android:text="锁屏后将定时自动清理，加入QQ、微信将会开启优化"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 

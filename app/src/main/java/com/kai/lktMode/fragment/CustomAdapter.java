@@ -1,20 +1,20 @@
-package com.kai.lktMode;
+package com.kai.lktMode.fragment;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.kai.lktMode.Item;
+import com.kai.lktMode.Preference;
+import com.kai.lktMode.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,5 +106,6 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
 
         return (scrollY > 0) || (scrollY < scrollDifference - 1);
     }
+
 }
 

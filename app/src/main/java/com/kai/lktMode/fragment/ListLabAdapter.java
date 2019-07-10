@@ -1,4 +1,4 @@
-package com.kai.lktMode;
+package com.kai.lktMode.fragment;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +9,9 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.kai.lktMode.Item;
+import com.kai.lktMode.R;
 
 import java.util.List;
 

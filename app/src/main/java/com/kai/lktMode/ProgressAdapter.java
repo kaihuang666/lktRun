@@ -19,6 +19,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.lzyzsd.circleprogress.ArcProgress;
+import com.kai.lktMode.fragment.MainFragment;
 import com.stericson.RootShell.execution.Command;
 import com.stericson.RootTools.RootTools;
 
@@ -28,9 +29,9 @@ import java.util.List;
 
 public class ProgressAdapter extends RecyclerView.Adapter<ProgressAdapter.ViewHolder> {
     private List<String> items=new ArrayList<>();
-    private int[] freq=new int[MainActivity.getCpuAmount()];
-    public int[] maxfreq=new int[MainActivity.getCpuAmount()];
-    private int[] minfreq=new int[MainActivity.getCpuAmount()];
+    private int[] freq=new int[MainFragment.getCpuAmount()];
+    public int[] maxfreq=new int[MainFragment.getCpuAmount()];
+    private int[] minfreq=new int[MainFragment.getCpuAmount()];
     private int sum=0;
     private Context context;
     static class ViewHolder extends RecyclerView.ViewHolder{
@@ -119,14 +120,14 @@ public class ProgressAdapter extends RecyclerView.Adapter<ProgressAdapter.ViewHo
         return Integer.parseInt(result.trim())/1000;
     }
     private int[] getMax(){
-        int[] result=new int[MainActivity.getCpuAmount()];
+        int[] result=new int[MainFragment.getCpuAmount()];
         for (int i=0;i<result.length;i++){
             result[i]=getMaxCpuFreq("cpu"+i);
         }
         return result;
     }
     private int[] getMin(){
-        int[] result=new int[MainActivity.getCpuAmount()];
+        int[] result=new int[MainFragment.getCpuAmount()];
         for (int i=0;i<result.length;i++){
             result[i]=getMinCpuFreq("cpu"+i);
         }

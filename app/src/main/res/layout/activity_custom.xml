@@ -4,23 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".CustomActivity">
+    android:orientation="vertical">
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <androidx.appcompat.widget.Toolbar
-            app:layout_scrollFlags="scroll"
-            android:id="@+id/simple_toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorPrimaryDark"
-            app:title="自定义调度"
-            app:subtitle="设置四个挡位"
-            app:navigationIcon="@mipmap/back"
-            app:collapseIcon="@mipmap/ensure">
-        </androidx.appcompat.widget.Toolbar>
         <RelativeLayout
+            app:layout_scrollFlags="scroll"
             android:background="@color/colorWhite"
             android:layout_width="match_parent"
             android:layout_height="69dp">
@@ -58,19 +47,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
             </androidx.recyclerview.widget.RecyclerView>
-            <Button
-                android:textColor="#fff"
-                android:text="保存并返回"
-                android:textSize="18dp"
-                android:backgroundTintMode="multiply"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:background="@drawable/corner_selector"
-                android:backgroundTint="@color/colorPrimaryDark"
-                android:layout_gravity="center"
-                android:id="@+id/save"
-                android:layout_width="120dp"
-                android:layout_height="wrap_content" />
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>

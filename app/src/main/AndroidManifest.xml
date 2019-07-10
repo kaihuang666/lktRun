@@ -17,7 +17,6 @@
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -25,13 +24,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".AboutActivity"></activity>
         <activity android:name=".GameBoostActivity" />
         <activity android:name=".SleepSettingActivity" />
-        <activity
-            android:name=".CustomActivity"
-            android:windowSoftInputMode="stateVisible|adjustResize" />
-        <activity android:name=".AddGameActivity" />
+        <activity android:name=".fragment.AddActivity" />
 
         <service
             android:name=".ProtectService"
@@ -41,8 +36,6 @@
             android:name=".AutoService"
             android:enabled="true"
             android:exported="true" />
-
-        <activity android:name=".LabActivity" />
 
         <receiver android:name=".LktAppWidget">
             <intent-filter>
@@ -55,8 +48,6 @@
                 android:resource="@xml/lkt_app_widget_info" />
         </receiver>
 
-        <activity android:name=".SettingActivity" />
-
         <service
             android:name=".CommandService"
             android:exported="false" />
@@ -65,7 +56,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".MainActivity"
+            android:name=".fragment.MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

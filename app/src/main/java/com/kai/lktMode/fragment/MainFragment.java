@@ -1,48 +1,37 @@
-package com.kai.lktMode;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+package com.kai.lktMode.fragment;
 
 import android.Manifest;
-import android.app.AlarmManager;
 import android.app.AlertDialog;
-import android.app.AppOpsManager;
-import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.Settings;
-import android.util.Log;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.github.lzyzsd.circleprogress.CircleProgress;
-import com.google.android.material.navigation.NavigationView;
+import com.kai.lktMode.Preference;
+import com.kai.lktMode.ProgressAdapter;
+import com.kai.lktMode.R;
 import com.liulishuo.filedownloader.BaseDownloadTask;
 import com.liulishuo.filedownloader.FileDownloadListener;
 import com.liulishuo.filedownloader.FileDownloader;
@@ -57,10 +46,7 @@ import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -70,9 +56,8 @@ import java.util.regex.Pattern;
 
 import dmax.dialog.SpotsDialog;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    Toolbar mNormalToolbar;
-    ActionBarDrawerToggle mActionBarDrawerToggle;
+public class MainFragment extends MyFragment implements View.OnClickListener {
+
     private AlertDialog dialog;
     private ProgressDialog downloadDialog;
     private String[] modeTitle={"省电模式","均衡模式","游戏模式","极限模式"};
@@ -87,6 +72,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ProgressAdapter adapter;
     private int cpuAmount=0;
     private CircleProgress circleProgress;
+    private View contentView;
+    private HandlePassage handlePassage;
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -98,13 +85,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    MainActivity.this.sendMessage();
+                    MainFragment.this.sendMessage();
                 }
             }).start();
 
             super.handleMessage(msg);
         }
     };
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view=inflater.inflate(R.layout.fragment_main,container,false);
+        contentView=view;
+        return view;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        FileDownloader.setup(getContext());
+        initButton();
+        initDialog();
+        getRoot();
+        //initCpuInfo();
+    }
+
     private int[] getCpu(){
         int[] result=new int[cpuAmount];
         for (int i=0;i<result.length;i++){
@@ -118,33 +129,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return result;
     }
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        FileDownloader.setup(this);
-        mNormalToolbar=findViewById(R.id.simple_toolbar);
-        initToolbar();
-        initDialog();
-        initButton();
-        getRoot();
-        //initCpuInfo();
-
-        if (!ServiceStatusUtils.isServiceRunning(this,AutoService.class)){
-            Intent intent=new Intent(this,AutoService.class);
-            intent.setAction("reset");
-            startService(intent);
-
-        }
-        //Log.d("ssss",getCpuAmount()+"");
-
-
-
-
-    }
-
-
-
     public static int getCpuAmount(){
         int result = 0;
         DataInputStream dis=null;
@@ -178,16 +162,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     public void readProp(final boolean isCreate){
-        Preference.clearAll(MainActivity.this);
-        if ((Boolean) Preference.get(this,"custom","Boolean")){
+        Preference.clearAll(getContext());
+        if ((Boolean) Preference.get(getContext(),"custom","Boolean")){
             setBusyBox("已忽略");
             setVersion("自定义调度");
-            setMode(modestring[(int)Preference.get(this,"customMode","int")]);
+            setMode(modestring[(int)Preference.get(getContext(),"customMode","int")]);
             dialog.dismiss();
             return;
         }
         try {
-            cmd("mkdir "+Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/");
+            cmd("mkdir "+ Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/");
             Command command=new Command(0,"cp -f /data/LKT.prop "+Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/LKT.prop"){
                 @Override
                 public void commandCompleted(int id, int exitcode) {
@@ -206,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             cutVersion(passage);
                             cutMode(passage);
                             cutBusyBox(passage);
-                            //Toast.makeText(MainActivity.this,passage,Toast.LENGTH_LONG).show();
+                            //Toast.makeText(getContext(),passage,Toast.LENGTH_LONG).show();
                         }
                         catch (FileNotFoundException e){
                             e.printStackTrace();
@@ -230,11 +214,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         setVersion("已安装");
                                         setMode("unsure");
                                         setBusyBox("未完成开机配置");
-                                        Toast.makeText(MainActivity.this,"还未完成开机配置，5秒后执行默认模式",Toast.LENGTH_LONG).show();
+                                        Toast.makeText(getContext(),"还未完成开机配置，5秒后执行默认模式",Toast.LENGTH_LONG).show();
                                         TimerTask task=new TimerTask() {
                                             @Override
                                             public void run() {
-                                                runOnUiThread(new Runnable() {
+                                                getActivity().runOnUiThread(new Runnable() {
                                                     @Override
                                                     public void run() {
                                                         reset();
@@ -276,15 +260,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // 现在创建 matcher 对象
         Matcher m = r.matcher(str);
         if (m.find( )) {
-            Preference.save(MainActivity.this,"version",true);
+            Preference.save(getContext(),"version",true);
             setVersion(m.group(1));
 
         } else {
-            //Toast.makeText(MainActivity.this,)
+            //Toast.makeText(getContext(),)
         }
     }
     private void setVersion(String str){
-        TextView version=findViewById(R.id.version);
+        TextView version=contentView.findViewById(R.id.version);
         version.setText(str);
 
     }
@@ -300,12 +284,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //Toast.makeText(this,m.group(1),Toast.LENGTH_SHORT).show();
             setMode(m.group(1));
         } else {
-            //Toast.makeText(MainActivity.this,)
+            //Toast.makeText(getContext(),)
         }
 
     }
     private void setMode(String str){
-        TextView mode=(TextView)findViewById(R.id.mode);
+        TextView mode=(TextView)contentView.findViewById(R.id.mode);
         switch (str){
             case "Battery":mode.setText("省电模式");setButton("省电模式切换中",R.id.battery);break;
             case "Balanced":mode.setText("均衡模式");setButton("均衡模式切换中",R.id.balance);break;
@@ -316,10 +300,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
     private void reset(){
-        TextView mode=(TextView)findViewById(R.id.mode);
-        int index=(int)Preference.get(this,"default","int")+1;
+        TextView mode=(TextView)contentView.findViewById(R.id.mode);
+        int index=(int)Preference.get(getContext(),"default","int")+1;
         mode.setText(modeTitle[index-1]);
-        Toast.makeText(MainActivity.this,"已切换到默认模式",Toast.LENGTH_LONG).show();
+        Toast.makeText(getContext(),"已切换到默认模式",Toast.LENGTH_LONG).show();
         setButton("配置错误，切换到默认模式",buttonID[index-1]);
         try{
             shell.add(new Command(0,"su -c lkt "+index){
@@ -342,21 +326,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Matcher m = r.matcher(str);
         if (m.find( )) {
             //showToast(m.group(1));
-            Preference.save(MainActivity.this,"busybox",true);
+            Preference.save(getContext(),"busybox",true);
             setBusyBox(m.group(1));
         } else {
             installBusybox();
         }
     }
     private void setBusyBox(String str){
-        TextView version=findViewById(R.id.busybox_version);
+        TextView version=contentView.findViewById(R.id.busybox_version);
         if (str.contains("#")){
             version.setText("未安装");
             installBusybox();
         }else
-        version.setText(str);
+            version.setText(str);
     }
-    private void cmd(String str){
+    public static void cmd(String str){
         try{
             Runtime.getRuntime().exec(str);
         }catch (Exception e){
@@ -384,12 +368,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }*/
     private  void disableButton(){
         for (int i:buttonID){
-            ((Button)findViewById(i)).setEnabled(false);
+            ((Button)contentView.findViewById(i)).setEnabled(false);
         }
     }
     private  void enableButton(){
         for (int i:buttonID){
-            ((Button)findViewById(i)).setEnabled(true);
+            ((Button)contentView.findViewById(i)).setEnabled(true);
         }
     }
     public static void installStyleB(final Context context){
@@ -456,7 +440,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     private void installBusybox(){
         disableButton();
-        final AlertDialog dialog=new AlertDialog.Builder(MainActivity.this,R.style.AppDialog)
+        final AlertDialog dialog=new AlertDialog.Builder(getContext(),R.style.AppDialog)
                 .setTitle("检测到您的设备暂未安装BusyBox，这可能使模块运行不稳定")
                 .setCancelable(true)
                 .setItems(new String[]{"直接安装", "安装magisk模块"}, new DialogInterface.OnClickListener() {
@@ -465,14 +449,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         dialogInterface.dismiss();
                         switch (i){
                             case 0: try{
-                                    Uri uri = Uri.parse("market://details?id="+"stericson.busybox ");
-                                    Intent intent = new Intent(Intent.ACTION_VIEW,uri);
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    startActivity(intent);
-                                    Toast.makeText(MainActivity.this,"安装BusyBox应用，并打开安装脚本，完成后请重启手动挡",Toast.LENGTH_LONG).show();
-                                }catch(ActivityNotFoundException e){
-                                    Toast.makeText(MainActivity.this, "找不到应用市场", Toast.LENGTH_SHORT).show();
-                                }
+                                Uri uri = Uri.parse("market://details?id="+"stericson.busybox ");
+                                Intent intent = new Intent(Intent.ACTION_VIEW,uri);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                                Toast.makeText(getContext(),"安装BusyBox应用，并打开安装脚本，完成后请重启手动挡",Toast.LENGTH_LONG).show();
+                            }catch(ActivityNotFoundException e){
+                                Toast.makeText(getContext(), "找不到应用市场", Toast.LENGTH_SHORT).show();
+                            }
                                 break;
                             case 1:downloadDialog.show();
                                 FileDownloader.getImpl().create("https://files.catbox.moe/5t8g9z.zip")
@@ -491,7 +475,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                             @Override
                                             protected void completed(BaseDownloadTask task) {
                                                 downloadDialog.dismiss();
-                                                installStyleB(MainActivity.this);
+                                                installStyleB(getContext());
                                             }
 
                                             @Override
@@ -517,7 +501,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     private void installLKT(){
         disableButton();
-        final AlertDialog dialog1=new AlertDialog.Builder(MainActivity.this,R.style.AppDialog)
+        final AlertDialog dialog1=new AlertDialog.Builder(getContext(),R.style.AppDialog)
                 .setTitle("检测到您的设备暂未安装LKT模块")
                 .setMessage("是否下载LKT magisk模块到您的设备？")
                 .setCancelable(false)
@@ -544,7 +528,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     @Override
                                     protected void completed(BaseDownloadTask task) {
                                         downloadDialog.dismiss();
-                                        installStyleL(MainActivity.this);
+                                        installStyleL(getContext());
                                     }
 
                                     @Override
@@ -555,7 +539,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     protected void error(BaseDownloadTask task, Throwable e) {
                                         downloadDialog.dismiss();
                                         e.printStackTrace();
-                                        Toast.makeText(MainActivity.this,e.toString(),7000).show();
+                                        //Toast.makeText(getContext(),e.toString(),7000).show();
                                     }
 
                                     @Override
@@ -602,39 +586,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 requetPermission();
             }
 
-        }catch (IOException |TimeoutException| RootDeniedException e){
+        }catch (IOException | TimeoutException | RootDeniedException e){
             e.printStackTrace();
-            Toast.makeText(MainActivity.this,"无法获取到ROOT权限",Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(),"无法获取到ROOT权限",Toast.LENGTH_SHORT).show();
         }
     }
     private void initButton(){
         for (int i:buttonID){
-            ((Button)findViewById(i)).setOnClickListener(this);
+            ((Button)contentView.findViewById(i)).setOnClickListener(this);
         }
     }
     private void setButton(String title,int id){
-        Button button=findViewById(id);
+        Button button=contentView.findViewById(id);
         button.setTextColor(getResources().getColor(R.color.colorPress));
         button.setEnabled(false);
         for(int i:buttonID){
             if (i!=id){
-                ((Button)findViewById(i)).setTextColor(getResources().getColor(R.color.colorWhite));
-                ((Button)findViewById(i)).setEnabled(true);
+                ((Button)contentView.findViewById(i)).setTextColor(getResources().getColor(R.color.colorWhite));
+                ((Button)contentView.findViewById(i)).setEnabled(true);
             }
         }
         dialog.setMessage(title);
-        //dialog.show();
     }
 
     @Override
     public void onClick(View view) {
-        TextView mode=(TextView)findViewById(R.id.mode);
-        if ((Boolean)Preference.get(MainActivity.this,"custom","Boolean")){
+        TextView mode=(TextView)contentView.findViewById(R.id.mode);
+        if ((Boolean)Preference.get(getContext(),"custom","Boolean")){
             switch (view.getId()){
-                case R.id.battery:run((String)Preference.get(MainActivity.this,"code1","String"));mode.setText("省电模式");setButton("省电模式切换中",R.id.battery);Preference.save(MainActivity.this,"customMode",1);break;
-                case R.id.balance:run((String)Preference.get(MainActivity.this,"code2","String"));mode.setText("均衡模式");setButton("均衡模式切换中",R.id.balance);Preference.save(MainActivity.this,"customMode",2);break;
-                case R.id.performance:run((String)Preference.get(MainActivity.this,"code3","String"));mode.setText("游戏模式");setButton("游戏模式切换中",R.id.performance);Preference.save(MainActivity.this,"customMode",3);break;
-                case R.id.turbo:run((String)Preference.get(MainActivity.this,"code4","String"));mode.setText("极限模式");setButton("极限模式切换中",R.id.turbo);Preference.save(MainActivity.this,"customMode",4);break;
+                case R.id.battery:run((String)Preference.get(getContext(),"code1","String"));mode.setText("省电模式");setButton("省电模式切换中",R.id.battery);Preference.save(getContext(),"customMode",1);break;
+                case R.id.balance:run((String)Preference.get(getContext(),"code2","String"));mode.setText("均衡模式");setButton("均衡模式切换中",R.id.balance);Preference.save(getContext(),"customMode",2);break;
+                case R.id.performance:run((String)Preference.get(getContext(),"code3","String"));mode.setText("游戏模式");setButton("游戏模式切换中",R.id.performance);Preference.save(getContext(),"customMode",3);break;
+                case R.id.turbo:run((String)Preference.get(getContext(),"code4","String"));mode.setText("极限模式");setButton("极限模式切换中",R.id.turbo);Preference.save(getContext(),"customMode",4);break;
             }
         }else
             switch (view.getId()){
@@ -687,106 +670,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     private void initDialog(){
         dialog= new SpotsDialog.Builder()
-                .setContext(this)
+                .setContext(getContext())
                 .setCancelable(false)
                 .setMessage("模式切换中")
                 .build();
-        downloadDialog= new ProgressDialog(this,R.style.AppDialog);
+        downloadDialog= new ProgressDialog(getContext(),R.style.AppDialog);
         downloadDialog.setCancelable(false);
         downloadDialog.setTitle("正在下载");
     }
-    private void initToolbar() {
-        //设置menu
-        //设置menu的点击事件
-        mNormalToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                int menuItemId = item.getItemId();
-                return true;
-            }
-        });
-        //设置左侧NavigationIcon点击事件
-        mNormalToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(MainActivity.this,"s",Toast.LENGTH_SHORT).show();
-            }
-        });
-        DrawerLayout drawerLayout=findViewById(R.id.drawer);
-
-        mActionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, mNormalToolbar,R.string.app_name,R.string.app_name);
-        mActionBarDrawerToggle.setDrawerIndicatorEnabled(true);
-        mActionBarDrawerToggle.setHomeAsUpIndicator(R.mipmap.ic_launcher);//channge the icon,改变图标
-        mActionBarDrawerToggle.syncState();////show the default icon and sync the DrawerToggle state,如果你想改变图标的话，这句话要去掉。这个会使用默认的三杠图标
-        drawerLayout.setDrawerListener(mActionBarDrawerToggle);//关联 drawerlayout
-        NavigationView view=findViewById(R.id.navigationView);
-        view.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-                int ID=menuItem.getItemId();
-                Intent intent;
-                switch (ID){
-                    case R.id.setting:
-                        intent=new Intent(MainActivity.this,SettingActivity.class);
-                        intent.putExtra("passage",passage);
-                        //overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-                    break;
-                    case R.id.lab:
-                        intent=new Intent(MainActivity.this,LabActivity.class);
-                        break;
-                    case R.id.about:
-                        intent=new Intent(MainActivity.this,AboutActivity.class);
-                        break;
-                    case R.id.custom:
-                        intent=new Intent(MainActivity.this,CustomActivity.class);
-                        break;
-                        default:intent=new Intent();
-                }
-                startActivity(intent);
-                return true;
-            }
-        });
-
-    }
 
     private void showToast(Object e){
-        Toast.makeText(MainActivity.this,String.valueOf(e),Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(),String.valueOf(e),Toast.LENGTH_SHORT).show();
     }
     private void requetPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, permissions, 1);
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(getActivity(), permissions, 1);
         }else {
             readProp(true);
         }
     }
 
-
-
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        //handler.removeMessages(3);
+    public String getPassage(){
+        return passage;
     }
 
     @Override
-    protected void onRestart() {
-        super.onRestart();
-        //handler.removeMessages(3);
-        //sendMessage();
+    public void onResume() {
+        super.onResume();
         try {
             shell=RootTools.getShell(true);
             //adapter.notifyDataSetChanged();
         }catch (Exception e){
             e.printStackTrace();
         }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             readProp(false);
         }
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         handler.removeMessages(3);
     }
@@ -805,20 +728,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     readProp(true);
 
                 }else { //拒绝权限申请
-                    Toast.makeText(this,"权限被拒绝了",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(),"权限被拒绝了",Toast.LENGTH_SHORT).show();
                 }
                 break;
             default:
                 break;
         }
     }
+
     private void initCpuInfo(){
-        circleProgress=(CircleProgress)findViewById(R.id.circle);
-        RecyclerView recyclerView=findViewById(R.id.recyclerview);
-        adapter=new ProgressAdapter(this,cpus);
+        circleProgress=(CircleProgress)contentView.findViewById(R.id.circle);
+        RecyclerView recyclerView=contentView.findViewById(R.id.recyclerview);
+        adapter=new ProgressAdapter(getContext(),cpus);
         StaggeredGridLayoutManager manager=new StaggeredGridLayoutManager(4,StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(manager);
         recyclerView.setAdapter(adapter);
+        cpus.clear();
         cpuAmount=getCpuAmount();
         for (int i=0;i<cpuAmount;i++){
             cpus.add(i,"cpu"+i);
@@ -847,4 +772,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }).start();
     }
 
+    interface HandlePassage{
+        void passage(String passage);
+    }
 }
