@@ -1,28 +1,22 @@
 package com.kai.lktMode;
 
 import android.app.ActivityManager;
-import android.app.AppOpsManager;
 import android.app.Notification;
 import android.app.Service;
 import android.app.usage.UsageEvents;
-import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
-import android.media.AudioManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
-import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
-
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.kai.lktMode.fragment.MainFragment;
 import com.stericson.RootShell.exceptions.RootDeniedException;
@@ -31,17 +25,8 @@ import com.stericson.RootShell.execution.Shell;
 import com.stericson.RootTools.RootTools;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NavigableSet;
-import java.util.SortedMap;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.TreeMap;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +35,6 @@ public class AutoService extends Service {
     private ScreenReceiver receiver;
     private OrientationReciver orientationReciver;
     private static int SERVICE_ID = 0;
-    private LocalBroadcastManager localBroadcastManager;
     public AutoService() {
     }
 
@@ -109,8 +93,8 @@ public class AutoService extends Service {
 
     @Override
     public void onDestroy() {
-        Intent innerIntent = new Intent(this, AutoService.class);
-        startService(innerIntent);
+        /*Intent innerIntent = new Intent(this, ProtectService.class);
+        startService(innerIntent);*/
         //startForeground(SERVICE_ID, new Notification());
     }
     private void regisrerOrentationReceiver(){

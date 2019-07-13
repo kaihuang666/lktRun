@@ -259,7 +259,7 @@ public class MainActivity extends BaseActivity {
                     case R.id.powercfg:
                         viewPager.setCurrentItem(3,false);
                         drawerLayout.closeDrawers();
-                        setToolbar("自定义调度-动态脚本", new String[]{"保存","从网络导入"}, new ActionMenuView.OnMenuItemClickListener() {
+                        setToolbar("自定义调度-动态脚本", new String[]{"保存","从网络导入","使用说明"}, new ActionMenuView.OnMenuItemClickListener() {
                             @Override
                             public boolean onMenuItemClick(MenuItem item) {
                                 switch (item.getTitle().toString()){
@@ -269,7 +269,9 @@ public class MainActivity extends BaseActivity {
                                         Toast.makeText(MainActivity.this,"已保存",Toast.LENGTH_SHORT).show();
                                         break;
                                     case "导入网络脚本":
-
+                                        break;
+                                    case "使用说明":
+                                        showDialog(MainActivity.this,"动态脚本\n动态脚本是自定义调度的附属功能，为了反正出现冲突，所以启动动态脚本后自定义调度将处于不可编辑状态，你需要在省电、均衡、游戏、极限四个挡中输入参数，powersave、balance、performance、turbo、level 0-6来合理调整系统cpu功耗。",null);
                                         break;
                                 }
                                 return true;
