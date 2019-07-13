@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.kai.lktMode.AppUtils;
+import com.kai.lktMode.BaseActivity;
 import com.kai.lktMode.Item;
 import com.kai.lktMode.Preference;
 import com.kai.lktMode.R;
@@ -24,7 +25,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class AddActivity extends AppCompatActivity {
+public class AddActivity extends BaseActivity {
     private  List<Item> items=new ArrayList<>();
     private ListGameAdapter adapter;
     private ProgressDialog dialog;

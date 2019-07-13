@@ -1,7 +1,10 @@
 package com.kai.lktMode.fragment;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -17,12 +20,11 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -36,16 +38,18 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomFragment extends MyFragment {
+public class PowercfgFragment extends MyFragment {
     private List<Item> items=new ArrayList<>();
     private int[] colors={R.color.colorBattery,R.color.colorBalance,R.color.colorPerformance,R.color.colorTurbo};
-    private CustomAdapter adapter;
+    private PowercfgAdapter adapter;
     private String output;
     private View view;
+    private TextView title;
+    private Button change;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        view=inflater.inflate(R.layout.activity_custom,container,false);
+        view=inflater.inflate(R.layout.activity_powercfg,container,false);
         return view;
     }
 
@@ -61,27 +65,41 @@ public class CustomFragment extends MyFragment {
     }
     private void initList(){
         items.clear();
-        Switch custom=(Switch)view.findViewById(R.id.swicth);
-        custom.setChecked((Boolean) Preference.get(getContext(),"custom","Boolean"));
-        custom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        title=view.findViewById(R.id.list_title);
+        change=view.findViewById(R.id.change);
+        final String sdcard= Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/powercfg/powercfg.sh";
+        File shell=new File(sdcard);
+        if (!shell.exists()){
+            change.setText("导入");
+            title.setText("动态脚本：未导入");
+        }
+        change.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(final CompoundButton compoundButton, boolean b) {
-                if (b){
-                    showDialog("使用自定义调度会禁用默认的LKT调度，你还需要再下面的输入框中输入对应的调度命令", "立即开启", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            Preference.save(getContext(),"custom",true);
-                        }
-                    }, "暂不开启", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            compoundButton.setChecked(false);
-                        }
-                    });
-                }
-                else {
-                    compoundButton.setChecked(false);
-                    Preference.save(getContext(),"custom",false);
+            public void onClick(View view) {
+                if (change.getText().equals("导入")){
+                    Intent importShell = new Intent(Intent.ACTION_GET_CONTENT);
+                    importShell.setType("*/*");
+                    importShell.addCategory(Intent.CATEGORY_OPENABLE);
+                    try {
+                        startActivityForResult(importShell,17);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                        Toast.makeText(getContext(),"找不到系统文件管理器", Toast.LENGTH_SHORT);
+                    }
+                }else {
+                    try {
+                        RootTools.getShell(true).add(new Command(4,"rm "+sdcard){
+                            @Override
+                            public void commandCompleted(int id, int exitcode) {
+                                super.commandCompleted(id, exitcode);
+                                if (exitcode==0){
+                                    change();
+                                }
+                            }
+                        });
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
                 }
             }
         });
@@ -92,48 +110,73 @@ public class CustomFragment extends MyFragment {
         RecyclerView recyclerView=view.findViewById(R.id.recyclerview);
         final LinearLayoutManager manager=new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(manager);
-        adapter=new CustomAdapter(getContext(),items,colors);
-        adapter.setOnItemClick(new CustomAdapter.OnItemClick() {
+        adapter=new PowercfgAdapter(getContext(),items,colors);
+        adapter.setOnItemClick(new PowercfgAdapter.OnItemClick() {
             @Override
             public void onClick(int i, String a) {
                 showTerminal(a);
             }
         });
-        adapter.setOnImportClick(new CustomAdapter.OnImportClick() {
-            @Override
-            public void onImport(int i, final EditText e, ImageButton self) {
-                PopupMenu popup = new PopupMenu(getContext(), self);//第二个参数是绑定的那个view
-                //获取菜单填充器
-                MenuInflater inflater = popup.getMenuInflater();
-                //填充菜单
-                inflater.inflate(R.menu.importmenu, popup.getMenu());
-                //绑定菜单项的点击事件
-                final String sdcard= Environment.getExternalStorageDirectory().getAbsolutePath();
-                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem menuItem) {
-                        switch (menuItem.getItemId()){
-                            case R.id.importPowercfg:
-                                e.setText("sh "+sdcard+"/lktMode/powercfg/powercfg.sh ");
-                                break;
-                            case R.id.importFile:
-                                break;
-                        }
-                        return true;
-                    }
-                });
-                popup.show();
-            }
-        });
 
         recyclerView.setAdapter(adapter);
-        updateList();
+        if (!shell.exists()){
+            //adapter.closeAll();
+        }else {
+            updateList();
+        }
+
     }
+    private void change(){
+        if (change.getText().equals("移除")){
+            change.setText("导入");
+            title.setText("动态脚本：未导入");
+            for (int i=1;i<=4;i++){
+                Preference.save(getContext(),"code"+i,"");
+            }
+            adapter.closeAll();
+        }else {
+            change.setText("移除");
+            title.setText("动态脚本：已导入");
+            for (int i=1;i<=4;i++){
+                Preference.save(getContext(),"code"+i,"");
+            }
+            Preference.save(getContext(),"custom",true);
+            adapter.openAll();
+        }
+
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 17 && resultCode == Activity.RESULT_OK) {
+            Uri uri = data.getData();
+            if (uri==null){
+                return;
+            }
+            String filePatch=MainActivity.getRealPach(uri,getContext());
+
+            Log.d("filePath",filePatch);
+            String sdcard=Environment.getExternalStorageDirectory().getAbsolutePath();
+            if (MainActivity.copyFile(MainActivity.getRealPach(uri,getContext()),sdcard+"/lktMode/powercfg/powercfg.sh")){
+                Toast.makeText(getContext(),"导入成功",Toast.LENGTH_SHORT).show();
+                change();
+            }else {
+                Toast.makeText(getContext(),"导入失败",Toast.LENGTH_LONG).show();
+            }
+
+        }
+    }
+
     public void updateList(){
-        items.get(0).setSubtitle((String) Preference.get(getContext(),"code1","String"));
-        items.get(1).setSubtitle((String) Preference.get(getContext(),"code2","String"));
-        items.get(2).setSubtitle((String) Preference.get(getContext(),"code3","String"));
-        items.get(3).setSubtitle((String) Preference.get(getContext(),"code4","String"));
+        String code1=(String) Preference.get(getContext(),"code1","String");
+        items.get(0).setSubtitle(code1.substring(code1.lastIndexOf(" ")+1));
+        String code2=(String) Preference.get(getContext(),"code2","String");
+        items.get(1).setSubtitle(code2.substring(code2.lastIndexOf(" ")+1));
+        String code3=(String) Preference.get(getContext(),"code3","String");
+        items.get(2).setSubtitle(code3.substring(code3.lastIndexOf(" ")+1));
+        String code4=(String) Preference.get(getContext(),"code4","String");
+        items.get(3).setSubtitle(code4.substring(code4.lastIndexOf(" ")+1));;
         adapter.notifyDataSetChanged();
     }
 
@@ -141,14 +184,11 @@ public class CustomFragment extends MyFragment {
     public void onResume() {
         super.onResume();
         updateList();
-        Switch custom=(Switch)view.findViewById(R.id.swicth);
-        custom.setChecked((Boolean) Preference.get(getContext(),"custom","Boolean"));
         final String sdcard= Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/powercfg/powercfg.sh";
         File shell=new File(sdcard);
         if (!shell.exists()){
-            //adapter.openAll();
-        }else {
-            //adapter.closeAll();
+            change.setText("导入");
+            title.setText("动态脚本：未导入");
         }
     }
 
@@ -166,7 +206,7 @@ public class CustomFragment extends MyFragment {
                 .create();
         alertDialog.show();
         try{
-            RootTools.getShell(true).add(new Command(2,str){
+            RootTools.getShell(true).add(new Command(2,"sh "+Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/powercfg/powercfg.sh "+str){
                 @Override
                 public void commandOutput(int id, String line) {
                     super.commandOutput(id, line);

@@ -13,14 +13,13 @@
         android:background="?attr/colorPrimaryDark"
         app:title="调度"
         app:navigationIcon="@mipmap/menu">
-        <TextView
-            android:layout_margin="10dp"
-            android:id="@+id/extra"
-            android:textSize="18dp"
+        <androidx.appcompat.widget.ActionMenuView
+            android:layout_gravity="end"
+            android:id="@+id/actionmenuview"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right|end"
-            />
+            android:layout_height="wrap_content">
+
+        </androidx.appcompat.widget.ActionMenuView>
     </androidx.appcompat.widget.Toolbar>
 
     <androidx.drawerlayout.widget.DrawerLayout

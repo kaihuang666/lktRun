@@ -5,12 +5,14 @@ import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,7 +33,7 @@ public class GameFragment extends MyFragment {
     private ListLabAdapter adapter;
     private List<Item> items=new ArrayList<>();
     private List<Item> gameItems=new ArrayList<>();
-    private String[] checks={"autoBoot","autoLock","gameMode"};
+    private String[] checks={"gameMode"};
     private ListGameAdapter gameAdapter;;
     private View view;
     @Nullable
@@ -83,6 +85,7 @@ public class GameFragment extends MyFragment {
                                 getContext().startService(intent);
                             }else {
                                 Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+                                //intent.setData(Uri.parse(getActivity().getPackageName()));
                                 startActivityForResult(intent,10);
                             }
 
@@ -109,6 +112,9 @@ public class GameFragment extends MyFragment {
         return mode == AppOpsManager.MODE_ALLOWED;
     }
     private void updateList(){
+        if (!hasPermission()){
+            Preference.save(getContext(),"gameMode",false);
+        }
         items.get(0).setChecked((Boolean)Preference.get(getContext(),"gameMode","Boolean"));
         adapter.notifyDataSetChanged();
     }
@@ -151,13 +157,7 @@ public class GameFragment extends MyFragment {
         }
         gameAdapter.notifyDataSetChanged();
     }
-    private void showDialog(String str, DialogInterface.OnClickListener listener){
-        new AlertDialog.Builder(getContext(),R.style.AppDialog)
-                .setNegativeButton("了解",listener)
-                .setTitle("功能说明")
-                .setMessage(str)
-                .create().show();
-    }
+
     private void showDialog(String str, String positive, DialogInterface.OnClickListener p, String negative, DialogInterface.OnClickListener n){
         new AlertDialog.Builder(getContext(),R.style.AppDialog)
                 .setNegativeButton(negative,n)
@@ -172,6 +172,26 @@ public class GameFragment extends MyFragment {
     public void onResume() {
         super.onResume();
         upcateGames();
+    }
+    public void closeGame(){
+        if (hasPermission()){
+            Intent intent=new Intent(getContext(), AutoService.class);
+            intent.setAction("gameOn");
+            getContext().startService(intent);
+        }else {
+            Toast.makeText(getContext(),"需要使用情况访问权限！",Toast.LENGTH_LONG).show();
+            items.get(0).setChecked(false);
+            adapter.notifyItemChanged(0);
+            Preference.save(getContext(),checks[0],false);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode==10){
+            closeGame();
+        }
     }
     /*
     @Override

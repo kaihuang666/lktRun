@@ -7,12 +7,13 @@ import androidx.appcompat.widget.Toolbar;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-public class SleepSettingActivity extends AppCompatActivity {
+public class SleepSettingActivity extends BaseActivity {
     private String[] items=new String[]{"省电模式", "均衡模式", "游戏模式","极限模式"};
     private EditText edit;
     private EditText delay;

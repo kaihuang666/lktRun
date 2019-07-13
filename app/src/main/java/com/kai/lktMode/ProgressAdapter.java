@@ -46,11 +46,10 @@ public class ProgressAdapter extends RecyclerView.Adapter<ProgressAdapter.ViewHo
     }
     public ProgressAdapter(Context context, List<String> items){
         maxfreq=getMax();
-        minfreq=getMin();
+        //minfreq=getMin();
         this.context=context;
         this.items=items;
     }
-
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -76,7 +75,7 @@ public class ProgressAdapter extends RecyclerView.Adapter<ProgressAdapter.ViewHo
         return items.size();
     }
     public static int getMaxCpuFreq(String cpu){
-        String result = "0";
+        String result = "1000";
         ProcessBuilder cmd;
         try {
             String[] args = {"/system/bin/cat", "/sys/devices/system/cpu/"+cpu+"/cpufreq/cpuinfo_max_freq"};
@@ -92,7 +91,7 @@ public class ProgressAdapter extends RecyclerView.Adapter<ProgressAdapter.ViewHo
             in.close();
         } catch (Exception e) {
             e.printStackTrace();
-            result = "10";
+            result = "1000";
         }
 
         return Integer.parseInt(result.trim())/1000;
@@ -119,11 +118,13 @@ public class ProgressAdapter extends RecyclerView.Adapter<ProgressAdapter.ViewHo
         Log.d("cpuMin",Integer.parseInt(result.trim())/1000+"");
         return Integer.parseInt(result.trim())/1000;
     }
+
     private int[] getMax(){
         int[] result=new int[MainFragment.getCpuAmount()];
         for (int i=0;i<result.length;i++){
             result[i]=getMaxCpuFreq("cpu"+i);
         }
+
         return result;
     }
     private int[] getMin(){

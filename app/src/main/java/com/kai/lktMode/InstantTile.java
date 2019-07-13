@@ -5,16 +5,20 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.Settings;
 import android.service.quicksettings.Tile;
 import android.service.quicksettings.TileService;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 
 import com.stericson.RootShell.exceptions.RootDeniedException;
 import com.stericson.RootShell.execution.Command;
@@ -23,16 +27,29 @@ import com.stericson.RootTools.RootTools;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @TargetApi(24)
-public class DialogTile extends TileService{
+public class InstantTile extends TileService{
     private int now=0;
     private String[] items=new String[]{"省电模式", "均衡模式", "游戏模式","极限模式"};
-    private String[] tileLabels=new String[]{"省电模式", "均衡模式", "游戏模式","极限模式","错误配置"};
+    private String[] tileLabels=new String[]{"省电模式", "均衡模式", "游戏模式","极限模式"};
     private int[] lalelIds={R.mipmap.battery_tile,R.mipmap.balance_tile,R.mipmap.performance_tile,R.mipmap.turbo_tile,R.mipmap.icon_tile};
+    Handler handler=new Handler(){
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+            if (msg.what==4){
+                int mode=msg.getData().getInt("mode");
+                switchMode(mode);
+                DialogTile.collapseStatusBar(getApplicationContext());
+                //Log.d("sss",now+"");
+            }
+        }
+    };
 
     @Override
     public void onStartListening() {
@@ -68,8 +85,27 @@ public class DialogTile extends TileService{
     @Override
     public void onClick() {
         super.onClick();
-        collapseStatusBar(getBaseContext());
-        showDialog(now);
+        handler.removeMessages(4);
+        int mode=0;
+        Tile tile=getQsTile();
+        int now=Arrays.asList(tileLabels).indexOf(tile.getLabel());
+        if (now<0){
+            now=0;
+        }
+        if (now==3){
+            mode=0;
+        }else {
+            mode=now+1;
+        }
+        showIcon(tileLabels[mode],lalelIds[mode]);
+        Message message=new Message();
+        Bundle bundle=new Bundle();
+        bundle.putInt("mode",mode);
+        message.what=4;
+        message.setData(bundle);
+        handler.sendMessageDelayed(message,2000);
+        //collapseStatusBar(getBaseContext());
+        //showDialog(now);
 
     }
     private void readMode(){
@@ -104,28 +140,6 @@ public class DialogTile extends TileService{
         }catch (IOException| TimeoutException| RootDeniedException e){
             e.printStackTrace();
             showIcon(tileLabels[4],lalelIds[4]);
-        }
-    }
-    public static void collapseStatusBar(Context context)
-    {
-        try
-        {
-            Object statusBarManager = context.getSystemService("statusbar");
-            Method collapse;
-
-            if (Build.VERSION.SDK_INT <= 16)
-            {
-                collapse = statusBarManager.getClass().getMethod("collapse");
-            }
-            else
-            {
-                collapse = statusBarManager.getClass().getMethod("collapsePanels");
-            }
-            collapse.invoke(statusBarManager);
-        }
-        catch (Exception localException)
-        {
-            localException.printStackTrace();
         }
     }
 

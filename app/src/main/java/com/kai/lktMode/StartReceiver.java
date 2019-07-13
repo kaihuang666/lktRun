@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.util.Log;
 import android.view.Display;
 
 import androidx.core.app.NotificationCompat;
@@ -17,6 +18,7 @@ public class StartReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
 
         if(Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())){
+            Log.d("kaiji","sss");
             if ((Boolean) Preference.get(context,"autoBoot","Boolean")) {
                 Intent serviceIntent;
                 if ((Boolean) Preference.get(context,"custom","Boolean")){

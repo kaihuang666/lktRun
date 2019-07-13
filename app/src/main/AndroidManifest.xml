@@ -17,6 +17,8 @@
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -24,21 +26,25 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".fragment.StartActivity"></activity>
         <activity android:name=".GameBoostActivity" />
         <activity android:name=".SleepSettingActivity" />
         <activity android:name=".fragment.AddActivity" />
 
         <service
+            android:persistent="true"
             android:name=".ProtectService"
             android:enabled="true"
             android:exported="true" />
         <service
+            android:persistent="true"
             android:name=".AutoService"
             android:enabled="true"
             android:exported="true" />
 
         <receiver android:name=".LktAppWidget">
-            <intent-filter>
+            <intent-filter
+                android:priority="1000">
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="com.kai.lktUpdate" />
             </intent-filter>
@@ -70,12 +76,24 @@
             android:icon="@drawable/icon_tile"
             android:label="@string/tile_name_1"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
-            <intent-filter>
+            <intent-filter
+                android:priority="1000">
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+        <service
+            android:name=".InstantTile"
+            android:icon="@drawable/icon_tile"
+            android:label="连续切换"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter
+                android:priority="1000">
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
 
         <receiver
+            android:persistent="true"
             android:name=".StartReceiver"
             android:enabled="true"
             android:exported="true">

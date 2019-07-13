@@ -1,8 +1,10 @@
 package com.kai.lktMode.fragment;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -77,9 +79,13 @@ public class SettingFragment extends MyFragment {
         adapter.setOnItemCheck(new ListAdapter.OnItemCheck() {
             @Override
             public void onCheck(int i, Boolean isChecked, CompoundButton compoundButton) {
+                if (i==0){
+                    Preference.save(getContext(),"autoBoot",isChecked);
+                }
                 if (isChecked){
+
                     if (i==4){
-                        setting(compoundButton);
+                        setting(compoundButton,getActivity());
                     }
                 }
             }
@@ -249,23 +255,35 @@ public class SettingFragment extends MyFragment {
                 .create();
         dialog.show();
     }
-    private void setting(CompoundButton compoundButton){
+    public static boolean  setting(CompoundButton compoundButton, Activity context){
+        boolean isGranted=false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (Settings.canDrawOverlays(getContext())) {
-                Toast.makeText(getContext(),"已授权",Toast.LENGTH_SHORT).show();
+            if (Settings.canDrawOverlays(context)) {
+                isGranted=true;
+                Toast.makeText(context,"已授权",Toast.LENGTH_SHORT).show();
             } else {
                 //若没有权限，提示获取.
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:" + getActivity().getPackageName()));
-                Toast.makeText(getContext(),"需要取得权限以使用悬浮窗",Toast.LENGTH_SHORT).show();
-                startActivity(intent);
+                        Uri.parse("package:" + context.getPackageName()));
+                Toast.makeText(context,"需要取得权限以使用悬浮窗",Toast.LENGTH_SHORT).show();
+                context.startActivityForResult(intent,13);
             }
 
         }else {
-            Toast.makeText(getContext(),"版本过低",Toast.LENGTH_SHORT).show();
+            //Toast.makeText(context,"版本过低",Toast.LENGTH_SHORT).show();
+            if (compoundButton!=null)
             compoundButton.setChecked(false);
+            if (StartActivity.getAppOps(context)){
+                isGranted=true;
+            }else {
+                Intent intent = new Intent();
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.setAction("android.settings.APPLICATION_DETAILS_SETTINGS");
+                intent.setData(Uri.fromParts("package", context.getPackageName(), null));
+                context.startActivityForResult(intent,13);
+            }
         }
-
+        return isGranted;
     }
 
     @Override

@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class GameBoostActivity extends AppCompatActivity {
+public class GameBoostActivity extends BaseActivity {
     private String[] items=new String[]{"省电模式", "均衡模式", "游戏模式","极限模式"};
     private EditText edit;
     private ListAddAdapter adapter;

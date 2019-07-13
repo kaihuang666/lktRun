@@ -74,13 +74,9 @@ public class AutoService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (Build.VERSION.SDK_INT < 18) {
-            startForeground(SERVICE_ID, new Notification());//API < 18 ，此方法能有效隐藏Notification上的图标
-        } else {
-            Intent innerIntent = new Intent(this, ProtectService.class);
-            startService(innerIntent);
-            startForeground(SERVICE_ID, new Notification());
-        }
+        Intent innerIntent = new Intent(this, ProtectService.class);
+        startService(innerIntent);
+        startForeground(SERVICE_ID, new Notification());
         String action=intent==null?null:intent.getAction();
         if (action==null){
             if ((Boolean)Preference.get(AutoService.this,"autoLock","Boolean"))
@@ -113,7 +109,9 @@ public class AutoService extends Service {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
+        Intent innerIntent = new Intent(this, AutoService.class);
+        startService(innerIntent);
+        //startForeground(SERVICE_ID, new Notification());
     }
     private void regisrerOrentationReceiver(){
         IntentFilter intentFilter = new IntentFilter();
@@ -249,6 +247,7 @@ public class AutoService extends Service {
                 runWithDelay(new Handler(Looper.getMainLooper()) {
                     @Override
                     public void handleMessage(Message msg) {
+                        protectService();
                         Log.d("解锁","success");
                         readMode((int) Preference.get(context, "default", "int")+1,context);
                         setMode(context,(int) Preference.get(context, "default", "int")+1);
@@ -261,6 +260,7 @@ public class AutoService extends Service {
                 runWithDelay(new Handler(Looper.getMainLooper()) {
                     @Override
                     public void handleMessage(Message msg) {
+                        protectService();
                         Log.d("上锁","success");
                         if (((String)Preference.get(context,"code5","String")).isEmpty()){
                             readMode(1,context);
@@ -307,6 +307,12 @@ public class AutoService extends Service {
         }
         else {
             Preference.save(c, "customMode", i);
+        }
+    }
+    private void protectService(){
+        if (!ServiceStatusUtils.isServiceRunning(getApplicationContext(), AutoService.class)){
+            Intent intent=new Intent(this,AutoService.class);
+            startService(intent);
         }
     }
     private void readMode(final int i,final Context c){

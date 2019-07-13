@@ -1,6 +1,7 @@
 package com.kai.lktMode.fragment;
 
 import android.content.Context;
+import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,12 +17,14 @@ import com.kai.lktMode.Item;
 import com.kai.lktMode.Preference;
 import com.kai.lktMode.R;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder> implements View.OnTouchListener {
     List<EditText> editTexts=new ArrayList<>();
     private OnItemClick onItemClick=null;
+    private OnImportClick onImportClick=null;
     private List<Item> items;
     private int[] colors=new int[4];
     private Context context;
@@ -29,11 +32,13 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
         TextView title;
         EditText edit;
         ImageButton run;
+        ImageButton importSh;
         public ViewHolder(View v){
             super(v);
             title=v.findViewById(R.id.title);
             edit=v.findViewById(R.id.edit);
             run=v.findViewById(R.id.run);
+            importSh=v.findViewById(R.id.importSh);
         }
     }
     public CustomAdapter(Context context,List<Item> items,int[] colors){
@@ -52,8 +57,18 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
     public void setOnItemClick(OnItemClick click){
         onItemClick=click;
     }
+
+    public void setOnImportClick(OnImportClick onImportClick) {
+        this.onImportClick = onImportClick;
+    }
+
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
+        String sdcard= Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/powercfg/powercfg.sh";
+        File file=new File(sdcard);
+        if (file.exists()){
+            holder.edit.setEnabled(false);
+        }
         editTexts.add(position,holder.edit);
         Item item=items.get(position);
         holder.title.setText(item.getTitle());
@@ -66,6 +81,25 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
                 onItemClick.onClick(position,holder.edit.getText().toString());
             }
         });
+        holder.importSh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (onImportClick!=null)
+                    onImportClick.onImport(position,holder.edit,holder.importSh);
+            }
+        });
+    }
+    public void closeAll(){
+        for (int i=0;i<4;i++){
+            editTexts.get(i).setClickable(false);
+            editTexts.get(i).setEnabled(false);
+        }
+    }
+    public void openAll(){
+        for (int i=0;i<4;i++){
+            editTexts.get(i).setClickable(true);
+            editTexts.get(i).setEnabled(true);
+        }
     }
     public void saveAll(){
         for (int i=0;i<4;i++){
@@ -78,6 +112,9 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
     }
     interface OnItemClick{
         public void onClick(int i,String a);
+    }
+    interface OnImportClick{
+        public void onImport(int i,EditText e,ImageButton self);
     }
 
     @Override

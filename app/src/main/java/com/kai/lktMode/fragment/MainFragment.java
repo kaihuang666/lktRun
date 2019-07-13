@@ -77,17 +77,20 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            int[] freq=msg.getData().getIntArray("freq");
-            int mean=msg.getData().getInt("mean");
-            circleProgress.setProgress(mean);
-            adapter.setFreq(freq);
-            adapter.notifyDataSetChanged();
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    MainFragment.this.sendMessage();
-                }
-            }).start();
+            if (msg.what==3){
+                int[] freq=msg.getData().getIntArray("freq");
+                int mean=msg.getData().getInt("mean");
+                circleProgress.setProgress(mean);
+                adapter.setFreq(freq);
+                adapter.notifyDataSetChanged();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        MainFragment.this.sendMessage();
+                    }
+                }).start();
+
+            }
 
             super.handleMessage(msg);
         }
@@ -573,8 +576,6 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
     private void getRoot(){
         try {
             if (RootTools.isRootAvailable()){
-                //dialog.setMessage("获取配置中");
-                //dialog.show();
                 shell=RootTools.getShell(true);
                 requetPermission();
                 initCpuInfo();
@@ -699,7 +700,6 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
         super.onResume();
         try {
             shell=RootTools.getShell(true);
-            //adapter.notifyDataSetChanged();
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -744,14 +744,19 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
         recyclerView.setLayoutManager(manager);
         recyclerView.setAdapter(adapter);
         cpus.clear();
-        cpuAmount=getCpuAmount();
+        cpuAmount=(int)Preference.get(getContext(),"cpuAmount",0);
+        if (cpuAmount==0){
+            cpuAmount=getCpuAmount();
+        }
         for (int i=0;i<cpuAmount;i++){
             cpus.add(i,"cpu"+i);
         }
         adapter.notifyDataSetChanged();
+
         sendMessage();
 
     }
+
     private void sendMessage(){
         new Thread(new Runnable() {
             @Override
