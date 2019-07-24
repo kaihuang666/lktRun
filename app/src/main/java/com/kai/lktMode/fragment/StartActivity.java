@@ -40,7 +40,9 @@ public class StartActivity extends BaseActivity {
         @Override
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
+            Log.d("pass",msg.what+"");
             switch (msg.what){
+
                 case 0:
                     content.setText("正在获取root权限");
                     try {
@@ -92,6 +94,7 @@ public class StartActivity extends BaseActivity {
                     content.setText("正在获取浮窗权限");
                     if (SettingFragment.setting(null,StartActivity.this)){
                         setting[4]=true;
+                        Preference.save(StartActivity.this,"isFirstRun",true);
                         finish();
                     }
                     break;
@@ -102,6 +105,7 @@ public class StartActivity extends BaseActivity {
                     StartActivity.this.startActivity(intent);
                     break;
                 case 7:
+                    Preference.save(StartActivity.this,"isFirstRun",true);
                     finish();
                     break;
             }
@@ -112,11 +116,14 @@ public class StartActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
         content=(TextView)findViewById(R.id.content);
-        if ((Boolean) Preference.get(this,"firstRun",true)){
+        if (!(Boolean)Preference.get(this,"isFirstRun","Boolean")){
             handler.sendEmptyMessage(0);
         }else {
-            handler.sendEmptyMessageDelayed(7,500);
+            handler.sendEmptyMessage(7);
         }
+
+
+
 
     }
 
@@ -155,7 +162,7 @@ public class StartActivity extends BaseActivity {
     }
     private void requestPermission(){
         if (ContextCompat.checkSelfPermission(StartActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(StartActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 11);
+            ActivityCompat.requestPermissions(StartActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 17);
         }else {
             setting[3]=true;
             handler.sendEmptyMessageDelayed(4,500);
@@ -223,26 +230,37 @@ public class StartActivity extends BaseActivity {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode){
             case 12:
-                if (requestCode==RESULT_OK){
+                if (resultCode==RESULT_OK){
                     setting[2]=true;
                     handler.sendEmptyMessageDelayed(3,500);
+                }else {
+                    MainActivity.ignoreBatteryOptimization(StartActivity.this);
                 }
                 break;
-            case 11:
-                if (requestCode==RESULT_OK){
+
+            case 13:
+                if (resultCode==RESULT_OK){
+                    Preference.save(StartActivity.this,"isFirstRun",true);
+                    finish();
+                }else {
+                    SettingFragment.setting(null,StartActivity.this);
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode){
+            case 17:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED ){
                     setting[3]=true;
                     handler.sendEmptyMessageDelayed(4,500);
                 }
-                break;
-            case 13:
-                if (requestCode==RESULT_OK){
-                    finish();
-                }else {
-                    if (Build.VERSION.SDK_INT<Build.VERSION_CODES.M){
-                        if (getAppOps(StartActivity.this)){
-                            finish();
-                        }
-                    }
+                else {
+                    Toast.makeText(StartActivity.this,"必须授予读写权限",Toast.LENGTH_SHORT).show();
+                    requestPermission();
                 }
                 break;
         }

@@ -1,13 +1,27 @@
 package com.kai.lktMode.fragment;
 
+import android.os.Bundle;
+import android.view.View;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class MyFragment extends Fragment {
-    public void setToolbar(OnToolbarChange toolbar){
+    private LocalBroadcastManager localBroadcastManager;
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        localBroadcastManager= LocalBroadcastManager.getInstance(getContext());
+    }
+
+    public MainActivity getMain(){
+        MainActivity mainActivity=(MainActivity) getActivity();
+        return mainActivity;
+    }
+    public void Refresh(){
 
     }
-    public interface OnToolbarChange{
-        void onchange(String title,String subtitle);
 
-    }
 }

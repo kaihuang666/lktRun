@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.kai.lktMode.AppUtils;
 import com.kai.lktMode.AutoService;
 import com.kai.lktMode.Item;
 import com.kai.lktMode.Preference;
@@ -90,6 +91,7 @@ public class LockFragment extends MyFragment {
         adapter.notifyDataSetChanged();
     }
     private void initList(){
+        items.clear();
         Item item1=new Item("锁屏沉睡",false);
         Item item2=new Item("锁屏自动清理",false);
         Item item3=new Item("IM耗电优化",true);
@@ -97,6 +99,14 @@ public class LockFragment extends MyFragment {
         items.add(item2);
         items.add(item3);
     }
+
+    @Override
+    public void Refresh() {
+        super.Refresh();
+        updateList();
+        initSoftwares();
+    }
+
     private void initSoftwares(){
         gameItems=new ArrayList<>();
         RecyclerView recyclerView=view.findViewById(R.id.gameList);
@@ -128,6 +138,10 @@ public class LockFragment extends MyFragment {
     private void upcateSoftware(){
         gameItems.clear();
         for (String s:Preference.getSoftwares(getContext())){
+            if (AppUtils.getAppName(getContext(),s)==null){
+                Preference.softwareRemove(getContext(),s);
+                continue;
+            }
             gameItems.add(new Item(s,false));
         }
         gameAdapter.notifyDataSetChanged();

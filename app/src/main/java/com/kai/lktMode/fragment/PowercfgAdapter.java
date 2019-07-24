@@ -21,7 +21,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder> implements View.OnTouchListener {
+public class PowercfgAdapter extends RecyclerView.Adapter<PowercfgAdapter.ViewHolder> implements View.OnTouchListener {
     List<EditText> editTexts=new ArrayList<>();
     private OnItemClick onItemClick=null;
     private OnImportClick onImportClick=null;
@@ -32,16 +32,17 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
         TextView title;
         EditText edit;
         ImageButton run;
-        ImageButton importSh;
+        ImageButton extra;
         public ViewHolder(View v){
             super(v);
             title=v.findViewById(R.id.title);
             edit=v.findViewById(R.id.edit);
             run=v.findViewById(R.id.run);
-            importSh=v.findViewById(R.id.importSh);
+            extra=v.findViewById(R.id.extra);
         }
     }
-    public CustomAdapter(Context context,List<Item> items,int[] colors){
+    public PowercfgAdapter(Context context, List<Item> items, int[] colors){
+
         this.context=context;
         this.items=items;
         this.colors=colors;
@@ -50,7 +51,7 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.list_custom,parent,false);
+        View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.list_powercfg,parent,false);
         ViewHolder holder=new ViewHolder(view);
         return holder;
     }
@@ -64,14 +65,14 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
+        editTexts.add(position,holder.edit);
         String sdcard= Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/powercfg/powercfg.sh";
         File file=new File(sdcard);
-        if (file.exists()){
+        if (!file.exists()){
             holder.edit.setEnabled(false);
         }else {
             holder.edit.setEnabled(true);
         }
-        editTexts.add(position,holder.edit);
         Item item=items.get(position);
         holder.title.setText(item.getTitle());
         holder.edit.setText(item.getSubtitle());
@@ -83,18 +84,30 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
                 onItemClick.onClick(position,holder.edit.getText().toString());
             }
         });
-        holder.importSh.setOnClickListener(new View.OnClickListener() {
+        holder.extra.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (onImportClick!=null)
-                    onImportClick.onImport(position,holder.edit,holder.importSh);
+                onImportClick.onImport(position,holder.edit,holder.extra);
             }
         });
     }
 
     public void saveAll(){
+        String sdcard= Environment.getExternalStorageDirectory().getAbsolutePath();
         for (int i=0;i<4;i++){
-            Preference.save(context,"code"+(i+1),editTexts.get(i).getText().toString());
+            Preference.save(context,"code"+(i+1),"sh "+sdcard+"/lktMode/powercfg/powercfg.sh "+editTexts.get(i).getText().toString());
+        }
+    }
+    public void closeAll(){
+        for (int i=0;i<4;i++){
+            editTexts.get(i).setClickable(false);
+            editTexts.get(i).setEnabled(false);
+        }
+    }
+    public void openAll(){
+        for (int i=0;i<4;i++){
+            editTexts.get(i).setClickable(true);
+            editTexts.get(i).setEnabled(true);
         }
     }
     @Override
@@ -102,10 +115,10 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
         return items.size();
     }
     interface OnItemClick{
-        public void onClick(int i,String a);
+        public void onClick(int i, String a);
     }
     interface OnImportClick{
-        public void onImport(int i,EditText e,ImageButton self);
+        public void onImport(int i, EditText e, ImageButton self);
     }
 
     @Override

@@ -67,22 +67,18 @@ public class CustomFragment extends MyFragment {
             @Override
             public void onCheckedChanged(final CompoundButton compoundButton, boolean b) {
                 if (b){
-                    showDialog("使用自定义调度会禁用默认的LKT调度，你还需要再下面的输入框中输入对应的调度命令", "立即开启", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            Preference.save(getContext(),"custom",true);
-                        }
-                    }, "暂不开启", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            compoundButton.setChecked(false);
-                        }
-                    });
+                    Preference.save(getContext(),"custom",b);
+                }else {
+                    String sdcard=Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/powercfg/powercfg.sh";
+                    File shell=new File(sdcard);
+                    if (shell.exists()){
+                        Toast.makeText(getContext(),"老铁，正在用动态脚本，不能关啊",Toast.LENGTH_LONG).show();
+                        compoundButton.setChecked(true);
+                    }else {
+                        Preference.save(getContext(),"custom",b);
+                    }
                 }
-                else {
-                    compoundButton.setChecked(false);
-                    Preference.save(getContext(),"custom",false);
-                }
+                getMain().refreshProp();
             }
         });
         items.add(new Item("省电",""));
@@ -138,18 +134,16 @@ public class CustomFragment extends MyFragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void Refresh() {
+        super.Refresh();
+        refresh();
+    }
+
+    public void refresh(){
         updateList();
         Switch custom=(Switch)view.findViewById(R.id.swicth);
         custom.setChecked((Boolean) Preference.get(getContext(),"custom","Boolean"));
-        final String sdcard= Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/powercfg/powercfg.sh";
-        File shell=new File(sdcard);
-        if (!shell.exists()){
-            //adapter.openAll();
-        }else {
-            //adapter.closeAll();
-        }
+        updateList();
     }
 
     private void showTerminal(String str){
@@ -170,6 +164,11 @@ public class CustomFragment extends MyFragment {
                 @Override
                 public void commandOutput(int id, String line) {
                     super.commandOutput(id, line);
+                    if (line.contains("No such file or directory")){
+                        line="内核不支持该命令";
+                    }if (line.contains("Permission denied")){
+                        line="命令无法执行，内核正在被其他调度占用";
+                    }
                     output+=line+"\n";
                     Log.d("output",line);
                     alertDialog.setMessage(output);
@@ -206,9 +205,4 @@ public class CustomFragment extends MyFragment {
                 .create().show();
     }
 
-    @Override
-    public void setToolbar(OnToolbarChange toolbar) {
-        super.setToolbar(toolbar);
-        toolbar.onchange("自定义调度","设置四个挡位");
-    }
 }

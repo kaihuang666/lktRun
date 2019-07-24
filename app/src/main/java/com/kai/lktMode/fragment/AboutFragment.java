@@ -1,6 +1,8 @@
 package com.kai.lktMode.fragment;
 
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -15,15 +17,22 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.kai.lktMode.AlipayUtil;
 import com.kai.lktMode.BuildConfig;
 import com.kai.lktMode.R;
+import com.kai.lktMode.tool.UpdateUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -54,18 +63,43 @@ public class AboutFragment extends MyFragment {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 switch (i){
                     case 0:
-                        Uri uri = Uri.parse("market://details?id="+getContext().getPackageName());
-                        Intent intent = new Intent(Intent.ACTION_VIEW,uri);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                final UpdateUtil updateUtil=new UpdateUtil();
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (updateUtil.isToUpdate()){
+                                            new AlertDialog.Builder(getContext(),R.style.AppDialog)
+                                                    .setTitle("版本更新:"+updateUtil.getVersionName())
+                                                    .setMessage(updateUtil.getVersionLog())
+                                                    .setPositiveButton("更新", new DialogInterface.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                                            Uri uri = Uri.parse("market://details?id="+getContext().getPackageName());
+                                                            Intent intent = new Intent(Intent.ACTION_VIEW,uri);
+                                                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                            startActivity(intent);
+                                                        }
+                                                    })
+                                                    .setNegativeButton("忽略",null)
+                                                    .create().show();
+                                        }else {
+                                            Toast.makeText(getContext(),"已经是最新版本",Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                });
+
+                            }
+                        }).start();
+
                         break;
                     case 1:
-                        Intent intent1 = new Intent();
-                        String key="-jOcqHVCKRQFS2uIWVMUsO3AMes9Hcc0";
-                        intent1.setData(Uri.parse("mqqopensdkapi://bizAgent/qm/qr?url=http%3A%2F%2Fqm.qq.com%2Fcgi-bin%2Fqm%2Fqr%3Ffrom%3Dapp%26p%3Dandroid%26k%3D" + key));
-                        startActivity(intent1);
+                        startQQGroup(getActivity());
                         break;
                     case 2:
+
                         Intent intent2 = new Intent();
                         intent2.setAction("android.intent.action.VIEW");
                         Uri content_url1 = Uri.parse("https://github.com/kaihuang666/lktMode");//此处填链接
@@ -73,32 +107,34 @@ public class AboutFragment extends MyFragment {
                         startActivity(intent2);
                         break;
                     case 3:
-                        donation(getContext());
+                        donation(getActivity(),new WebView(getContext()));
                         break;
                 }
             }
         });
         listView.setAdapter(adapter);
     }
+    public static void startQQGroup(Context context){
+        Intent intent1 = new Intent();
+        String key="-jOcqHVCKRQFS2uIWVMUsO3AMes9Hcc0";
+        intent1.setData(Uri.parse("mqqopensdkapi://bizAgent/qm/qr?url=http%3A%2F%2Fqm.qq.com%2Fcgi-bin%2Fqm%2Fqr%3Ffrom%3Dapp%26p%3Dandroid%26k%3D" + key));
+        context.startActivity(intent1);
+    }
     private void init(){
         data.clear();
-        data.add(0,"版本：v"+ BuildConfig.VERSION_NAME);
+        data.add(0,"版本更新：v"+ BuildConfig.VERSION_NAME);
         data.add(1,"加入QQ群反馈信息");
         data.add(2,"查看使用说明及源代码");
         data.add(3,"捐赠支持作者");
     }
-    public static void donation(final Context context){
+    public static void donation(final Activity context, final WebView webView){
         AlertDialog dialog=new AlertDialog.Builder(context,R.style.AppDialog)
-                .setItems(new String[]{"支付宝", "微信"}, new DialogInterface.OnClickListener() {
+                .setItems(new String[]{"支付宝(直接跳转)", "微信"}, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         switch (i){
                             case 0:
-                                Intent intent2 = new Intent();
-                                intent2.setAction("android.intent.action.VIEW");
-                                Uri content_url1 = Uri.parse("https://qr.alipay.com/fkx02459dc3qpqdxupmmz9b");//此处填链接
-                                intent2.setData(content_url1);
-                                context.startActivity(intent2);
+                                AlipayUtil.startAlipayClient(context,"fkx02459dc3qpqdxupmmz9b");
                                 break;
                             case 1:new AlertDialog.Builder(context,R.style.AppDialog)
                                     .setView(R.layout.wxdialog)
@@ -168,9 +204,5 @@ public class AboutFragment extends MyFragment {
         }
     }
 
-    @Override
-    public void setToolbar(OnToolbarChange toolbar) {
-        super.setToolbar(toolbar);
-        toolbar.onchange("关于","");
-    }
+
 }

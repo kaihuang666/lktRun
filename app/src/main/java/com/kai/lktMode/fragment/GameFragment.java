@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.kai.lktMode.AppUtils;
 import com.kai.lktMode.AutoService;
 import com.kai.lktMode.GameBoostActivity;
 import com.kai.lktMode.Item;
@@ -119,6 +120,7 @@ public class GameFragment extends MyFragment {
         adapter.notifyDataSetChanged();
     }
     private void initList(){
+        items.clear();
         Item item2=new Item("游戏加速",false);
         items.add(item2);
     }
@@ -153,9 +155,20 @@ public class GameFragment extends MyFragment {
     private void upcateGames(){
         gameItems.clear();
         for (String s:Preference.getGames(getContext())){
+            if (AppUtils.getAppName(getContext(),s)==null){
+                Preference.softwareRemove(getContext(),s);
+                continue;
+            }
             gameItems.add(new Item(s,false));
         }
         gameAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void Refresh() {
+        super.Refresh();
+        updateList();
+        initGame();
     }
 
     private void showDialog(String str, String positive, DialogInterface.OnClickListener p, String negative, DialogInterface.OnClickListener n){

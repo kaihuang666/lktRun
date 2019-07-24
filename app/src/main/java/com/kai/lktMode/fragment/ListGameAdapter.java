@@ -66,6 +66,7 @@ public class ListGameAdapter extends RecyclerView.Adapter<ListGameAdapter.ViewHo
         ViewHolder holder=new ViewHolder(view);
         return holder;
     }
+
     public void setOnItemClick(OnItemClick click){
         onItemClick=click;
     }
@@ -96,6 +97,7 @@ public class ListGameAdapter extends RecyclerView.Adapter<ListGameAdapter.ViewHo
             });
         }else {
             final Item item=items.get(position);
+
             holder.name.setText(AppUtils.getAppName(context, item.getTitle()));
             holder.icon.setImageDrawable(AppUtils.getDrawable(context,item.getTitle()));
             if (item.getTitle().equals("com.tencent.mobileqq")||item.getTitle().equals("com.tencent.mm")){
