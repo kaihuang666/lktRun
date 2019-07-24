@@ -25,26 +25,41 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity android:name=".fragment.StartActivity"></activity>
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true"
+        tools:replace="android:icon">
+        <service
+            android:process=".Forground"
+            android:name=".CpuService"
+            android:enabled="true"
+            android:exported="true">
+
+        </service>
+
+        <activity android:name=".fragment.StartActivity" />
         <activity android:name=".GameBoostActivity" />
         <activity android:name=".SleepSettingActivity" />
         <activity android:name=".fragment.AddActivity" />
 
         <service
-            android:persistent="true"
             android:name=".ProtectService"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="true"
+            android:persistent="true" />
         <service
-            android:persistent="true"
             android:name=".AutoService"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="true"
+            android:persistent="true" >
+            <intent-filter android:priority="1000" >
+                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
+                <action android:name="android.intent.action.ACTION_SCREEN_OFF"/>
+                <action android:name="android.intent.action.ACTION_SCREEN_ON"/>
+            </intent-filter>
+        </service>
 
         <receiver android:name=".LktAppWidget">
-            <intent-filter
-                android:priority="1000">
+            <intent-filter android:priority="1000">
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="com.kai.lktUpdate" />
             </intent-filter>
@@ -63,6 +78,7 @@
 
         <activity
             android:name=".fragment.MainActivity"
+            android:process=".Forground"
             android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -76,8 +92,7 @@
             android:icon="@drawable/icon_tile"
             android:label="@string/tile_name_1"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
-            <intent-filter
-                android:priority="1000">
+            <intent-filter android:priority="1000">
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
@@ -86,17 +101,16 @@
             android:icon="@drawable/icon_tile"
             android:label="连续切换"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
-            <intent-filter
-                android:priority="1000">
+            <intent-filter android:priority="1000">
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
 
         <receiver
-            android:persistent="true"
             android:name=".StartReceiver"
             android:enabled="true"
-            android:exported="true">
+            android:exported="true"
+            android:persistent="true">
             <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>

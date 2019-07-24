@@ -11,7 +11,7 @@ import java.util.TreeSet;
 
 public class Preference {
     public static void save(Context context,String key, Object value){
-        SharedPreferences.Editor editor=context.getSharedPreferences("db",Context.MODE_PRIVATE).edit();
+        SharedPreferences.Editor editor=context.getSharedPreferences("db",Context.MODE_MULTI_PROCESS).edit();
         if (value instanceof Boolean){
             editor.putBoolean(key, ((Boolean) value).booleanValue());
         }else if(value instanceof String){
@@ -26,7 +26,7 @@ public class Preference {
         editor.apply();
     }
     public static Object get(Context context,String key,String type){
-        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_PRIVATE);
+        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_MULTI_PROCESS);
         switch (type){
             case "int":return preferences.getInt(key,0);
             case "Boolean":return preferences.getBoolean(key,false);
@@ -37,7 +37,7 @@ public class Preference {
 
     }
     public static Object get(Context context,String key,Object defaultValue){
-        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_PRIVATE);
+        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_MULTI_PROCESS);
         if (defaultValue instanceof Boolean){
             return preferences.getBoolean(key,(Boolean) defaultValue);
         }else if(defaultValue instanceof String){
@@ -51,7 +51,7 @@ public class Preference {
 
     }
     public static void clearAll(Context context){
-        SharedPreferences.Editor editor=context.getSharedPreferences("db",Context.MODE_PRIVATE).edit();
+        SharedPreferences.Editor editor=context.getSharedPreferences("db",Context.MODE_MULTI_PROCESS).edit();
         editor.putBoolean("version",false);
         editor.putBoolean("busybox",false);
         editor.apply();

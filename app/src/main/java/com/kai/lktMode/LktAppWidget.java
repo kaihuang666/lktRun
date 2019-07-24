@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 /**
@@ -36,17 +37,14 @@ public class LktAppWidget extends AppWidgetProvider {
     }
     @TargetApi(26)
     private PendingIntent getPendingIntent(Context context,int mode){
-        Intent intent = new Intent(context,CommandService.class);
+        Intent intent;
+        if ((Boolean) Preference.get(context,"custom","Boolean")){
+            intent=new Intent(context,CustomCommandService.class);
+        }else {
+            intent = new Intent(context,CommandService.class);
+        }
         intent.putExtra("mode",mode);
-
         PendingIntent pendingIntent = PendingIntent.getService(context, mode,intent,PendingIntent.FLAG_ONE_SHOT);
-        return pendingIntent;
-    }
-    private PendingIntent getPendingIntent(int i,Context context){
-        Intent intent = new Intent();
-        intent.setAction(ACTION);
-        intent.putExtra("mode",i);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context,i,intent,PendingIntent.FLAG_ONE_SHOT);
         return pendingIntent;
     }
 

@@ -31,6 +31,10 @@
         android:title="关于与反馈"
         android:icon="@mipmap/about"
         app:showAsAction="ifRoom"/>
+    <item android:id="@+id/cloud"
+        android:title="云同步"
+        android:icon="@mipmap/cloud"
+        app:showAsAction="ifRoom"/>
     <!--添加-->
 
     <!--设置-->

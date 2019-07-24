@@ -20,7 +20,10 @@ public class AppUtils {
             ApplicationInfo appInfo =context.getPackageManager().getApplicationInfo(packageName, PackageManager.GET_META_DATA);
             String appName = appInfo.loadLabel(context.getPackageManager()) + "";
             return appName;
-        } catch (Exception e) {
+        }catch (PackageManager.NameNotFoundException e){
+            return null;
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
         return null;

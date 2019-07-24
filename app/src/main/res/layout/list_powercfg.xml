@@ -2,8 +2,9 @@
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/layout"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:background="@drawable/card_background"
+        android:layout_height="60dp"
+    android:layout_margin="5dp"
+        android:background="@drawable/bc"
         android:backgroundTintMode="src_in">
         <TextView
             android:id="@+id/title"
@@ -15,15 +16,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
             <EditText
-                android:hint="请输入你导入脚本对应的参数，如:balance"
+                android:hint="请输入参数，如:balance"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
                 android:background="@drawable/bg_edittext_selector"
                 android:textSize="12dp"
-                android:gravity="top|left"
+                android:gravity="center_vertical|left"
                 android:layout_gravity="center"
                 android:scrollbars="vertical"
-                android:maxLines="1"
                 android:id="@+id/edit"
                 android:layout_marginLeft="10dp"
                 android:minWidth="100dp"
@@ -31,27 +31,40 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="match_parent" />
+
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="39dp"
         android:layout_height="match_parent"
-        android:layout_weight="0.15"
-        android:layout_marginLeft="8dp"
         android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_weight="0.2"
         android:orientation="vertical">
+
         <LinearLayout
-            android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1">
-            <ImageButton
-                android:layout_toRightOf="@+id/edit"
-                android:id="@+id/run"
-                android:layout_centerVertical="true"
+            android:layout_weight="1"
+            android:gravity="center">
 
-                android:background="#00FFFFFF"
-                android:src="@mipmap/run"
+            <ImageButton
+                android:id="@+id/run"
                 android:layout_width="20dp"
-                android:layout_height="20dp" />
+                android:layout_height="20dp"
+                android:layout_marginEnd="6dp"
+                android:layout_marginRight="6dp"
+                android:layout_centerVertical="true"
+                android:background="#00FFFFFF"
+                android:src="@mipmap/run" />
+
+            <ImageButton
+                android:id="@+id/extra"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_marginStart="6dp"
+                android:layout_marginLeft="6dp"
+                android:adjustViewBounds="true"
+                android:background="#00FFFFFF"
+                android:src="@mipmap/importsh" />
 
         </LinearLayout>
     </LinearLayout>

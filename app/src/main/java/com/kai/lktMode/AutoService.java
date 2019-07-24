@@ -87,14 +87,15 @@ public class AutoService extends Service {
             }
 
 
+        flags = START_STICKY;
         return super.onStartCommand(intent, flags, startId);
     }
 
 
     @Override
     public void onDestroy() {
-        /*Intent innerIntent = new Intent(this, ProtectService.class);
-        startService(innerIntent);*/
+        Intent innerIntent = new Intent(this, ProtectService.class);
+        startService(innerIntent);
         //startForeground(SERVICE_ID, new Notification());
     }
     private void regisrerOrentationReceiver(){
@@ -142,6 +143,7 @@ public class AutoService extends Service {
             Configuration mConfiguration = context.getResources().getConfiguration(); //获取设置的配置信息
             int ori = mConfiguration.orientation; //获取屏幕方向
             if (ori == 2) {
+                protectService();
                 //为了获取最顶层此处休眠1.5秒
                 try{
                     Thread.sleep(1500);
@@ -166,6 +168,7 @@ public class AutoService extends Service {
                 }
             }
             if (ori == 1) {
+                protectService();
                 try{
                     Thread.sleep(1500);
                 }catch (InterruptedException e){
@@ -231,20 +234,19 @@ public class AutoService extends Service {
                 runWithDelay(new Handler(Looper.getMainLooper()) {
                     @Override
                     public void handleMessage(Message msg) {
-                        protectService();
                         Log.d("解锁","success");
                         readMode((int) Preference.get(context, "default", "int")+1,context);
                         setMode(context,(int) Preference.get(context, "default", "int")+1);
                         super.handleMessage(msg);
                     }
-                },5000);
+                },2000);
 
             }
-            else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)){
+            if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)){
                 runWithDelay(new Handler(Looper.getMainLooper()) {
                     @Override
                     public void handleMessage(Message msg) {
-                        protectService();
+
                         Log.d("上锁","success");
                         if (((String)Preference.get(context,"code5","String")).isEmpty()){
                             readMode(1,context);
@@ -253,6 +255,7 @@ public class AutoService extends Service {
                             readMode(5,context);
                         }
                         for (String s:Preference.getSoftwares(context)){
+                            Log.d("sss",s);
                             MainFragment.cmd("su -c "+"am force-stop "+s);
                             if (s.contains("com.tencent.mobileqq")){
                                 Log.d("QQ","服务保活");

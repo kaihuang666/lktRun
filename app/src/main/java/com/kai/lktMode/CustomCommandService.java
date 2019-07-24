@@ -39,6 +39,7 @@ public class CustomCommandService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         final boolean isShow=intent.getBooleanExtra("isShow",true);
         int mode=intent.getIntExtra("mode",1);
+        Preference.save(getApplicationContext(),"customMode",mode);
         Log.d("switchTo:",mode+"");
         if (isShow)
         showToastByMsg(CustomCommandService.this,modes[mode-1]+"切换中",1000);

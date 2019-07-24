@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/code6"
+        android:title="卡顿" />
+    <item android:id="@+id/code5"
+        android:title="省电" />
+    <item android:id="@+id/code4"
+        android:title="沉稳"/>
+    <item android:id="@+id/code3"
+        android:title="均衡"/>
+    <item android:id="@+id/code2"
+        android:title="活跃"/>
+    <item android:id="@+id/code1"
+        android:title="游戏"/>
+    <item android:id="@+id/code0"
+        android:title="极限"/>
+</menu>

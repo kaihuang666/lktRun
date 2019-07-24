@@ -1,1 +1,3 @@
-include ':app', ':Progress'
+include ':app', ':Progress', ':lib', ':sardine-sardine-5.9'
+include ':sardine'
+include ':sardine'

@@ -2,6 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:orientation="vertical"
+    android:layout_margin="2dp"
+    android:background="@drawable/bc"
     android:layout_height="70dp">
     <RelativeLayout
         android:layout_width="match_parent"
@@ -30,9 +32,4 @@
             android:layout_gravity="bottom" />
     </RelativeLayout>
 
-    <View
-        android:gravity="bottom"
-        android:layout_width="match_parent"
-        android:background="#666666"
-        android:layout_height="0.5dp"/>
 </LinearLayout>
