@@ -9,6 +9,7 @@
         android:name="android.permission.WRITE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -20,6 +21,7 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <application
+        android:name=".base.MyApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -28,37 +30,38 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:replace="android:icon">
-        <service
-            android:process=".Forground"
-            android:name=".CpuService"
+        <receiver
+            android:name=".receiver.AutoReceiver"
             android:enabled="true"
             android:exported="true">
-
-        </service>
-
-        <activity android:name=".fragment.StartActivity" />
-        <activity android:name=".GameBoostActivity" />
-        <activity android:name=".SleepSettingActivity" />
-        <activity android:name=".fragment.AddActivity" />
+            <intent-filter>
+                <action android:name="com.kai.lktMode.restart"/>
+            </intent-filter>
+        </receiver>
 
         <service
-            android:name=".ProtectService"
+            android:name=".service.CpuService"
             android:enabled="true"
-            android:exported="true"
-            android:persistent="true" />
+            android:exported="true" />
+
+        <activity android:name=".activity.StartActivity" />
+        <activity android:name=".activity.GameBoostActivity" />
+        <activity android:name=".activity.SleepSettingActivity" />
+        <activity android:name=".activity.AddActivity" />
+
         <service
-            android:name=".AutoService"
+            android:name=".service.AutoService"
             android:enabled="true"
             android:exported="true"
-            android:persistent="true" >
-            <intent-filter android:priority="1000" >
+            android:persistent="true">
+            <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
-                <action android:name="android.intent.action.ACTION_SCREEN_OFF"/>
-                <action android:name="android.intent.action.ACTION_SCREEN_ON"/>
+                <action android:name="android.intent.action.ACTION_SCREEN_OFF" />
+                <action android:name="android.intent.action.ACTION_SCREEN_ON" />
             </intent-filter>
         </service>
 
-        <receiver android:name=".LktAppWidget">
+        <receiver android:name=".widget.LktAppWidget">
             <intent-filter android:priority="1000">
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="com.kai.lktUpdate" />
@@ -70,25 +73,25 @@
         </receiver>
 
         <service
-            android:name=".CommandService"
+            android:name=".service.CommandService"
             android:exported="false" />
         <service
-            android:name=".CustomCommandService"
+            android:name=".service.CustomCommandService"
             android:exported="false" />
 
         <activity
-            android:name=".fragment.MainActivity"
-            android:process=".Forground"
-            android:configChanges="keyboardHidden|orientation|screenSize">
+            android:name=".activity.MainActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:finishOnTaskLaunch="false"
+            android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <service
-            android:name=".DialogTile"
+            android:name=".tile.DialogTile"
             android:icon="@drawable/icon_tile"
             android:label="@string/tile_name_1"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
@@ -97,7 +100,7 @@
             </intent-filter>
         </service>
         <service
-            android:name=".InstantTile"
+            android:name=".tile.InstantTile"
             android:icon="@drawable/icon_tile"
             android:label="连续切换"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
@@ -107,7 +110,7 @@
         </service>
 
         <receiver
-            android:name=".StartReceiver"
+            android:name=".receiver.StartReceiver"
             android:enabled="true"
             android:exported="true"
             android:persistent="true">

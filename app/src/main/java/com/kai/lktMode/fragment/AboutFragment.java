@@ -2,7 +2,6 @@ package com.kai.lktMode.fragment;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,14 +12,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -29,10 +23,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.kai.lktMode.AlipayUtil;
+import com.kai.lktMode.tool.util.net.AlipayUtil;
 import com.kai.lktMode.BuildConfig;
 import com.kai.lktMode.R;
-import com.kai.lktMode.tool.UpdateUtil;
+import com.kai.lktMode.tool.util.net.WebUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -43,12 +37,10 @@ import java.util.List;
 
 public class AboutFragment extends MyFragment {
     private List<String> data=new ArrayList<>();
-    private ArrayAdapter<String> adapter;
-    private View view;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        view=inflater.inflate(R.layout.activity_about,container,false);
+        View view=inflater.inflate(R.layout.activity_about,null,false);
         return view;
     }
 
@@ -56,7 +48,7 @@ public class AboutFragment extends MyFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         init();
-        adapter=new ArrayAdapter<String >(getContext(),android.R.layout.simple_list_item_1,data);
+        ArrayAdapter<String> adapter=new ArrayAdapter<String >(getContext(),android.R.layout.simple_list_item_1,data);
         ListView listView=(ListView)view.findViewById(R.id.list);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -66,14 +58,14 @@ public class AboutFragment extends MyFragment {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                final UpdateUtil updateUtil=new UpdateUtil();
+                                final WebUtil webUtil =new WebUtil();
                                 getActivity().runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        if (updateUtil.isToUpdate()){
+                                        if (webUtil.isToUpdate()){
                                             new AlertDialog.Builder(getContext(),R.style.AppDialog)
-                                                    .setTitle("版本更新:"+updateUtil.getVersionName())
-                                                    .setMessage(updateUtil.getVersionLog())
+                                                    .setTitle("版本更新:"+ webUtil.getVersionName())
+                                                    .setMessage(webUtil.getVersionLog())
                                                     .setPositiveButton("更新", new DialogInterface.OnClickListener() {
                                                         @Override
                                                         public void onClick(DialogInterface dialogInterface, int i) {
@@ -106,9 +98,6 @@ public class AboutFragment extends MyFragment {
                         intent2.setData(content_url1);
                         startActivity(intent2);
                         break;
-                    case 3:
-                        donation(getActivity(),new WebView(getContext()));
-                        break;
                 }
             }
         });
@@ -125,24 +114,41 @@ public class AboutFragment extends MyFragment {
         data.add(0,"版本更新：v"+ BuildConfig.VERSION_NAME);
         data.add(1,"加入QQ群反馈信息");
         data.add(2,"查看使用说明及源代码");
-        data.add(3,"捐赠支持作者");
     }
-    public static void donation(final Activity context, final WebView webView){
+    public static void donation(final Activity context){
         AlertDialog dialog=new AlertDialog.Builder(context,R.style.AppDialog)
-                .setItems(new String[]{"支付宝(直接跳转)", "微信"}, new DialogInterface.OnClickListener() {
+                .setItems(new String[]{"支付宝红包码（推荐）","支付宝捐赠", "微信赞赏","给个5星好评"}, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         switch (i){
                             case 0:
+                                new AlertDialog.Builder(context,R.style.AppDialog)
+                                        .setView(R.layout.alipay)
+                                        .setPositiveButton("保存到相册并扫码", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                BitmapDrawable bitmapDrawable=(BitmapDrawable) context.getResources().getDrawable(R.mipmap.alipay);
+                                                saveBitmap(context,bitmapDrawable.getBitmap(),"ali.jpg",0);
+                                            }
+                                        })
+                                        .setNegativeButton("残忍拒绝", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+
+                                            }
+                                        })
+                                        .show();
+                                break;
+                            case 1:
                                 AlipayUtil.startAlipayClient(context,"fkx02459dc3qpqdxupmmz9b");
                                 break;
-                            case 1:new AlertDialog.Builder(context,R.style.AppDialog)
+                            case 2:new AlertDialog.Builder(context,R.style.AppDialog)
                                     .setView(R.layout.wxdialog)
                                     .setPositiveButton("保存到相册并扫码", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialogInterface, int i) {
                                             BitmapDrawable bitmapDrawable=(BitmapDrawable) context.getResources().getDrawable(R.mipmap.mm);
-                                            saveBitmap(context,bitmapDrawable.getBitmap(),"wx.jpg");
+                                            saveBitmap(context,bitmapDrawable.getBitmap(),"wx.jpg",1);
                                         }
                                     })
                                     .setNegativeButton("残忍拒绝", new DialogInterface.OnClickListener() {
@@ -153,13 +159,19 @@ public class AboutFragment extends MyFragment {
                                     })
                                     .create().show();
                                 break;
+                            case 3:
+                                Uri uri = Uri.parse("market://details?id="+context.getPackageName());
+                                Intent intent = new Intent(Intent.ACTION_VIEW,uri);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                context.startActivity(intent);
+                                break;
                         }
                     }
                 })
                 .create();
         dialog.show();
     }
-    public static void saveBitmap(Context context,Bitmap bitmap, String bitName){
+    public static void saveBitmap(Context context,Bitmap bitmap, String bitName,int type){
         String fileName ;
         File file ;
         if(Build.BRAND .equals("Xiaomi") ){ // 小米手机
@@ -196,11 +208,25 @@ public class AboutFragment extends MyFragment {
         }
         // 发送广播，通知刷新图库的显示
         context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + fileName)));
-        String cmd="su -c am start -n com.tencent.mm/com.tencent.mm.plugin.scanner.ui.BaseScanUI";
-        try {
-            Process p = Runtime.getRuntime().exec(cmd);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (type==0){
+            try {
+                Uri uri = Uri.parse("alipayqr://platformapi/startapp?saId=10000007");
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                context.startActivity(intent);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(context,"请先安装支付宝",Toast.LENGTH_SHORT).show();
+            }
+
+        }else {
+            try {
+                String cmd="su -c am start -n com.tencent.mm/com.tencent.mm.plugin.scanner.ui.BaseScanUI";
+                Runtime.getRuntime().exec(cmd);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(context,"请先安装微信",Toast.LENGTH_SHORT).show();
+
+            }
         }
     }
 

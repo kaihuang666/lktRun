@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -12,7 +11,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,28 +22,18 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.kai.lktMode.DownloadUtil;
-import com.kai.lktMode.Item;
-import com.kai.lktMode.Preference;
+import com.kai.lktMode.activity.StartActivity;
+import com.kai.lktMode.adapter.ListAdapter;
+import com.kai.lktMode.tool.util.net.DownloadUtil;
+import com.kai.lktMode.bean.Item;
+import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.R;
-import com.kai.lktMode.ShellUtil;
-import com.liulishuo.okdownload.DownloadListener;
-import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.StatusUtil;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.cause.EndCause;
-import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
-import com.stericson.RootShell.execution.Command;
+import com.kai.lktMode.tool.util.local.ShellUtil;
 import com.stericson.RootTools.RootTools;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class SettingFragment extends MyFragment {
     private View view;
@@ -55,7 +43,6 @@ public class SettingFragment extends MyFragment {
     private String busyBoxInfo="";
     private ProgressDialog downloadDialog;
     private String passage;
-    private ShellUtil shellUtil;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -66,22 +53,21 @@ public class SettingFragment extends MyFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        view=inflater.inflate(R.layout.activity_setting,container,false);
+        view=inflater.inflate(R.layout.activity_setting,null,false);
         return view;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        shellUtil=ShellUtil.create(true);
-        passage=shellUtil.command(new String[]{"su","-c","cat","/data/LKT.prop"}).getOutput();
+        passage=ShellUtil.command(new String[]{"su","-c","cat","/data/LKT.prop"});
         downloadDialog= new ProgressDialog(getContext(),R.style.AppDialog);
         downloadDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         downloadDialog.setCancelable(false);
         downloadDialog.setMax(100);
         downloadDialog.setTitle("正在下载");
         Item item=new Item("LKT模块","点击安装");
-        Item item1=new Item("BusyBox模块","点击安装");
+        Item item1=new Item("BusyBox","点击安装");
         Item item2=new Item("默认模式","省电模式");
         Item item3=new Item("通知栏磁贴",false);
         Item item0=new Item("开机自启",false);
@@ -114,7 +100,7 @@ public class SettingFragment extends MyFragment {
             public void onClick(int i) {
                 switch (i){
                     case 1:
-                        String isInstalledL=shellUtil.command(new String[]{"which","lkt"}).getOutput();
+                        String isInstalledL=ShellUtil.command(new String[]{"which","lkt"});
                         if (isInstalledL.isEmpty()){
                             installLKT();
                             return;
@@ -138,7 +124,7 @@ public class SettingFragment extends MyFragment {
                                     installBusybox();
                                     return;
                                 }
-                                busyBoxInfo=shellUtil.command(new String[]{"busybox","--help"}).getOutput();
+                                busyBoxInfo=ShellUtil.command(new String[]{"busybox","--help"});
                                 showBusyboxInfo();
                             }catch (Exception e){
                                 e.printStackTrace();
@@ -170,8 +156,8 @@ public class SettingFragment extends MyFragment {
     private void updateList(){
         items.clear();
         Item item0=new Item("开机自启",(Boolean) Preference.get(getContext(),"autoBoot","Boolean"));
-        Item item=new Item("LKT模块",!shellUtil.command(new String[]{"which","lkt"}).getOutput().isEmpty()?"已安装":((Boolean)Preference.get(getContext(),"custom","Boolean"))?"自定义调度":"点击安装");
-        Item item1=new Item("BusyBox模块",RootTools.isBusyboxAvailable()?RootTools.getBusyBoxVersion():"未安装");
+        Item item=new Item("LKT模块",!ShellUtil.command(new String[]{"which","lkt"}).isEmpty()?"已安装":((Boolean)Preference.get(getContext(),"custom","Boolean"))?"自定义调度":"点击安装");
+        Item item1=new Item("BusyBox",RootTools.isBusyboxAvailable()?RootTools.getBusyBoxVersion():"未安装");
         Item item2=new Item("默认模式",modes[(int)Preference.get(getContext(),"default","int")]);
         Item item3=new Item("通知栏磁贴",true);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
@@ -281,7 +267,6 @@ public class SettingFragment extends MyFragment {
             }
 
         }else {
-            //Toast.makeText(context,"版本过低",Toast.LENGTH_SHORT).show();
             if (compoundButton!=null)
             compoundButton.setChecked(false);
             if (StartActivity.getAppOps(context)){

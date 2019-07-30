@@ -11,7 +11,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -21,13 +20,12 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.kai.lktMode.Item;
-import com.kai.lktMode.Preference;
+import com.kai.lktMode.bean.Item;
+import com.kai.lktMode.adapter.CustomAdapter;
+import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.R;
 import com.stericson.RootShell.execution.Command;
 import com.stericson.RootTools.RootTools;
@@ -45,7 +43,7 @@ public class CustomFragment extends MyFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        view=inflater.inflate(R.layout.activity_custom,container,false);
+        view=inflater.inflate(R.layout.activity_custom,null,false);
         return view;
     }
 

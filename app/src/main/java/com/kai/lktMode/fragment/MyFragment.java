@@ -8,6 +8,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.kai.lktMode.activity.MainActivity;
+
 public class MyFragment extends Fragment {
     private LocalBroadcastManager localBroadcastManager;
     @Override

@@ -1,14 +1,9 @@
 package com.kai.lktMode.fragment;
 
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.FragmentManager;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -17,11 +12,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,8 +27,10 @@ import com.github.angads25.filepicker.controller.DialogSelectionListener;
 import com.github.angads25.filepicker.model.DialogConfigs;
 import com.github.angads25.filepicker.model.DialogProperties;
 import com.github.angads25.filepicker.view.FilePickerDialog;
-import com.kai.lktMode.Item;
-import com.kai.lktMode.Preference;
+import com.kai.lktMode.bean.Item;
+import com.kai.lktMode.activity.MainActivity;
+import com.kai.lktMode.adapter.PowercfgAdapter;
+import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.R;
 import com.stericson.RootShell.execution.Command;
 import com.stericson.RootTools.RootTools;
@@ -56,7 +51,7 @@ public class PowercfgFragment extends MyFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        view=inflater.inflate(R.layout.activity_powercfg,container,false);
+        view=inflater.inflate(R.layout.activity_powercfg,null,false);
         return view;
     }
 
@@ -288,30 +283,14 @@ public class PowercfgFragment extends MyFragment {
                 public void commandCompleted(int id, int exitcode) {
                     super.commandCompleted(id, exitcode);
                     Log.d("output",exitcode+"");
-                    if (exitcode==0){
-                        output+="脚本运行成功";
-                        alertDialog.setMessage(output);
-                        alertDialog.show();
-                    }else {
-                        output+="脚本运行失败";
-                        alertDialog.setMessage(output);
-                        alertDialog.show();
-                    }
+                    output+="脚本运行完成";
+                    alertDialog.setMessage(output);
+                    alertDialog.show();
                 }
             });
         }catch (Exception e){
             e.printStackTrace();
         }
-    }
-
-
-    private void showDialog(String str, String positive, DialogInterface.OnClickListener p, String negative, DialogInterface.OnClickListener n){
-        new AlertDialog.Builder(getContext(),R.style.AppDialog)
-                .setNegativeButton(negative,n)
-                .setPositiveButton(positive,p)
-                .setTitle("功能说明")
-                .setMessage(str)
-                .create().show();
     }
 
 }

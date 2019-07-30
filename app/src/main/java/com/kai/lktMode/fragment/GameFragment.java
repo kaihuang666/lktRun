@@ -5,7 +5,6 @@ import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -19,13 +18,15 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.kai.lktMode.AppUtils;
-import com.kai.lktMode.AutoService;
-import com.kai.lktMode.GameBoostActivity;
-import com.kai.lktMode.Item;
-import com.kai.lktMode.Preference;
+import com.kai.lktMode.activity.AddActivity;
+import com.kai.lktMode.adapter.ListGameAdapter;
+import com.kai.lktMode.adapter.ListLabAdapter;
+import com.kai.lktMode.tool.util.local.AppUtils;
+import com.kai.lktMode.service.AutoService;
+import com.kai.lktMode.activity.GameBoostActivity;
+import com.kai.lktMode.bean.Item;
+import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.R;
-import com.kai.lktMode.SleepSettingActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +41,7 @@ public class GameFragment extends MyFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        view=inflater.inflate(R.layout.activity_lab,container,false);
+        view=inflater.inflate(R.layout.activity_lab,null,false);
         return view;
     }
 

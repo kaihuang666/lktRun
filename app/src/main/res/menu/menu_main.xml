@@ -35,7 +35,10 @@
         android:title="云同步"
         android:icon="@mipmap/cloud"
         app:showAsAction="ifRoom"/>
-    <!--添加-->
+    <item android:id="@+id/donation"
+        android:title="捐赠与支持"
+        android:icon="@mipmap/donation"
+        app:showAsAction="ifRoom"/>
 
     <!--设置-->
 </menu>

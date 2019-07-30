@@ -13,12 +13,15 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.kai.lktMode.AppUtils;
-import com.kai.lktMode.AutoService;
-import com.kai.lktMode.Item;
-import com.kai.lktMode.Preference;
+import com.kai.lktMode.activity.AddActivity;
+import com.kai.lktMode.adapter.ListGameAdapter;
+import com.kai.lktMode.adapter.ListLabAdapter;
+import com.kai.lktMode.tool.util.local.AppUtils;
+import com.kai.lktMode.service.AutoService;
+import com.kai.lktMode.bean.Item;
+import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.R;
-import com.kai.lktMode.SleepSettingActivity;
+import com.kai.lktMode.activity.SleepSettingActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +36,7 @@ public class LockFragment extends MyFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        view=inflater.inflate(R.layout.fragment_lock,container,false);
+        view=inflater.inflate(R.layout.fragment_lock,null,false);
         return view;
     }
 
@@ -113,8 +116,12 @@ public class LockFragment extends MyFragment {
         for (String s:Preference.getSoftwares(getContext())){
             gameItems.add(new Item(s,false));
         }
-        LinearLayoutManager manager=new LinearLayoutManager(getContext());
-        recyclerView.setLayoutManager(manager);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()){
+            @Override
+            protected int getExtraLayoutSpace(RecyclerView.State state) {
+                return 360;
+            }
+        });
         gameAdapter=new ListGameAdapter(getContext(),gameItems,0,false);
         recyclerView.setAdapter(gameAdapter);
         gameAdapter.setBottomClick(new ListGameAdapter.OnBottomClick() {

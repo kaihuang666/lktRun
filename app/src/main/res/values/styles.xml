@@ -7,6 +7,10 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorPrimaryDark</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <!--Android 5.x开始需要把颜色设置透明，否则导航栏会呈现系统默认的浅灰色-->
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
     <style name="AppDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="colorPrimaryDark">#1868A7</item>
@@ -17,6 +21,8 @@
     <style name="AppDialogRun" parent="AppDialog">
         <item name="android:height">400dp</item>
     </style>
+
+
 
 
 

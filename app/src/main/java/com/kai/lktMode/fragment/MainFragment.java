@@ -5,25 +5,16 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
-import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.IBinder;
-import android.os.Looper;
-import android.os.Message;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,49 +24,28 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.github.lzyzsd.circleprogress.CircleProgress;
-import com.kai.lktMode.CpuService;
-import com.kai.lktMode.CpuUtil;
-import com.kai.lktMode.DownloadUtil;
-import com.kai.lktMode.Preference;
-import com.kai.lktMode.ProgressAdapter;
+import com.kai.lktMode.tool.util.local.CpuUtil;
+import com.kai.lktMode.tool.util.net.DownloadUtil;
+import com.kai.lktMode.tool.Preference;
+import com.kai.lktMode.adapter.ProgressAdapter;
 import com.kai.lktMode.R;
-import com.kai.lktMode.ShellUtil;
-import com.liulishuo.okdownload.DownloadListener;
-import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.StatusUtil;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.cause.EndCause;
-import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
-import com.stericson.RootShell.exceptions.RootDeniedException;
+import com.kai.lktMode.tool.util.local.ShellUtil;
 import com.stericson.RootShell.execution.Command;
-import com.stericson.RootShell.execution.Shell;
 import com.stericson.RootTools.RootTools;
 
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -85,7 +55,6 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
     private String[] modeTitle={"省电模式","均衡模式","游戏模式","极限模式"};
     private String[] modestring={"unsure","Battery","Balanced","Performance","Turbo"};
     private int[] buttonID={R.id.battery,R.id.balance,R.id.performance,R.id.turbo};
-    private Shell shell;
     private String[] permissions={Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.ACCESS_NETWORK_STATE,Manifest.permission.INTERNET};
     private String passage;
     private List<String> cpus=new ArrayList<>();
@@ -97,32 +66,37 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
     private TextView battery_temp;
     private TextView cpu_temp;
     private TextView cpu_info;
-    private String temp="0";
     private boolean isCreated=true;
-    private ShellUtil shellUtil;
-    private int cpuSenserId=0;
-
     private LocalBroadcastManager localBroadcastManager;
     private LocalRecevicer recevicer;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view=inflater.inflate(R.layout.fragment_main,container,false);
+        View view=inflater.inflate(R.layout.fragment_main,null,false);
         contentView=view;
-        shellUtil=ShellUtil.create(true);
         return view;
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //
     }
 
     //碎片创建
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        try {
+            if (getRoot()){
+                setBusyBox(cutBusyBox());
+                readProp(isCreated);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        initButton();
+        initCpuInfo();
+        initDialog();
         battery_current=(TextView)contentView.findViewById(R.id.battery_current);
         battery_temp=(TextView)contentView.findViewById(R.id.battery_temp);
         cpu_temp=(TextView)contentView.findViewById(R.id.cpu_temp);
@@ -132,73 +106,23 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
                 Intent.ACTION_BATTERY_CHANGED));
         IntentFilter intentFilter=new IntentFilter();
         intentFilter.addAction("com.kai.lktMode.cpuListening");
+        intentFilter.addAction("com.kai.lktMode.currentUpdate");
+        intentFilter.addAction("com.kai.lktMode.tempUpdate");
         localBroadcastManager=LocalBroadcastManager.getInstance(getActivity());
         recevicer=new LocalRecevicer();
         localBroadcastManager.registerReceiver(recevicer,intentFilter);
-        initButton();
-        initCpuInfo();
-        initDialog();
+
+
         //耗时操作的子线程
-        try {
-            if (getRoot()){
-                //shell=RootTools.getShell(true);
-                setBusyBox(cutBusyBox());
-                readProp(isCreated);
-                if (isCreated){
-                    isCreated=false;
-                }
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        /*
-         max=getMax();
-        cpuSenserId=getCpuSenserId();
-        Handler handler=new Handler(){
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-
-                if (msg.what==3){
-                    Log.d("state","I have handled the message");
-
-                    Bundle bundle=msg.getData();
-                    adapter.setFreq(bundle.getIntArray("freq"));
-                    adapter.setProgress(bundle.getIntArray("progress"));
-                    adapter.notifyDataSetChanged();
-                    circleProgress.setProgress(bundle.getInt("sum"));
-                    battery_current.setText("电流："+bundle.getString("current"));
-                    circleProgress.setProgress(bundle.getInt("sum"));
-                    cpu_temp.setText("cpu温度："+bundle.getString("cpu_temp").substring(0,bundle.getString("cpu_temp").indexOf(".")+2)+"°C");
-                    thread.getHandler().sendEmptyMessageDelayed(3,500);
-                }
-            }
-        };
-        thread=new MyThread(handler);
-
-        */
     }
 
     @Override
     public void onDestroy() {
-        //thread.getHandler().removeMessages(3);
         getContext().unregisterReceiver(this.myBatteryReceiver);
-        //thread.handler.getLooper().quit();
         super.onDestroy();
         localBroadcastManager.unregisterReceiver(recevicer);
     }
 
-    //碎片激活
-    @Override
-    public void onResume() {
-        super.onResume();
-        try {
-            readProp(false);
-
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
-    }
     //碎片被移除或替换
     @Override
     public void onStop() {
@@ -209,11 +133,9 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
         super.Refresh();
         readProp(false);
     }
-
     /**初始化控件
      *
      */
-
     private void initDialog(){
         dialog= new ProgressDialog(getContext(),R.style.AppDialog);
         dialog.setMessage("切换中");
@@ -247,41 +169,16 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
         boolean isGranted=false;
         try {
             if (RootTools.isRootAvailable()){
-                shell=RootTools.getShell(true);
                 isGranted=true;
             }else {
                 Runtime.getRuntime().exec("su");
-                shell=RootTools.getShell(true);
             }
 
-        }catch (IOException | TimeoutException | RootDeniedException e){
+        }catch (Exception e){
             e.printStackTrace();
             Toast.makeText(getContext(),"无法获取到ROOT权限",Toast.LENGTH_SHORT).show();
         }
         return isGranted;
-    }
-    //
-    private int[] getCpu(){
-        int[] result=new int[cpuAmount];
-        for (int i=0;i<result.length;i++){
-            int cpuFreq0=getCurCpuFreq("cpu"+i);
-            for (int j=0;j<10;j++){
-                int freq=getCurCpuFreq("cpu"+i);
-                if (freq<cpuFreq0){
-                    cpuFreq0=freq;
-                }
-            }
-            result[i]=cpuFreq0;
-            //Log.d("ssss",result[i]+"");
-        }
-        return result;
-    }
-    public int getCurCpuFreq(String cpu){
-        ShellUtil.Result result =shellUtil.command(new String[]{"su","-c","cat","/sys/devices/system/cpu/"+cpu+"/cpufreq/scaling_cur_freq"});
-        if (result.getExitValue()!=0){
-            return 0;
-        }
-        return Integer.parseInt(result.getOutput())/1000;
     }
 
     public  String getCpuPlatform(Context context){
@@ -290,18 +187,6 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
             return  cpuPlatform;
         }
         return Build.HARDWARE;
-        /*
-        if (result.getExitValue()!=0)
-            return "";
-        String pattern = ":\\s(\\S+)";
-        Pattern r = Pattern.compile(pattern);
-        Matcher m = r.matcher(result.getOutput());
-        if (m.find()){
-            Preference.save(context,"cpuPlatform",result);
-            return m.group(1);
-        }else
-            return result.getOutput();
-            */
     }
 
 
@@ -342,12 +227,13 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
 
 
 
-    public void readProp(final boolean isCreate){
+    public void readProp(boolean isCreate){
         final ProgressDialog p=new ProgressDialog(getContext(),R.style.AppDialog);
         if (isCreate){
             p.setMessage("获取配置中");
             p.show();
         }
+        //判断是否使用自定义调度
         Preference.clearAll(getContext());
         if ((Boolean) Preference.get(getContext(),"custom","Boolean")){
             p.dismiss();
@@ -355,20 +241,19 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
             setMode(modestring[(int)Preference.get(getContext(),"customMode","int")]);
             return;
         }
+        //判断是否使用LKT调度
         try {
             File file=new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/");
             if (!file.exists()){
                 file.mkdirs();
             }
-            String lkt=shellUtil.command(new String[]{"which","lkt"}).getOutput();
+            //判断是否安装了模块
+            String lkt=ShellUtil.command(new String[]{"which","lkt"});
             if (lkt.isEmpty()){
-                p.dismiss();
                 if (!isCreate){
-                    //setBusyBox("未配置");
-                    setVersion("未配置");
-                    setMode("未配置");
                     return;
                 }
+                p.dismiss();
                 new AlertDialog.Builder(getContext(),R.style.AppDialog)
                         .setTitle("选择调度")
                         .setItems(new String[]{"LKT调度(需按照面具模块)","YC调度(直接导入，推荐)","我要自定义"}, new DialogInterface.OnClickListener() {
@@ -377,67 +262,42 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
                                 switch (i){
                                     case 0:installLKT();break;
                                     case 1:getMain().pickPowercfg();break;
-                                    case 2:getMain().switchPage(2,null);Toast.makeText(getActivity(),"请在自定义调度中进行配置",Toast.LENGTH_LONG).show();break;
+                                    case 2:getMain().switchPage(2);Toast.makeText(getActivity(),"请在自定义调度中进行配置",Toast.LENGTH_LONG).show();break;
                                 }
                             }
                         })
                         .setCancelable(false)
                         .create().show();
             }else {
-                Command command=new Command(0,"cp -f /data/LKT.prop "+Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/LKT.prop"){
-                    @Override
-                    public void commandCompleted(int id, int exitcode) {
-                        super.commandCompleted(id, exitcode);
-                        if (exitcode==0){
-                            p.dismiss();
-                            try{
-                                passage="";
-                                FileReader reader=new FileReader(Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/LKT.prop");
-                                BufferedReader reader1=new BufferedReader(reader);
-                                String line=null;
-                                while ((line=reader1.readLine())!=null){
-                                    passage+=line+"\n";
-                                }
-                                reader.close();
-                                reader1.close();
-                                cutVersion(passage);
-                                cutMode(passage);
-                            }
-                            catch (FileNotFoundException e){
-                                e.printStackTrace();
-                            }catch (IOException e){
-                                e.printStackTrace();
-                            }
-                        }else {
-                            dialog.setMessage("正在切换到默认调度");
-                            reset();
-                            dialog.dismiss();
-                        }
+                passage=ShellUtil.command(new String[]{"su","-c","cat","/data/LKT.prop"});
+                if (!passage.isEmpty()){
+                    cutVersion(passage);
+                    cutMode(passage);
+                }else {
+                    reset();
+                }
 
-
-                    }
-                };
-                shell.add(command);
             }
 
 
-        }catch (IOException e){
+        }catch (Exception e){
             e.printStackTrace();
         }
         p.dismiss();
+        isCreated=false;
     }
     private void cutVersion(String str){
-        String pattern = "LKT™\\s(\\S+)";
+        String pattern = "LKT™.*";
         Pattern r = Pattern.compile(pattern);
 
         // 现在创建 matcher 对象
         Matcher m = r.matcher(str);
-        if (m.find( )) {
-            Preference.save(getContext(),"version",true);
-            setVersion(m.group(1));
 
+        if (m.find()) {
+            Preference.save(getContext(),"version",true);
+            setVersion(m.group(0).trim());
         } else {
-            //Toast.makeText(getContext(),)
+            setVersion("已安装");
         }
     }
     private void setVersion(String str){
@@ -450,14 +310,12 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
     private void cutMode(String line){
         String pattern = "PROFILE\\s:\\s(\\S+)";
         Pattern r = Pattern.compile(pattern);
-
         // 现在创建 matcher 对象
         Matcher m = r.matcher(line);
         if (m.find( )) {
-            //Toast.makeText(this,m.group(1),Toast.LENGTH_SHORT).show();
             setMode(m.group(1));
         } else {
-            //Toast.makeText(getContext(),)
+
         }
 
     }
@@ -478,7 +336,7 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
         Toast.makeText(getContext(),"已切换到默认模式",Toast.LENGTH_LONG).show();
         setButton("配置错误，切换到默认模式",buttonID[index-1]);
         try{
-            shell.add(new Command(0,"su -c lkt "+index){
+            RootTools.getShell(true).add(new Command(0,"su -c lkt "+index){
                 @Override
                 public void commandCompleted(int id, int exitcode) {
                     super.commandCompleted(id, exitcode);
@@ -728,8 +586,8 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
         dialog.show();
         try{
             Command command=new Command(0,cmd);
-            shell.add(command);
-        }catch (IOException e){
+            RootTools.getShell(true).add(command);
+        }catch (Exception e){
             e.printStackTrace();
         }
         Timer timer=new Timer();
@@ -742,39 +600,6 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
         };
         timer.schedule(task,3500);
 
-    }
-    private void initLKT(){
-        setButton("省电模式切换中",R.id.battery);
-        setMode("Battery");
-        dialog.setMessage("初始化中");
-        dialog.show();
-        try{
-            Command command=new Command(0,"lkt 1");
-            shell.add(command);
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-        Timer timer=new Timer();
-        TimerTask task=new TimerTask() {
-            @Override
-            public void run() {
-                dialog.dismiss();
-            }
-        };
-        timer.schedule(task,3500);
-    }
-
-    private void showToast(Object e){
-        Toast.makeText(getContext(),String.valueOf(e),Toast.LENGTH_SHORT).show();
-    }
-    private boolean requetPermission() {
-        boolean isGranted=false;
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(getActivity(), permissions, 1);
-        }else {
-            isGranted=true;
-        }
-        return isGranted;
     }
 
 
@@ -814,14 +639,36 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
     class LocalRecevicer extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (adapter!=null){
-                adapter.setFreq(intent.getIntArrayExtra("freq"));
-                adapter.setProgress(intent.getIntArrayExtra("progress"));
-                adapter.notifyDataSetChanged();
+            //cpu数据的更新
+            if (intent.getAction().equals("com.kai.lktMode.cpuListening")){
+                for (String key:intent.getExtras().keySet()){
+                    switch (key){
+                        case "freq":adapter.setFreq(intent.getIntArrayExtra("freq"));break;
+                        case "progress":adapter.setProgress(intent.getIntArrayExtra("progress"));break;
+                        case "sum":circleProgress.setProgress(intent.getIntExtra("sum",0));break;
+                        case "current":battery_current.setText("电流："+intent.getStringExtra("current"));break;
+                    }
+                }
+                if (adapter!=null)
+                    adapter.notifyDataSetChanged();
             }
-            circleProgress.setProgress(intent.getIntExtra("sum",0));
-            battery_current.setText("电流："+intent.getStringExtra("current"));
-            cpu_temp.setText("cpu温度："+intent.getStringExtra("temp")+"°C");
+            //电流信息的更新
+            if (intent.getAction().equals("com.kai.lktMode.currentUpdate")){
+                for (String key:intent.getExtras().keySet()){
+                    if (key.equals("current")){
+                        battery_current.setText("电流："+intent.getStringExtra("current"));
+                    }
+                }
+            }
+            //温度信息的更新
+            if (intent.getAction().equals("com.kai.lktMode.tempUpdate")){
+                for (String key:intent.getExtras().keySet()){
+                    if (key.equals("temp")){
+                        cpu_temp.setText("cpu温度："+intent.getStringExtra("temp")+"°C");
+                    }
+                }
+            }
+
         }
     }
 

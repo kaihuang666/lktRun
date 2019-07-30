@@ -5,12 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".fragment.MainActivity">
+    tools:context=".activity.MainActivity">
     <androidx.appcompat.widget.Toolbar
+        android:paddingTop="20dp"
         android:id="@+id/simple_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimaryDark"
+        android:background="@drawable/background_gradient"
         app:title="调度"
         app:navigationIcon="@mipmap/menu">
         <androidx.appcompat.widget.ActionMenuView
@@ -23,36 +24,30 @@
     </androidx.appcompat.widget.Toolbar>
 
     <androidx.drawerlayout.widget.DrawerLayout
+        android:background="#fff"
         android:id="@+id/drawer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-        <com.kai.lktMode.ViewPagerSlide
+        <com.kai.lktMode.widget.ViewPagerSlide
             android:id="@+id/viewPager"
             android:name="com.kai.lktMode.fragment.MainFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             />
         <LinearLayout
+            android:background="#fff"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_gravity="left"
+            android:layout_gravity="start"
             android:orientation="vertical">
-            <LinearLayout
-                android:background="@drawable/drawer_background"
-                android:layout_width="300dp"
-                android:layout_height="100dp"
-                android:gravity="center_vertical">
-                <ImageView
-                    android:layout_margin="10dp"
-                    android:src="@mipmap/ic_launcher"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
+
             <com.google.android.material.navigation.NavigationView
+                android:background="#fff"
                 android:id="@+id/navigationView"
                 android:layout_width="300dp"
                 android:layout_height="match_parent"
+                app:headerLayout="@layout/header"
                 android:fitsSystemWindows="true"
                 app:menu="@menu/menu_main">
             </com.google.android.material.navigation.NavigationView>
