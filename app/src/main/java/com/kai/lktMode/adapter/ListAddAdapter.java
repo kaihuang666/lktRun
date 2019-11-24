@@ -139,6 +139,7 @@ public class ListAddAdapter extends RecyclerView.Adapter<ListAddAdapter.ViewHold
                 notifyItemRangeChanged(position, items.size() - position);
             }
         });
+
     }
 
 

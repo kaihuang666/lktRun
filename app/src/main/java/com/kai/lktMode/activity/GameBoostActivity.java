@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -38,6 +39,7 @@ public class GameBoostActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_boost);
+
         init();
         initImport();
         initToolBar();
@@ -45,8 +47,14 @@ public class GameBoostActivity extends BaseActivity {
     }
     private void init(){
         edit=(EditText)findViewById(R.id.edit);
-        edit.setText((String) Preference.get(GameBoostActivity.this,"code6","String"));
+        if (! Preference.getBoolean(this,"custom"))
+            edit.setFocusable(false);
+        edit.setText(Preference.getString(GameBoostActivity.this,"code6"));
         TextView clear=(TextView)findViewById(R.id.clear);
+        final TextView openDelay=(TextView)findViewById(R.id.open_delay);
+        final TextView closeDelay=(TextView)findViewById(R.id.close_delay);
+        openDelay.setText(""+Preference.getInt(this,"openGameDelay",5));
+        closeDelay.setText(""+Preference.getInt(this,"closeGameDelay",15));
         clear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -57,7 +65,9 @@ public class GameBoostActivity extends BaseActivity {
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Preference.save(GameBoostActivity.this,"code6",edit.getText().toString());
+                Preference.saveString(GameBoostActivity.this,"code6",edit.getText().toString());
+                Preference.saveInt(GameBoostActivity.this,"openGameDelay",openDelay.getText().toString().isEmpty()?5:Integer.parseInt(openDelay.getText().toString()));
+                Preference.saveInt(GameBoostActivity.this,"closeGameDelay",closeDelay.getText().toString().isEmpty()?15:Integer.parseInt(closeDelay.getText().toString()));
                 TransTool transTool=new TransTool(GameBoostActivity.this);
                 transTool.save(adapter.getItems());
                 finish();
@@ -67,6 +77,7 @@ public class GameBoostActivity extends BaseActivity {
         add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.d("sss","cao");
                 new AlertDialog.Builder(GameBoostActivity.this,R.style.AppDialog)
                         .setTitle("添加附加设置")
                         .setItems(new String[]{"自动亮度", "亮度", "音量"}, new DialogInterface.OnClickListener() {
@@ -106,10 +117,10 @@ public class GameBoostActivity extends BaseActivity {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 int mode=i+1;
-                                if (!(Boolean)Preference.get(GameBoostActivity.this,"custom","Boolean")){
+                                if (!(Boolean)Preference.getBoolean(GameBoostActivity.this,"custom")){
                                     edit.setText("lkt "+mode);
                                 }else {
-                                    edit.setText((String)Preference.get(GameBoostActivity.this,"code"+mode,"String"));
+                                    edit.setText((String)Preference.getString(GameBoostActivity.this,"code"+mode));
                                 }
                             }
                         })
@@ -134,7 +145,7 @@ public class GameBoostActivity extends BaseActivity {
                         .setPositiveButton("是", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                Preference.save(GameBoostActivity.this,"code6",edit.getText().toString());
+                                Preference.saveString(GameBoostActivity.this,"code6",edit.getText().toString());
                                 TransTool transTool=new TransTool(GameBoostActivity.this);
                                 transTool.save(adapter.getItems());
                                 finish();
@@ -147,7 +158,7 @@ public class GameBoostActivity extends BaseActivity {
     }
     private void initList(){
         TransTool tool=new TransTool(this);
-        settings=tool.getItems(new ArrayList((Set<String>)Preference.get(this,"gameSettings","StringSet")));
+        settings=tool.getItems(Preference.getList(this,"gameSettings"));
         RecyclerView recyclerView=(RecyclerView)findViewById(R.id.recyclerview);
         adapter=new ListAddAdapter(this,settings);
         LinearLayoutManager manager=new LinearLayoutManager(this);

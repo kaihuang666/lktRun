@@ -8,10 +8,12 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,12 +23,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.kai.lktMode.activity.AddActivity;
 import com.kai.lktMode.adapter.ListGameAdapter;
 import com.kai.lktMode.adapter.ListLabAdapter;
+import com.kai.lktMode.bean.App;
 import com.kai.lktMode.tool.util.local.AppUtils;
 import com.kai.lktMode.service.AutoService;
 import com.kai.lktMode.activity.GameBoostActivity;
 import com.kai.lktMode.bean.Item;
 import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.R;
+import com.kai.lktMode.widget.SimplePaddingDecoration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +38,7 @@ import java.util.List;
 public class GameFragment extends MyFragment {
     private ListLabAdapter adapter;
     private List<Item> items=new ArrayList<>();
-    private List<Item> gameItems=new ArrayList<>();
+    private List<App> gameItems=new ArrayList<>();
     private String[] checks={"gameMode"};
     private ListGameAdapter gameAdapter;;
     private View view;
@@ -76,7 +80,7 @@ public class GameFragment extends MyFragment {
         adapter.setOnItemCheck(new ListLabAdapter.OnItemCheck() {
             @Override
             public void onCheck(int i, Boolean isChecked) {
-                Preference.save(getContext(),checks[i],isChecked);
+                Preference.saveBoolean(getContext(),checks[i],isChecked);
                 switch (i){
 
                     case 0:
@@ -112,12 +116,13 @@ public class GameFragment extends MyFragment {
                     android.os.Process.myUid(), getContext().getPackageName());
         }
         return mode == AppOpsManager.MODE_ALLOWED;
+
     }
     private void updateList(){
         if (!hasPermission()){
-            Preference.save(getContext(),"gameMode",false);
+            Preference.saveBoolean(getContext(),"gameMode",false);
         }
-        items.get(0).setChecked((Boolean)Preference.get(getContext(),"gameMode","Boolean"));
+        items.get(0).setChecked((Boolean)Preference.getBoolean(getContext(),"gameMode"));
         adapter.notifyDataSetChanged();
     }
     private void initList(){
@@ -126,41 +131,47 @@ public class GameFragment extends MyFragment {
         items.add(item2);
     }
     private void initGame(){
-        gameItems=new ArrayList<>();
+        gameItems.clear();
         RecyclerView recyclerView=view.findViewById(R.id.gameList);
         for (String s:Preference.getGames(getContext())){
-            gameItems.add(new Item(s,false));
+            gameItems.add(new App(AppUtils.getAppName(getContext(),s),s,AppUtils.getDrawable(getContext(),s),false));
         }
         LinearLayoutManager manager=new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(manager);
         gameAdapter=new ListGameAdapter(getContext(),gameItems,0,false);
+        recyclerView.addItemDecoration(new SimplePaddingDecoration(getContext()));
         recyclerView.setAdapter(gameAdapter);
         gameAdapter.setBottomClick(new ListGameAdapter.OnBottomClick() {
             @Override
             public void onClick() {
                 Intent intent=new Intent(getContext(), AddActivity.class);
                 intent.setAction("games");
-                startActivity(intent);
+                startActivityForResult(intent,11);
             }
         });
         gameAdapter.setRemoveClick(new ListGameAdapter.OnItemRemoveClick() {
             @Override
             public void onRemoveClick(int i) {
-                Preference.gameRemove(getContext(),gameItems.get(i).getTitle());
-                gameAdapter.notifyItemRemoved(i);
-                gameItems.remove(i);
-                gameAdapter.notifyItemRangeChanged(i, items.size() - i);
+                try {
+                    Preference.gameRemove(getContext(),gameItems.get(i).getPackage_name());
+                    gameAdapter.notifyItemRemoved(i);
+                    gameItems.remove(i);
+                    gameAdapter.notifyItemRangeChanged(i, items.size() - i);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
             }
         });
     }
     private void upcateGames(){
         gameItems.clear();
         for (String s:Preference.getGames(getContext())){
-            if (AppUtils.getAppName(getContext(),s)==null){
+            if (AppUtils.getAppName(getContext(),s).isEmpty()){
                 Preference.softwareRemove(getContext(),s);
                 continue;
             }
-            gameItems.add(new Item(s,false));
+            gameItems.add(new App(AppUtils.getAppName(getContext(),s),s,AppUtils.getDrawable(getContext(),s),false));
         }
         gameAdapter.notifyDataSetChanged();
     }
@@ -196,7 +207,7 @@ public class GameFragment extends MyFragment {
             Toast.makeText(getContext(),"需要使用情况访问权限！",Toast.LENGTH_LONG).show();
             items.get(0).setChecked(false);
             adapter.notifyItemChanged(0);
-            Preference.save(getContext(),checks[0],false);
+            Preference.saveBoolean(getContext(),checks[0],false);
         }
     }
 
@@ -205,7 +216,10 @@ public class GameFragment extends MyFragment {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode==10){
             closeGame();
+        } else {
+            closeGame();
         }
+
     }
     /*
     @Override

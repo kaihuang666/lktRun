@@ -1,11 +1,15 @@
 package com.kai.lktMode.fragment;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
@@ -22,11 +26,19 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.kai.lktMode.adapter.AboutAdapter;
+import com.kai.lktMode.bean.Item;
+import com.kai.lktMode.root.RootUtils;
+import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.tool.util.net.AlipayUtil;
 import com.kai.lktMode.BuildConfig;
 import com.kai.lktMode.R;
 import com.kai.lktMode.tool.util.net.WebUtil;
+import com.kai.lktMode.widget.SimplePaddingDecoration;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -35,12 +47,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AboutFragment extends MyFragment {
-    private List<String> data=new ArrayList<>();
+public class AboutFragment extends Fragment {
+    private List<Item> data=new ArrayList<>();
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view=inflater.inflate(R.layout.activity_about,null,false);
+        View view=inflater.inflate(R.layout.fragment_about,null,false);
         return view;
     }
 
@@ -48,13 +60,19 @@ public class AboutFragment extends MyFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         init();
-        ArrayAdapter<String> adapter=new ArrayAdapter<String >(getContext(),android.R.layout.simple_list_item_1,data);
-        ListView listView=(ListView)view.findViewById(R.id.list);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        RecyclerView recyclerView=(RecyclerView)view.findViewById(R.id.list);
+        recyclerView.addItemDecoration(new SimplePaddingDecoration(getContext()));
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        AboutAdapter aboutAdapter=new AboutAdapter(getContext(),data);
+        aboutAdapter.setOnItemClick(new AboutAdapter.OnItemClick() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+            public void onClick(int i) {
                 switch (i){
-                    case 0:
+                    case 1:
+                        if (BuildConfig.BUILD_TYPE.equals("debug")){
+                            Toast.makeText(getContext(),"测试版不能接受正式版更新",Toast.LENGTH_SHORT).show();
+                            return;
+                        }
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
@@ -87,35 +105,58 @@ public class AboutFragment extends MyFragment {
                         }).start();
 
                         break;
-                    case 1:
+                    case 3:
                         startQQGroup(getActivity());
                         break;
-                    case 2:
+                    case 4:
 
                         Intent intent2 = new Intent();
                         intent2.setAction("android.intent.action.VIEW");
-                        Uri content_url1 = Uri.parse("https://github.com/kaihuang666/lktMode");//此处填链接
+                        Uri content_url1 = Uri.parse("https://www.jianshu.com/p/c5399a7e9bb3");//此处填链接
                         intent2.setData(content_url1);
                         startActivity(intent2);
+                        break;
+                    case 5:
+
+                        Intent intent3 = new Intent();
+                        intent3.setAction("android.intent.action.VIEW");
+                        Uri content_url2 = Uri.parse("https://github.com/kaihuang666/lktMode");//此处填链接
+                        intent3.setData(content_url2);
+                        startActivity(intent3);
                         break;
                 }
             }
         });
-        listView.setAdapter(adapter);
+        recyclerView.setAdapter(aboutAdapter);
     }
     public static void startQQGroup(Context context){
-        Intent intent1 = new Intent();
-        String key="-jOcqHVCKRQFS2uIWVMUsO3AMes9Hcc0";
-        intent1.setData(Uri.parse("mqqopensdkapi://bizAgent/qm/qr?url=http%3A%2F%2Fqm.qq.com%2Fcgi-bin%2Fqm%2Fqr%3Ffrom%3Dapp%26p%3Dandroid%26k%3D" + key));
-        context.startActivity(intent1);
+        try {
+            Intent intent1 = new Intent();
+            String key="-jOcqHVCKRQFS2uIWVMUsO3AMes9Hcc0";
+            intent1.setData(Uri.parse("mqqopensdkapi://bizAgent/qm/qr?url=http%3A%2F%2Fqm.qq.com%2Fcgi-bin%2Fqm%2Fqr%3Ffrom%3Dapp%26p%3Dandroid%26k%3D" + key));
+            context.startActivity(intent1);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
     private void init(){
         data.clear();
-        data.add(0,"版本更新：v"+ BuildConfig.VERSION_NAME);
-        data.add(1,"加入QQ群反馈信息");
-        data.add(2,"查看使用说明及源代码");
+        data.add(0,new Item("开发者","@凯帝拉克"));
+        data.add(1,new Item("版本更新",BuildConfig.VERSION_NAME));
+        data.add(2,new Item("app编译类型",BuildConfig.BUILD_TYPE.equals("debug")?"测试版":"正式版"));
+        data.add(3,new Item("加入QQ群获取测试版",""));
+        data.add(4,new Item("查看使用说明书",""));
+        data.add(5,new Item("github项目",""));
     }
+    @TargetApi(21)
     public static void donation(final Activity context){
+        try {
+            ClipboardManager cm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData mClipData = ClipData.newPlainText("Label", (String)Preference.getString(context,"username"));
+            cm.setPrimaryClip(mClipData);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         AlertDialog dialog=new AlertDialog.Builder(context,R.style.AppDialog)
                 .setItems(new String[]{"支付宝红包码（推荐）","支付宝捐赠", "微信赞赏","给个5星好评"}, new DialogInterface.OnClickListener() {
                     @Override
@@ -141,6 +182,7 @@ public class AboutFragment extends MyFragment {
                                 break;
                             case 1:
                                 AlipayUtil.startAlipayClient(context,"fkx02459dc3qpqdxupmmz9b");
+                                Toast.makeText(context.getApplicationContext(),"你的账号已经复制到剪贴板，请粘贴到付款备注里",5000).show();
                                 break;
                             case 2:new AlertDialog.Builder(context,R.style.AppDialog)
                                     .setView(R.layout.wxdialog)
@@ -213,6 +255,7 @@ public class AboutFragment extends MyFragment {
                 Uri uri = Uri.parse("alipayqr://platformapi/startapp?saId=10000007");
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                 context.startActivity(intent);
+                Toast.makeText(context.getApplicationContext(),"你的账号已经复制到剪贴板，请粘贴到付款备注里",5000).show();
             } catch (Exception e) {
                 e.printStackTrace();
                 Toast.makeText(context,"请先安装支付宝",Toast.LENGTH_SHORT).show();
@@ -220,8 +263,9 @@ public class AboutFragment extends MyFragment {
 
         }else {
             try {
-                String cmd="su -c am start -n com.tencent.mm/com.tencent.mm.plugin.scanner.ui.BaseScanUI";
-                Runtime.getRuntime().exec(cmd);
+                String cmd="am start -n com.tencent.mm/com.tencent.mm.plugin.scanner.ui.BaseScanUI";
+                RootUtils.runCommand(cmd);
+                Toast.makeText(context.getApplicationContext(),"你的账号已经复制到剪贴板，请粘贴到付款备注里",5000).show();
             } catch (Exception e) {
                 e.printStackTrace();
                 Toast.makeText(context,"请先安装微信",Toast.LENGTH_SHORT).show();

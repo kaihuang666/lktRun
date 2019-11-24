@@ -1,5 +1,6 @@
 package com.kai.lktMode.service;
 
+import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
@@ -14,15 +15,23 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
+import com.kai.lktMode.activity.MainActivity;
+import com.kai.lktMode.base.MyApplication;
+import com.kai.lktMode.root.RootUtils;
 import com.kai.lktMode.tool.ServiceStatusUtils;
 import com.kai.lktMode.fragment.MainFragment;
 import com.kai.lktMode.tool.Preference;
+import com.kai.lktMode.tool.Settings;
 import com.kai.lktMode.tool.TransTool;
+import com.kai.lktMode.tool.util.TopApp;
+import com.stericson.RootShell.RootShell;
 import com.stericson.RootShell.exceptions.RootDeniedException;
 import com.stericson.RootShell.execution.Command;
 import com.stericson.RootShell.execution.Shell;
@@ -31,6 +40,7 @@ import com.xdandroid.hellodaemon.AbsWorkService;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
@@ -39,6 +49,8 @@ import java.util.regex.Pattern;
 public class AutoService extends AbsWorkService {
     private ScreenReceiver receiver;
     private OrientationReciver orientationReciver;
+    private StringBuilder builder=new StringBuilder();
+    private TopApp topApp;
     public AutoService() {
     }
 
@@ -64,12 +76,7 @@ public class AutoService extends AbsWorkService {
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        super.onTaskRemoved(rootIntent);
-        Intent intent = new Intent("com.kai.lktMode.restart");
-        // 兼容安卓8.0  参数为（应用包名，广播路径）,但是只局限于特定的应用能收到广播
-        intent.setComponent(new ComponentName(getApplication().getPackageName(),
-                "com.kai.lktMode.receiver.AutoReceiver"));
-        sendBroadcast(intent);
+
     }
 
     @Nullable
@@ -82,9 +89,9 @@ public class AutoService extends AbsWorkService {
     public void startWork(Intent intent, int flags, int startId) {
         String action=intent==null?null:intent.getAction();
         if (action==null){
-            if ((Boolean) Preference.get(AutoService.this,"autoLock","Boolean"))
+            if ((Boolean) Preference.getBoolean(AutoService.this,"autoLock"))
                 registerScreenActionReceiver();
-            if ((Boolean)Preference.get(AutoService.this,"gameMode","Boolean"))
+            if ((Boolean)Preference.getBoolean(AutoService.this,"gameMode"))
                 regisrerOrentationReceiver();
         }else
             switch (action){
@@ -93,22 +100,33 @@ public class AutoService extends AbsWorkService {
                 case "lockOn":registerScreenActionReceiver();break;
                 case "lockOff":unregisterScreenActionReceiver();break;
                 case "reset":
-                    if ((Boolean)Preference.get(AutoService.this,"autoLock","Boolean")) {
+                    if ((Boolean)Preference.getBoolean(AutoService.this,"autoLock")) {
                         unregisterScreenActionReceiver();
                         registerScreenActionReceiver();
                     }
-                    if ((Boolean)Preference.get(AutoService.this,"gameMode","Boolean")){
+                    if ((Boolean)Preference.getBoolean(AutoService.this,"gameMode")){
                         unregisrerOrentationReceiver();
                         regisrerOrentationReceiver();
                     }
 
                     break;
             }
+        try {
+            topApp=TopApp.getInstance(AutoService.this);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void stopWork(Intent intent, int flags, int startId) {
-
+        unregisrerOrentationReceiver();
+        unregisterScreenActionReceiver();
+        Intent intent1 = new Intent("com.kai.lktMode.restart");
+        // 兼容安卓8.0  参数为（应用包名，广播路径）,但是只局限于特定的应用能收到广播
+        intent1.setComponent(new ComponentName(getApplication().getPackageName(),
+                "com.kai.lktMode.receiver.AutoReceiver"));
+        sendBroadcast(intent1);
     }
 
     @Override
@@ -132,7 +150,13 @@ public class AutoService extends AbsWorkService {
 
     @Override
     public void onDestroy() {
-
+        unregisrerOrentationReceiver();
+        unregisterScreenActionReceiver();
+        Intent intent1 = new Intent("com.kai.lktMode.restart");
+        // 兼容安卓8.0  参数为（应用包名，广播路径）,但是只局限于特定的应用能收到广播
+        intent1.setComponent(new ComponentName(getApplication().getPackageName(),
+                "com.kai.lktMode.receiver.AutoReceiver"));
+        sendBroadcast(intent1);
         super.onDestroy();
 
     }
@@ -142,17 +166,6 @@ public class AutoService extends AbsWorkService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         return START_STICKY;
-    }
-
-
-
-    private void bindDestory(){
-
-        IntentFilter intentFilter=new IntentFilter();
-        DestroyReciver destroyReciver=new DestroyReciver();
-        intentFilter.addAction("com.kai.lktMode.destroy");
-
-        registerReceiver(destroyReciver,intentFilter);
     }
     private void regisrerOrentationReceiver(){
         IntentFilter intentFilter = new IntentFilter();
@@ -190,63 +203,49 @@ public class AutoService extends AbsWorkService {
         }
 
     }
-    private class DestroyReciver extends BroadcastReceiver{
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            startService(new Intent(context,AutoService.class));
-        }
-    }
-
     private class OrientationReciver extends BroadcastReceiver {
         @Override
         public void onReceive(final Context context, Intent intent) {
-            if (!(Boolean)Preference.get(context,"gameMode","Boolean"))
+            if (!(Boolean)Preference.getBoolean(context,"gameMode"))
                 return;
             Configuration mConfiguration = context.getResources().getConfiguration(); //获取设置的配置信息
+            MyApplication myApplication=(MyApplication)getApplication();
             int ori = mConfiguration.orientation; //获取屏幕方向
+            //Toast.makeText(context,ori+"",Toast.LENGTH_LONG).show();
             if (ori == 2) {
-                //为了获取最顶层此处休眠1.5秒
-                try{
-                    Thread.sleep(1500);
-                }catch (InterruptedException e){
-                    e.printStackTrace();
-                }
-                if (!getTopApp(context,2).isEmpty()){
-                    Toast.makeText(context,"游戏加速开启",Toast.LENGTH_SHORT).show();
-                    TransTool.run(context);
+                //Toast.makeText(getApplicationContext(),getTopApp(context),Toast.LENGTH_LONG).show();
+                if (topApp.enterGameMode()){
+                    Toast.makeText(getApplicationContext(),"游戏加速开启",Toast.LENGTH_SHORT).show();
+                    TransTool.run(getApplicationContext());
                     runWithDelay(new Handler(Looper.getMainLooper()) {
                         @Override
                         public void handleMessage(Message msg) {
-                            if (((String)Preference.get(context,"code6","String")).isEmpty()){
-                                readMode(3,context);
+                            if (((String)Preference.getString(getApplicationContext(),"code6")).isEmpty()){
+                                readMode(3,getApplicationContext());
                             }else {
-                                readMode(6,context);
+                                readMode(6,getApplicationContext());
                             }
                             Log.d("game","on");
                             super.handleMessage(msg);
                         }
-                    },10000);
+                    },(int)Preference.getInt(getApplicationContext(),"openGameDelay",5)*1000);
+                }else {
+                    Preference.saveBoolean(context,"inGameMode",false);
                 }
             }
             if (ori == 1) {
-                try{
-                    Thread.sleep(1500);
-                }catch (InterruptedException e){
-                    e.printStackTrace();
-                }
-                if (getTopApp(context,2).isEmpty()){
+                if (topApp.getTopAppByUsage(context).isEmpty())
                     return;
-                }
-                Toast.makeText(context,"游戏加速关闭",Toast.LENGTH_SHORT).show();
-                TransTool.restore(context);
+                Toast.makeText(getApplicationContext(),"游戏加速关闭",Toast.LENGTH_SHORT).show();
+                TransTool.restore(AutoService.this);
                 runWithDelay(new Handler(Looper.getMainLooper()) {
                     @Override
                     public void handleMessage(Message msg) {
                         Log.d("game","off");
-                        readMode((int) Preference.get(context, "default", "int")+1,context);
+                        readMode((int) Preference.getInt(context, "default")+1,getApplicationContext());
                         super.handleMessage(msg);
                     }
-                },5000);
+                },(int)Preference.getInt(getApplicationContext(),"closeGameDelay",15)*1000);
             }
         }
     }
@@ -255,50 +254,27 @@ public class AutoService extends AbsWorkService {
         msgHandler = handler;
         msgHandler.sendEmptyMessageDelayed(2,l);
     }
-    private String getTopApp(Context context,int i) {
-        Log.d("秒数",String.valueOf(i));
-        String packageName = "";
-        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        try {
-            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.Q){
-                List<ActivityManager.RunningTaskInfo> rti = activityManager.getRunningTasks(1);
-                packageName = rti.get(0).topActivity.getPackageName();
-            }  else if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1){
-                final long end = System.currentTimeMillis()+1000;
-                final UsageStatsManager usageStatsManager = (UsageStatsManager) context.getSystemService( Context.USAGE_STATS_SERVICE);
-                final UsageEvents events = usageStatsManager.queryEvents((end - i * 1000-2000), end);
-                UsageEvents.Event usageEvent = new UsageEvents.Event();
-                //Log.d("shifou",String.valueOf(usageStatsManager.isAppInactive("com.cmcm.arrowio_cn.nearme.gamecenter")));
-                while (events.hasNextEvent()) {
-                    events.getNextEvent(usageEvent);
-                    Log.d("ac",usageEvent.getPackageName()+"   "+usageEvent.getEventType());
-                    if (!Preference.getGames(context).contains(usageEvent.getPackageName())) {
-                        continue;
-                    }else {
-                        return usageEvent.getPackageName();
-                    }
-                }
 
-            }
-        }catch (Exception ignored){
-        }
-        return "";
-    }
+
     class ScreenReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(final Context context, Intent intent) {
-            if (!(Boolean)Preference.get(context,"autoLock","Boolean"))
+            if (!(Boolean)Preference.getBoolean(context,"autoLock"))
                 return;
             if(intent.getAction().equals(Intent.ACTION_SCREEN_ON)){
                 runWithDelay(new Handler(Looper.getMainLooper()) {
                     @Override
                     public void handleMessage(Message msg) {
                         Log.d("解锁","success");
-                        readMode((int) Preference.get(context, "default", "int")+1,context);
-                        setMode(context,(int) Preference.get(context, "default", "int")+1);
+                        readMode((int) Preference.getInt(getApplicationContext(), "default")+1,getApplicationContext());
+                        setMode(getApplicationContext(),Preference.getInt(getApplicationContext(), "default")+1);
+                        Settings settings=Settings.getInstance(AutoService.this,false);
+                        for (Settings.Setting setting:settings.getItems()){
+                            setting.command();
+                        }
                         super.handleMessage(msg);
                     }
-                },2000);
+                },5000);
 
             }
             if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)){
@@ -307,15 +283,19 @@ public class AutoService extends AbsWorkService {
                     public void handleMessage(Message msg) {
 
                         Log.d("上锁","success");
-                        if (((String)Preference.get(context,"code5","String")).isEmpty()){
-                            readMode(1,context);
+                        MyApplication application=(MyApplication) getApplication();
+                        if (application.getMainActivity()!=null){
+                            //application.getMainActivity().finish();
+                        }
+                        if (((String)Preference.getString(getApplicationContext(),"code5")).isEmpty()){
+                            readMode(1,getApplicationContext());
 
                         }else {
-                            readMode(5,context);
+                            readMode(5,getApplicationContext());
                         }
-                        for (String s:Preference.getSoftwares(context)){
-                            Log.d("sss",s);
-                            MainFragment.cmd("su -c "+"am force-stop "+s);
+                        builder=new StringBuilder();
+                        for (String s:Preference.getSoftwares(getApplicationContext())){
+                            addCommand("am force-stop "+s+"\n");
                             if (s.contains("com.tencent.mobileqq")){
                                 Log.d("QQ","服务保活");
                                 try {
@@ -323,20 +303,39 @@ public class AutoService extends AbsWorkService {
                                 }catch (Exception e){
                                     e.printStackTrace();
                                 }
-                                MainFragment.cmd("su -c am startservice -n com.tencent.mobileqq/.msf.service.MsfService");
+                                addCommand("am startservice -n com.tencent.mobileqq/.msf.service.MsfService\n");
                             }
-                            if (s.contains("com.tencent.mm")){
+                            if (s.contains("com.tencent.tim")){
+                                Log.d("TIM","服务保活");
                                 try {
                                     Thread.sleep(1000);
                                 }catch (Exception e){
                                     e.printStackTrace();
                                 }
-                                MainFragment.cmd("su -c am startservice -n com.tencent.mm/.booter.CoreService");
+                                addCommand("am startservice -n com.tencent.tim/.msf.service.MsfService\n");
                             }
+                            if (s.contains("com.tencent.mm")){
+                                Log.d("微信","服务保活");
+                                try {
+                                    Thread.sleep(1000);
+                                }catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                                addCommand("am startservice -n com.tencent.mm/.booter.CoreService\n");
+                            }
+                        }
+                        Settings settings=Settings.getInstance(AutoService.this,true);
+                        for (Settings.Setting setting:settings.getItems()){
+                            setting.command();
+                        }
+                        try {
+                            RootUtils.runCommand(builder.toString());
+                        }catch (Exception e){
+                            e.printStackTrace();
                         }
                         super.handleMessage(msg);
                     }
-                },(int)Preference.get(context,"sleepDelay",200)*1000);
+                },(int)Preference.getInt(getApplicationContext(),"sleepDelay",200)*1000);
 
             }
         }
@@ -345,14 +344,17 @@ public class AutoService extends AbsWorkService {
 
 
     }
+    private void addCommand(String addStr){
+        builder.append(addStr);
+    }
     private void setMode(Context c,int i){
         if (i==5){
-            Preference.save(c,"customMode",1);
+            Preference.saveInt(c,"customMode",1);
         }else if(i==6){
-            Preference.save(c,"customMode",3);
+            Preference.saveInt(c,"customMode",3);
         }
         else {
-            Preference.save(c, "customMode", i);
+            Preference.saveInt(c, "customMode", i);
         }
     }
     public static void protectService(Context context){
@@ -362,8 +364,8 @@ public class AutoService extends AbsWorkService {
         }
     }
     private void readMode(final int i,final Context c){
-        if ((Boolean) Preference.get(c,"custom","Boolean")){
-            int now=(int)Preference.get(this,"customMode","int");
+        if ((Boolean) Preference.getBoolean(c,"custom")){
+            int now=(int)Preference.getInt(this,"customMode");
             if (now==i){
                 return;
             }
@@ -376,35 +378,36 @@ public class AutoService extends AbsWorkService {
             return;
         }
         try{
-            Shell shell= RootTools.getShell(true);
-            shell.add(new Command(1,"grep PROFILE /data/LKT.prop"){
-                @Override
-                public void commandOutput(int id, String line) {
-                    super.commandOutput(id, line);
-                    int now=cutMode(line);
-                    if (now==i){
-                        return;
-                    }
-                    Intent serviceIntent = new Intent(c, CommandService.class);
-                    serviceIntent.putExtra("mode", i);
-                    serviceIntent.putExtra("isShow", false);
-                    c.startService(serviceIntent);
-                }
+            //首先获取lkt当前的模式
+            int now=cutMode(RootUtils.runCommand("grep PROFILE /data/LKT.prop"));
+            //判断是否使用了游戏专用调度
+            if (!Preference.getString(AutoService.this,"code6").isEmpty()){
+                Intent gameIntent=new Intent(c,CustomCommandService.class);
+                gameIntent.putExtra("mode", i);
+                gameIntent.putExtra("isShow", false);
+                c.startService(gameIntent);
+                setMode(c,i);
+                return;
+            }
+            if (now == i){
+                return;
+            }
+            if (i == -1){
+                Intent serviceIntent = new Intent(c, CommandService.class);
+                int mode =  Preference.getInt(c, "default");
+                setMode(c,mode+1);
+                serviceIntent.putExtra("mode", mode+1);
+                serviceIntent.putExtra("isShow", false);
+                c.startService(serviceIntent);
+                return;
+            }
+            setMode(c,i);
+            Intent serviceIntent = new Intent(c, CommandService.class);
+            serviceIntent.putExtra("mode", i);
+            serviceIntent.putExtra("isShow", false);
+            c.startService(serviceIntent);
 
-                @Override
-                public void commandCompleted(int id, int exitcode) {
-                    super.commandCompleted(id, exitcode);
-                    if (exitcode!=0){
-                        Intent serviceIntent = new Intent(c, CommandService.class);
-                        int mode = (int) Preference.get(c, "default", "int");
-                        serviceIntent.putExtra("mode", mode+1);
-                        serviceIntent.putExtra("isShow", false);
-                        c.startService(serviceIntent);
-                    }
-                }
-            });
-
-        }catch (IOException | TimeoutException | RootDeniedException e){
+        }catch (Exception e){
             e.printStackTrace();
         }
     }

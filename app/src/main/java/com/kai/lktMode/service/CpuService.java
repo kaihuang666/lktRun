@@ -1,21 +1,30 @@
 package com.kai.lktMode.service;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.os.BatteryManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.kai.lktMode.bean.SystemInfo;
+import com.kai.lktMode.bean.Temperature;
+import com.kai.lktMode.cpu.CpuModel;
+import com.kai.lktMode.device.CurrentManager;
+import com.kai.lktMode.gpu.GPUFreq;
+import com.kai.lktMode.root.RootFile;
+import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.tool.util.local.CpuUtil;
 import com.kai.lktMode.tool.util.local.ShellUtil;
-import com.stericson.RootShell.execution.Command;
-import com.stericson.RootTools.RootTools;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -24,11 +33,15 @@ import java.io.FileReader;
 
 public class CpuService extends Service {
     private CpuThread cpuThread;
+    private Temperature temperature;
+    private CurrentManager currentManager;
     private int cpuAmount= CpuUtil.getCpuAmount();//cpu核心数量
     private CpuBinder binder=new CpuBinder();
     private LocalBroadcastManager localBroadcastManager;
     private int[] max=getMax();//获取每个核心的最高频率
-    private File temp_file;
+    private boolean hasCpu=true;
+    private boolean hasGpu=true;
+    private GPUFreq gpuFreq=GPUFreq.getInstance();
     public CpuService() {
     }
     public class CpuBinder extends Binder{
@@ -36,13 +49,11 @@ public class CpuService extends Service {
             cpuThread.setCreated(new OnHandlerCreated() {
                 @Override
                 public void created() {
-                    if (temp_file!=null){
-                        cpuThread.getHandler().sendEmptyMessageDelayed(6,500);
-                    }else {
-                        cpuThread.getHandler().sendEmptyMessageDelayed(5,500);
-                    }
-                    cpuThread.getHandler().sendEmptyMessageDelayed(4,500);
-                    cpuThread.getHandler().sendEmptyMessageDelayed(3,500);
+                    if (gpuFreq.supported())
+                        cpuThread.getHandler().sendEmptyMessageDelayed(9,0);
+                    cpuThread.getHandler().sendEmptyMessageDelayed(6,0);
+                    cpuThread.getHandler().sendEmptyMessageDelayed(4,0);
+                    cpuThread.getHandler().sendEmptyMessageDelayed(3,0);
 
                 }
             });
@@ -82,17 +93,34 @@ public class CpuService extends Service {
                     public void handleMessage(@NonNull Message msg) {
                         super.handleMessage(msg);
                         if (msg.what==3){
+                            cpuThread.getHandler().removeMessages(3);
                             Bundle bundle=msg.getData();
                             Intent intent=new Intent("com.kai.lktMode.cpuListening");
                             intent.putExtras(bundle);
                             localBroadcastManager.sendBroadcast(intent);
                             cpuThread.getHandler().sendEmptyMessageDelayed(3,500);
                         }
+                        if (msg.what==8){
+                            cpuThread.getHandler().removeMessages(8);
+                            Bundle bundle=msg.getData();
+                            Intent intent=new Intent("com.kai.lktMode.cpuListening");
+                            intent.putExtras(bundle);
+                            localBroadcastManager.sendBroadcast(intent);
+                            cpuThread.getHandler().sendEmptyMessageDelayed(8,500);
+                        }
                         if (msg.what==4){
+                            cpuThread.getHandler().removeMessages(4);
                             Intent intent=new Intent("com.kai.lktMode.currentUpdate");
                             intent.putExtra("current",msg.getData().getString("current"));
                             localBroadcastManager.sendBroadcast(intent);
-                            cpuThread.getHandler().sendEmptyMessageDelayed(4,1000);
+                            cpuThread.getHandler().sendEmptyMessageDelayed(4,800);
+                        }
+                        if (msg.what==7){
+                            cpuThread.getHandler().removeMessages(7);
+                            Intent intent=new Intent("com.kai.lktMode.currentUpdate");
+                            intent.putExtra("current",msg.getData().getString("current"));
+                            localBroadcastManager.sendBroadcast(intent);
+                            cpuThread.getHandler().sendEmptyMessageDelayed(7,1000);
                         }
                         if (msg.what==6){
                             Intent intent=new Intent("com.kai.lktMode.tempUpdate");
@@ -106,12 +134,21 @@ public class CpuService extends Service {
                             localBroadcastManager.sendBroadcast(intent);
                             cpuThread.getHandler().sendEmptyMessageDelayed(5,1500);
                         }
+                        if (msg.what==9){
+                            Intent intent=new Intent("com.kai.lktMode.gpuPercent");
+                            intent.putExtra("percent",msg.getData().getInt("percent",0));
+                            localBroadcastManager.sendBroadcast(intent);
+                            cpuThread.getHandler().sendEmptyMessageDelayed(9,1000);
+                        }
                     }
                 }
 
         );
+        temperature=Temperature.getInstance(CpuService.this);
+        hasCpu=temperature.hasCPU();
+        hasGpu=temperature.hasGPU();
         localBroadcastManager=LocalBroadcastManager.getInstance(CpuService.this);
-        temp_file=CpuUtil.getTempFile(CpuService.this,null);
+        currentManager=CurrentManager.getInstance(CpuService.this);
     }
 
     private class CpuThread extends Thread{
@@ -157,16 +194,26 @@ public class CpuService extends Service {
         }
         return result;
     }
+    private int[] getMin(){
+        int[] result=new int[cpuAmount];
+        for (int i=0;i<result.length;i++){
+            result[i]=getMinCpuFreq("cpu"+i);
+        }
+        return result;
+    }
     //获取单核支持的最高频率
     public int getMaxCpuFreq(String cpu){
         return ShellUtil.getIntFromFile(new File("/sys/devices/system/cpu/"+cpu+"/cpufreq/cpuinfo_max_freq"))/1000;
+    }
+    public int getMinCpuFreq(String cpu){
+        return ShellUtil.getIntFromFile(new File("/sys/devices/system/cpu/"+cpu+"/cpufreq/cpuinfo_min_freq"))/1000;
     }
     //获取每一核心的频率
     private int[] getCpu(){
         int[] result=new int[cpuAmount];
         for (int i=0;i<result.length;i++){
             int cpuFreq0=getCurCpuFreq("cpu"+i);
-            for (int j=0;j<6;j++){
+            for (int j=0;j<4;j++){
                 int freq=getCurCpuFreq("cpu"+i);
                 if (freq<cpuFreq0){
                     cpuFreq0=freq;
@@ -239,64 +286,40 @@ public class CpuService extends Service {
         public void handleMessage(@NonNull final Message msg) {
             if (msg.what==4){
                 try {
-                    RootTools.getShell(true).add(new Command(5,"cat /sys/class/power_supply/battery/current_now"){
-                        @Override
-                        public void commandOutput(int id, String line) {
-                            super.commandOutput(id, line);
-                            String s = line.toString().trim().replaceAll("[^0-9.-]+", "");
-
-                            float c=Float.valueOf(s)/1000;
-                            //部分机型是以毫安为单位的
-                            if (Math.abs(c)<=1){
-                                c=Float.valueOf(s);
-                            }
-                            current = String.format("%.1f",c)+"mA";
-                            Bundle bundle1=new Bundle();
-                            bundle1.putString("current",current);
-                            Message message=new Message();
-                            message.what=4;
-                            message.setData(bundle1);
-                            parent.sendMessage(message);
-                        }
-                    });
+                    int current_int=currentManager.getCurrent();
+                    Bundle bundle1=new Bundle();
+                    bundle1.putString("current",(currentManager.isCharge()?"充电":"放电")+"电流："+current_int+"mA");
+                    Message message=new Message();
+                    message.what=4;
+                    message.setData(bundle1);
+                    parent.sendMessage(message);
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             }
-            if (msg.what==5){
-                try {
-                    RootTools.getShell(true).add(new Command(6,"cat /sys/class/thermal/thermal_zone0/temp"){
-                        @Override
-                        public void commandOutput(int id, String line) {
-                            super.commandOutput(id, line);
-                            String s = line.toString().trim().replaceAll("[^0-9.]+", "");
-                            float c=Float.valueOf(s)/1000;
-                            //部分机型是以毫安为单位的
-                            if (c<=10){
-                                c=Integer.parseInt(s);
-                            }
-                            temp=String.format("%.1f",c);
-                            bundle=new Bundle();
-                            bundle.putString("temp",temp);
-                            Message message=new Message();
-                            message.setData(bundle);
-                            message.what=5;
-                            parent.sendMessage(message);
-                        }
-                    });
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
+            if (msg.what==9){
+                int percent=gpuFreq.getBusy();
+                Bundle bundle1=new Bundle();
+                bundle1.putInt("percent",percent);
+                Message message=new Message();
+                message.what=9;
+                message.setData(bundle1);
+                parent.sendMessage(message);
             }
             if (msg.what==6){
-                float cpuTemp=CpuUtil.getCpuTemp(CpuService.this,temp_file)/1000;
-                temp= String.format("%.1f",cpuTemp);
-                bundle=new Bundle();
-                bundle.putString("temp",temp);
-                Message message=new Message();
-                message.setData(bundle);
-                message.what=6;
-                parent.sendMessage(message);
+                try {
+                    if (hasCpu){
+                        temp=String.valueOf(temperature.getCPUTemp());
+                        bundle=new Bundle();
+                        bundle.putString("temp",temp);
+                        Message message=new Message();
+                        message.setData(bundle);
+                        message.what=5;
+                        parent.sendMessage(message);
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
             if (msg.what==3){
                 try {
@@ -317,6 +340,31 @@ public class CpuService extends Service {
                     Message message=new Message();
                     message.setData(bundle);
                     message.what=3;
+                    parent.sendMessage(message);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+            if (msg.what==8){
+                try {
+                    freq=getCpu();
+                    for (int i=0;i<freq.length;i++){
+                        if (max[i]==0||freq[i]==0){
+                            progress[i]=0;
+                            continue;
+                        }
+                        progress[i]=100*freq[i]/max[i];
+                    }
+                    //计算和获取信息
+                    sum=getCpuRate(progress);
+                    bundle=new Bundle();
+                    bundle.putIntArray("freq",freq);
+                    bundle.putIntArray("progress",progress);
+                    bundle.putInt("sum",sum);
+                    Message message=new Message();
+                    message.setData(bundle);
+                    message.what=8;
                     parent.sendMessage(message);
                 }catch (Exception e){
                     e.printStackTrace();

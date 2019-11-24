@@ -90,12 +90,13 @@ public class PowercfgAdapter extends RecyclerView.Adapter<PowercfgAdapter.ViewHo
                 onImportClick.onImport(position,holder.edit,holder.extra);
             }
         });
+
     }
 
     public void saveAll(){
         String sdcard= Environment.getExternalStorageDirectory().getAbsolutePath();
         for (int i=0;i<4;i++){
-            Preference.save(context,"code"+(i+1),"sh "+sdcard+"/lktMode/powercfg/powercfg.sh "+editTexts.get(i).getText().toString());
+            Preference.saveString(context,"code"+(i+1),"sh "+sdcard+"/lktMode/powercfg/powercfg.sh "+editTexts.get(i).getText().toString());
         }
     }
     @Override

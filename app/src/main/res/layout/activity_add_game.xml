@@ -7,6 +7,7 @@
     tools:context=".activity.AddActivity"
     android:orientation="vertical">
     <androidx.appcompat.widget.Toolbar
+        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         android:paddingTop="20dp"
         android:id="@+id/simple_toolbar"
         android:layout_width="match_parent"
@@ -15,11 +16,20 @@
         app:title="添加游戏"
         app:subtitle="仅限5个横屏应用"
         app:navigationIcon="@mipmap/back">
+        <androidx.appcompat.widget.ActionMenuView
+            android:layout_gravity="end"
+            android:id="@+id/actionmenuview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+        </androidx.appcompat.widget.ActionMenuView>
     </androidx.appcompat.widget.Toolbar>
     <androidx.recyclerview.widget.RecyclerView
+        android:background="@color/colorWhite"
+        android:fastScrollEnabled="true"
         android:id="@+id/recyclerview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
     </androidx.recyclerview.widget.RecyclerView>
 </LinearLayout>

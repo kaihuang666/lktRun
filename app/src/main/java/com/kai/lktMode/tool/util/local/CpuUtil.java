@@ -18,8 +18,6 @@ import android.os.BatteryManager;
 import android.os.Build;
 
 import com.kai.lktMode.tool.Preference;
-import com.stericson.RootShell.execution.Shell;
-import com.stericson.RootTools.RootTools;
 
 public class CpuUtil {
     public static HashMap<String, Class<?>> prefs = new HashMap<String, Class<?>>();
@@ -43,11 +41,6 @@ public class CpuUtil {
     }
     public CpuUtil(){
         //获取具有root权限的shell，用来读取被限制的文件
-        try {
-            Shell shell=RootTools.getShell(true);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
         //定义cpu文件路径，每部手机必然存在
         File file=new File(" /sys/devices/system/cpu");
         //获取cpu核心的文件夹
@@ -72,7 +65,7 @@ public class CpuUtil {
     public static float getCpuTemp(Context context,File file){
         float temp=0;
         if (file==null){
-            Preference.save(context,"tempReadable",true);
+            Preference.saveBoolean(context,"tempReadable",true);
             return temp;
         }
         try {
@@ -108,7 +101,7 @@ public class CpuUtil {
         return amount;
     }
     public static int getCurrent(Context context){
-        boolean readable=(boolean)Preference.get(context,"currentReadable",READ);
+        boolean readable=Preference.getBoolean(context,"currentReadable",READ);
         if (readable){
             return -1;
         }
@@ -123,7 +116,7 @@ public class CpuUtil {
             }
             return current_int;
         }else {
-            Preference.save(context,"currentReadable",READWITHROOT);
+            Preference.saveBoolean(context,"currentReadable",READWITHROOT);
             return -1;
         }
     }
@@ -155,7 +148,6 @@ public class CpuUtil {
 
         return result.toArray(new String[]{});
     }
-
     private static String[] tempFiles = {
             "/sys/devices/platform/omap/omap_temp_sensor.0/temperature",
             "/sys/kernel/debug/tegra_thermal/temp_tj",
@@ -167,11 +159,11 @@ public class CpuUtil {
 
     public static File getTempFile(Context context, String fileName) {
         File ret = null;
-        String tempFile=(String)Preference.get(context,"temp","String");
+        String tempFile=(String)Preference.getString(context,"temp");
         if (!tempFile.isEmpty()){
             return new File(tempFile);
         }
-        if ((boolean)Preference.get(context,"tempReadable","Boolean")){
+        if ((boolean)Preference.getBoolean(context,"tempReadable")){
             return null;
         }
         if(fileName!=null) {
@@ -214,7 +206,7 @@ public class CpuUtil {
             }
         }
         if (ret!=null)
-            Preference.save(context,"temp",ret.getAbsolutePath());
+            Preference.saveString(context,"temp",ret.getAbsolutePath());
         return ret;
     }
     public class Cpu{

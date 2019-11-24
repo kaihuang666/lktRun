@@ -3,16 +3,16 @@
     android:layout_width="match_parent"
     android:layout_height="130dp"
     android:layout_margin="5dp"
+    android:elevation="1dp"
     android:background="@drawable/bc"
     android:backgroundTintMode="src_in">
     <TextView
-        android:layout_weight="0.1"
+        android:layout_weight="0.08"
         android:id="@+id/title"
-        android:layout_marginStart="20dp"
-        android:layout_marginLeft="20dp"
+        android:gravity="center"
         android:ems="1"
+        android:maxEms="1"
         android:layout_gravity="center_vertical"
-        android:textSize="18dp"
         android:text="省电"
         android:layout_width="0dp"
         android:layout_height="wrap_content" />
@@ -20,17 +20,17 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1">
-        <EditText
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
+        <com.kai.lktMode.widget.SuperEditText
+            android:layout_marginTop="20px"
+            android:layout_marginBottom="20px"
             android:background="@drawable/bg_edittext_selector"
-            android:textSize="10dp"
+            android:textSize="25px"
             android:gravity="top|left"
             android:scrollbars="vertical"
             android:maxLines="100"
             android:id="@+id/edit"
-            android:layout_marginLeft="10dp"
-            android:layout_marginStart="10dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginStart="5dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
@@ -51,7 +51,6 @@
                 android:layout_toRightOf="@+id/edit"
                 android:id="@+id/run"
                 android:layout_centerVertical="true"
-
                 android:background="#00FFFFFF"
                 android:src="@mipmap/run"
                 android:layout_width="20dp"
@@ -66,10 +65,10 @@
             <ImageButton
                 android:id="@+id/importSh"
                 android:adjustViewBounds="true"
-                android:src="@mipmap/importsh"
                 android:background="#00FFFFFF"
-                android:layout_width="25dp"
-                android:layout_height="25dp" />
+                android:src="@mipmap/import_menu"
+                android:layout_width="20dp"
+                android:layout_height="20dp" />
 
         </LinearLayout>
     </LinearLayout>

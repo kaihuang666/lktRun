@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.kai.lktMode.bean.Item;
 import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.R;
+import com.kai.lktMode.widget.SuperEditText;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,13 +31,14 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
     private Context context;
     static class ViewHolder extends RecyclerView.ViewHolder{
         TextView title;
-        EditText edit;
+        SuperEditText edit;
         ImageButton run;
         ImageButton importSh;
         public ViewHolder(View v){
             super(v);
             title=v.findViewById(R.id.title);
             edit=v.findViewById(R.id.edit);
+            edit.setHorizontallyScrolling(true);
             run=v.findViewById(R.id.run);
             importSh=v.findViewById(R.id.importSh);
         }
@@ -94,8 +96,12 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
 
     public void saveAll(){
         for (int i=0;i<4;i++){
-            Preference.save(context,"code"+(i+1),editTexts.get(i).getText().toString());
+            Preference.saveString(context,"code"+(i+1),editTexts.get(i).getText().toString().trim());
         }
+    }
+    public void setCode(int i,String code){
+        Preference.saveString(context,"code"+(i+1),code);
+        editTexts.get(i).setText(code);
     }
     @Override
     public int getItemCount() {

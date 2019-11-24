@@ -4,6 +4,7 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
     android:layout_margin="5dp"
+    android:elevation="2dp"
         android:background="@drawable/bc"
         android:backgroundTintMode="src_in">
         <TextView
@@ -11,7 +12,6 @@
             android:layout_marginStart="20dp"
             android:layout_marginLeft="20dp"
             android:layout_gravity="center_vertical"
-            android:textSize="18dp"
             android:text="省电"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -58,13 +58,12 @@
 
             <ImageButton
                 android:id="@+id/extra"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:layout_marginStart="6dp"
                 android:layout_marginLeft="6dp"
-                android:adjustViewBounds="true"
                 android:background="#00FFFFFF"
-                android:src="@mipmap/importsh" />
+                android:src="@mipmap/import_menu" />
 
         </LinearLayout>
     </LinearLayout>

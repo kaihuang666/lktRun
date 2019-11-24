@@ -1,0 +1,33 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="windowNoTitle">true</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorPrimaryDark</item>
+        <item name="android:windowBackground">@color/colorBack</item>
+    </style>
+    <style name="ApplicationTheme" parent="AppTheme">
+        <item name="android:windowBackground">@drawable/splash</item>
+    </style>
+    <style name="ActivityTheme" parent="AppTheme">
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+    <style name="AppDialog" parent="Theme.AppCompat.DayNight.Dialog.Alert">
+        <item name="colorPrimaryDark">#1868A7</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="dialogCornerRadius">6dp</item>
+        <item name="android:background">@color/colorWhite</item>
+        <item name="colorAccent">@color/colorPrimaryDark</item>
+    </style>
+    <style name="AppDialogRun" parent="AppDialog">
+        <item name="android:height">400dp</item>
+    </style>
+
+
+
+
+
+</resources>

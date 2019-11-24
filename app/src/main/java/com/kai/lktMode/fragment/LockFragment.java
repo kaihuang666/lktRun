@@ -4,6 +4,8 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,12 +18,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.kai.lktMode.activity.AddActivity;
 import com.kai.lktMode.adapter.ListGameAdapter;
 import com.kai.lktMode.adapter.ListLabAdapter;
+import com.kai.lktMode.base.MyApplication;
+import com.kai.lktMode.bean.App;
 import com.kai.lktMode.tool.util.local.AppUtils;
 import com.kai.lktMode.service.AutoService;
 import com.kai.lktMode.bean.Item;
 import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.R;
 import com.kai.lktMode.activity.SleepSettingActivity;
+import com.kai.lktMode.widget.SimplePaddingDecoration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,10 +34,11 @@ import java.util.List;
 public class LockFragment extends MyFragment {
     private ListLabAdapter adapter;
     private List<Item> items=new ArrayList<>();
-    private List<Item> gameItems=new ArrayList<>();
+    private List<App> gameItems=new ArrayList<>();
     private ListGameAdapter gameAdapter;;
     private View view;
     private String[] checks=new String[]{"autoLock","autoClean","imClean"};
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -48,6 +54,7 @@ public class LockFragment extends MyFragment {
         LinearLayoutManager manager=new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(manager);
         adapter=new ListLabAdapter(items);
+        recyclerView.addItemDecoration(new SimplePaddingDecoration(getContext()));
         recyclerView.setAdapter(adapter);
         adapter.setOnItemClick(new ListLabAdapter.OnItemClick() {
             @Override
@@ -61,7 +68,7 @@ public class LockFragment extends MyFragment {
         adapter.setOnItemCheck(new ListLabAdapter.OnItemCheck() {
             @Override
             public void onCheck(int i, Boolean isChecked) {
-                Preference.save(getContext(),checks[i],isChecked);
+                Preference.saveBoolean(getContext(),checks[i],isChecked);
                 if (isChecked&&i==0){
                     Intent intent=new Intent(getContext(), AutoService.class);
                     intent.setAction("lockOn");
@@ -88,10 +95,22 @@ public class LockFragment extends MyFragment {
         });
     }
     private void updateList(){
-        items.get(0).setChecked((Boolean)Preference.get(getContext(),"autoLock","Boolean"));
-        items.get(1).setChecked((Boolean)Preference.get(getContext(),"autoClean","Boolean"));
-        items.get(2).setChecked((Boolean)Preference.get(getContext(),"imClean","Boolean"));
-        adapter.notifyDataSetChanged();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                items.get(0).setChecked((Boolean)Preference.getBoolean(getContext(),"autoLock"));
+                items.get(1).setChecked((Boolean)Preference.getBoolean(getContext(),"autoClean"));
+                items.get(2).setChecked((Boolean)Preference.getBoolean(getContext(),"imClean"));
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        adapter.notifyDataSetChanged();
+                    }
+                });
+            }
+        }).start();
+
+
     }
     private void initList(){
         items.clear();
@@ -114,7 +133,7 @@ public class LockFragment extends MyFragment {
         gameItems=new ArrayList<>();
         RecyclerView recyclerView=view.findViewById(R.id.gameList);
         for (String s:Preference.getSoftwares(getContext())){
-            gameItems.add(new Item(s,false));
+            gameItems.add(new App(AppUtils.getAppName(getContext(),s),s,AppUtils.getDrawable(getContext(),s),false));
         }
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()){
             @Override
@@ -122,6 +141,7 @@ public class LockFragment extends MyFragment {
                 return 360;
             }
         });
+        recyclerView.addItemDecoration(new SimplePaddingDecoration(getContext()));
         gameAdapter=new ListGameAdapter(getContext(),gameItems,0,false);
         recyclerView.setAdapter(gameAdapter);
         gameAdapter.setBottomClick(new ListGameAdapter.OnBottomClick() {
@@ -135,7 +155,7 @@ public class LockFragment extends MyFragment {
         gameAdapter.setRemoveClick(new ListGameAdapter.OnItemRemoveClick() {
             @Override
             public void onRemoveClick(int i) {
-                Preference.softwareRemove(getContext(),gameItems.get(i).getTitle());
+                Preference.softwareRemove(getContext(),gameItems.get(i).getPackage_name());
                 gameAdapter.notifyItemRemoved(i);
                 gameItems.remove(i);
                 gameAdapter.notifyItemRangeChanged(i, items.size() - i);
@@ -143,15 +163,27 @@ public class LockFragment extends MyFragment {
         });
     }
     private void upcateSoftware(){
-        gameItems.clear();
-        for (String s:Preference.getSoftwares(getContext())){
-            if (AppUtils.getAppName(getContext(),s)==null){
-                Preference.softwareRemove(getContext(),s);
-                continue;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                gameItems.clear();
+                for (String s:Preference.getSoftwares(getContext())){
+                    if (AppUtils.getAppName(getContext(),s)==null){
+                        Preference.softwareRemove(getContext(),s);
+                        continue;
+                    }
+                    gameItems.add(new App(AppUtils.getAppName(getContext(),s),s,AppUtils.getDrawable(getContext(),s),false));
+                }
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        gameAdapter.notifyDataSetChanged();
+                    }
+                });
+
             }
-            gameItems.add(new Item(s,false));
-        }
-        gameAdapter.notifyDataSetChanged();
+        }).start();
+
     }
     private void showDialog(String str, DialogInterface.OnClickListener listener){
         new AlertDialog.Builder(getContext(),R.style.AppDialog)

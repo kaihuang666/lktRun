@@ -1,6 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
     signingConfigs {
         release {
             storeFile file('C:\\Users\\kai\\Desktop\\lktMode.jks')
@@ -19,10 +23,10 @@ android {
     buildToolsVersion "29.0.1"
     defaultConfig {
         applicationId "com.kai.lktMode"
-        minSdkVersion 22
+        minSdkVersion 21
         targetSdkVersion 29
-        versionCode 32
-        versionName "2.3.4.5.7"
+        versionCode 49
+        versionName "2.3.4.5.10(beta4)"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.release
     }
@@ -48,10 +52,18 @@ android {
 }
 
 dependencies {
+    //rxjava
+    implementation "io.reactivex.rxjava3:rxjava:3.0.0-RC2"
+    implementation 'com.drawthink:expandable-recyclerview:0.0.3'
+    //沉浸状态栏
+    implementation 'com.gyf.immersionbar:immersionbar:3.0.0-beta05'
+    implementation 'com.jakewharton:butterknife:10.1.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     //protect process
-    implementation 'com.xdandroid:hellodaemon:+'
+    implementation 'com.xdandroid:hellodaemon:1.2.2'
     //filePicker
+    implementation 'com.leon:lfilepickerlibrary:1.8.0'
     implementation 'com.github.angads25:filepicker:1.1.1'
     //http
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
@@ -67,4 +79,5 @@ dependencies {
     implementation 'com.github.lzyzsd:circleprogress:v1.2.1'
     //jsoup
     implementation files('libs/jsoup-1.12.1.jar')
+
 }

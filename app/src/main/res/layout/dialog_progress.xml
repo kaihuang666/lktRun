@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="300dp"
+    android:layout_height="100dp"
+    android:background="@color/colorWhite"
+    android:orientation="vertical"
+    android:gravity="center_horizontal">
+    <WebView
+        android:id="@+id/webview"
+        android:visibility="invisible"
+        android:layout_width="match_parent"
+        android:layout_height="150dp">
+    </WebView>
+    <TextView
+        android:layout_above="@+id/progress"
+        android:layout_marginBottom="5dp"
+        android:layout_marginStart="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <ProgressBar
+        android:progressBackgroundTint="@color/colorGray"
+        android:progressBackgroundTintMode="multiply"
+        android:progress="0"
+        android:layout_centerInParent="true"
+        android:id="@+id/progress"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="40dp" />
+    <TextView
+        android:id="@+id/progress_int"
+        android:layout_marginStart="20dp"
+        android:text="0"
+        android:layout_below="@+id/progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:text="%"
+        android:layout_toRightOf="@+id/progress_int"
+        android:layout_below="@+id/progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/end"
+        android:text="/100"
+        android:layout_below="@+id/progress"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/progress_float"
+        android:text="0"
+        android:layout_below="@+id/progress"
+        android:layout_toLeftOf="@+id/end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+</RelativeLayout>

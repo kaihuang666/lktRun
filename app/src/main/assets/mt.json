@@ -1,0 +1,216 @@
+[
+  {
+    "board": "MT6582M",
+    "model": "MT6582M",
+    "model_name": "MT6582M",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6592",
+    "model": "MT6592",
+    "model_name": "MT6592",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6592M",
+    "model": "MT6592M",
+    "model_name": "MT6592M",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6591",
+    "model": "MT6591",
+    "model_name": "MT6591",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6595",
+    "model": "MT6595",
+    "model_name": "MT6595",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6595M",
+    "model": "MT6595M",
+    "model_name": "MT6595M",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6595T",
+    "model": "MT6595T",
+    "model_name": "MT6595T",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6732",
+    "model": "MT6732",
+    "model_name": "MT6732/6732M",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6735",
+    "model": "MT6735",
+    "model_name": "MT6735/6735M",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6737",
+    "model": "MT6737",
+    "model_name": "MT6737/6737M/6737T",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6738",
+    "model": "MT6738",
+    "model_name": "MT6738",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6739",
+    "model": "MT6739",
+    "model_name": "MT6739",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6750",
+    "model": "MT6750",
+    "model_name": "MT6750",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6752",
+    "model": "MT6752",
+    "model_name": "MT6752/6752M",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6753",
+    "model": "MT6753",
+    "model_name": "MT6753",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6762M",
+    "model": "MT6762M",
+    "model_name": "Helio A22",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6755",
+    "model": "MT6755",
+    "model_name": "Helio P10 ",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6755T",
+    "model": "MT6755T",
+    "model_name": "Helio P15",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6755S",
+    "model": "MT6755S",
+    "model_name": "Helio P18",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6757",
+    "model": "MT6757",
+    "model_name": "Helio P20",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6762",
+    "model": "MT6762",
+    "model_name": "Helio P22",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6763T",
+    "model": "MT6763T",
+    "model_name": "Helio P23",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6757CD",
+    "model": "MT6757CD",
+    "model_name": "Helio P25",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6758",
+    "model": "MT6758",
+    "model_name": "Helio P30",
+    "tune": "diy"
+  },
+
+  {
+    "board": "MT6765",
+    "model": "MT6765",
+    "model_name": "Helio P35",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6771",
+    "model": "MT6771",
+    "model_name": "Helio P60",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6775",
+    "model": "MT6775",
+    "model_name": "Helio P70",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6779",
+    "model": "MT6779",
+    "model_name": "Helio P90",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6797",
+    "model": "MT6797",
+    "model_name": "Helio x20",
+    "tune": "yc|diy",
+    "yc_url": "i5ldrta"
+  },
+  {
+    "board": "MT6795",
+    "model": "MT6795",
+    "model_name": "Helio x10",
+    "tune": "yc|diy",
+    "yc_url": "i5ldrsj"
+  },
+  {
+    "board": "MT6797D",
+    "model": "MT6797D",
+    "model_name": "Helio x23",
+    "tune": "yc|diy"
+  },
+  {
+    "board": "MT6797T",
+    "model": "MT6797T",
+    "model_name": "Helio x25",
+    "tune": "yc|diy",
+    "yc_url": "i5ldrta"
+  },
+  {
+    "board": "MT6797X",
+    "model": "MT6797X",
+    "model_name": "Helio x27",
+    "tune": "diy"
+  },
+  {
+    "board": "MT6799",
+    "model": "MT6799",
+    "model_name": "Helio x30",
+    "tune": "diy"
+  },
+  {
+    "board": "unknown",
+    "model": "unknown",
+    "model_name": "其他",
+    "tune": "diy"
+  }
+]

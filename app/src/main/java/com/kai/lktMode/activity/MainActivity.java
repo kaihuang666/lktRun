@@ -5,26 +5,35 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.ActionMenuView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.AssetFileDescriptor;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.ParcelFileDescriptor;
+import android.os.ParcelFormatException;
 import android.os.PowerManager;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -32,12 +41,21 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.bigkoo.pickerview.builder.OptionsPickerBuilder;
 import com.bigkoo.pickerview.listener.OnOptionsSelectListener;
 import com.bigkoo.pickerview.view.OptionsPickerView;
 import com.google.android.material.navigation.NavigationView;
+import com.kai.lktMode.bean.Sdcard;
+import com.kai.lktMode.cpu.CpuBoost;
+import com.kai.lktMode.cpu.CpuManager;
+import com.kai.lktMode.bean.SystemInfo;
+import com.kai.lktMode.cpu.CpuModel;
+import com.kai.lktMode.root.RootUtils;
 import com.kai.lktMode.service.AutoService;
 import com.kai.lktMode.base.BaseActivity;
 import com.kai.lktMode.service.CpuService;
@@ -49,47 +67,67 @@ import com.kai.lktMode.fragment.MainFragment;
 import com.kai.lktMode.base.MyApplication;
 import com.kai.lktMode.fragment.MyFragment;
 import com.kai.lktMode.fragment.PowercfgFragment;
-import com.kai.lktMode.fragment.SettingFragment;
-import com.kai.lktMode.tool.util.net.DownloadUtil;
 import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.R;
 import com.kai.lktMode.tool.ServiceStatusUtils;
+import com.kai.lktMode.tool.util.local.ShellUtil;
 import com.kai.lktMode.tool.util.net.WebUtil;
+import com.kai.lktMode.tune.Tune;
+import com.kai.lktMode.widget.CustomDrawerLayout;
+import com.kai.lktMode.widget.DownloadDialog;
 import com.kai.lktMode.widget.ViewPagerSlide;
 import com.kai.lktMode.widget.CloudLoginDialog;
+import com.leon.lfilepickerlibrary.utils.Constant;
+
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 
 public class MainActivity extends BaseActivity {
-    private String[] options1Items=new String[]{"高通","麒麟","猎户座","联发科","英特尔"};
-    private String[][] downloadSites={{"sd_625_626","sd_652_650","sd_636","sd_660","sd_801_800_805","sd_801_808","sd_820_821","sd_835","sd_845"},
-            {"exynos_8895","exynos_8890","exynos_7420"},{"kirin_970","kirin_960","kirin_950_955"},{"helio_x20_x25","helio_x10"},{"atom_z3560_z3580"}};
+    private String[] options1Items=new String[]{"高通","猎户座","麒麟","联发科","英特尔"};
+    private String[][] downloadSites={{"i5ldrxe","i5ldrzg","i5ldryf","i5lds0h","i5ldwkb","i5lds2j","i5lds3a","i5lds4b","i5lds5c"},
+            {"i5ldrri","i5ldrpg","i5ldrof"},{"i5ldrwd","i5ldrvc","i5ldrub"},{"i5ldrta","i5ldrsj"},{"i5ldrne"}};
+    @BindView(R.id.simple_toolbar) Toolbar mNormalToolbar;
+    @BindView(R.id.viewPager)ViewPagerSlide viewPager;
+    @BindView(R.id.navigationView1) NavigationView navigationView1;
+    @BindView(R.id.navigationView) NavigationView navigationView;
+    @BindView(R.id.actionmenuview) ActionMenuView actionmenuview;
+    @BindView(R.id.drawer)DrawerLayout drawerLayout;
+    @BindView(R.id.layout0) LinearLayout linearLayout0;
+    @BindView(R.id.layout1) LinearLayout linearLayout1;
+    MainFragment mainFragment;
+    CustomFragment customFragment;
+    PowercfgFragment powercfgFragment;
+    GameFragment gameFragment;
+    LockFragment lockFragment;
     private List<List<String>> options2Items=new ArrayList<>();
-    ActionBarDrawerToggle mActionBarDrawerToggle;
-    private Toolbar mNormalToolbar;
     private List<MyFragment> fragments=new ArrayList<>();
-    private ViewPagerSlide viewPager;
     private FragmentManager fragmentManager;
     private ProgressDialog dialog;
     private Intent bindIntent;
-    private DrawerLayout drawerLayout;
-    private ActionMenuView actionmenuview;
     public FragmentStatePagerAdapter adapter;
     private static boolean mBackKeyPressed = false;
     private CpuService.CpuBinder binder;
+
     private ServiceConnection connection=new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -107,51 +145,59 @@ public class MainActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         bindIntent=new Intent(this, CpuService.class);
-        bindService(bindIntent,connection,Context.BIND_AUTO_CREATE);
-
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    bindService(bindIntent,connection,Context.BIND_AUTO_CREATE);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        },1000);
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
-        getFragment(0).Refresh();
+        /*if (getFragment(0).isVisible()) {
+            getFragment(0).Refresh();
+        }*/
     }
 
     @Override
     protected void onStop() {
         if (bindIntent!=null)
-            unbindService(connection);
+            try {
+                unbindService(connection);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
         super.onStop();
     }
     private void setFragments(){
-        fragments.add(new MainFragment());
-        fragments.add(new SettingFragment());
-        fragments.add(new CustomFragment());
-        fragments.add(new PowercfgFragment());
-        fragments.add(new GameFragment());
-        fragments.add(new LockFragment());
-        fragments.add(new AboutFragment());
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState){
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        MyApplication application=(MyApplication)getApplication();
-        if (!(Boolean)Preference.get(this,"isFirstRun","Boolean")){
-            startActivity(new Intent(this, StartActivity.class));
-        }
-        mNormalToolbar=(Toolbar) findViewById(R.id.simple_toolbar);
-        initToolbar();
-        initDownloadDialog();
-        setFragments();
-        viewPager=(ViewPagerSlide) findViewById(R.id.viewPager);
-        viewPager.setOffscreenPageLimit(7);
+        fragments.add(0,mainFragment);
+        fragments.add(1,customFragment);
+        fragments.add(2,powercfgFragment);
+        fragments.add(3,gameFragment);
+        fragments.add(4,lockFragment);
         fragmentManager = getSupportFragmentManager();
         adapter=new FragmentStatePagerAdapter(fragmentManager) {
             @Override
             public Fragment getItem(int position) {
-                return fragments.get(position);
+                MyFragment fragment=fragments.get(position);
+                if (fragment==null){
+                    switch (position){
+                        case 0: fragment=new MainFragment();break;
+                        case 1: fragment=new CustomFragment();break;
+                        case 2: fragment=new PowercfgFragment();break;
+                        case 3: fragment=new GameFragment();break;
+                        case 4: fragment=new LockFragment();break;
+                    }
+                    fragments.set(position,fragment);
+                }
+                return fragment;
             }
 
             @Override
@@ -160,27 +206,33 @@ public class MainActivity extends BaseActivity {
             }
         };
         viewPager.setAdapter(adapter);
+        switchPage(0,false);
+    }
 
-        setToolbar("首页", new String[]{"支持作者","反馈群"}, new ActionMenuView.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getTitle().toString()){
-                    case "支持作者":
-                        AboutFragment.donation(MainActivity.this);
-                        break;
-                    case "反馈群":
-                        AboutFragment.startQQGroup(MainActivity.this);
-                        break;
-                }
-                return true;
-            }
-        });
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        //super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+
+        initToolbar();
+        setFragments();
+
+
         if (!ServiceStatusUtils.isServiceRunning(this, AutoService.class)){
             Intent intent=new Intent(this,AutoService.class);
             intent.setAction("reset");
             startService(intent);
         }
-
+        setYcDevices();
+        checkUpdate();
+    }
+    private void setYcDevices(){
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -208,26 +260,30 @@ public class MainActivity extends BaseActivity {
                 ArrayList<String> options2Items_05 = new ArrayList<>();
                 options2Items_05.add("Atom z3560/z3580");
                 options2Items.add(options2Items_01);
-                options2Items.add(options2Items_03);
                 options2Items.add(options2Items_02);
+                options2Items.add(options2Items_03);
                 options2Items.add(options2Items_04);
                 options2Items.add(options2Items_05);
             }
         }).start();
+
+    }
+    private void checkUpdate(){
         new Thread(new Runnable() {
             @Override
             public void run() {
                 final WebUtil webUtil =new WebUtil();
-                //webUtil.backup();
+                boolean update=webUtil.isToUpdate();
                 try {
                     Thread.sleep(3000);
+
                 }catch (Exception e){
                     e.printStackTrace();
                 }
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (webUtil.isToUpdate()){
+                        if (update){
                             new AlertDialog.Builder(MainActivity.this,R.style.AppDialog)
                                     .setTitle("版本更新:"+ webUtil.getVersionName())
                                     .setMessage(webUtil.getVersionLog())
@@ -235,6 +291,7 @@ public class MainActivity extends BaseActivity {
                                         @Override
                                         public void onClick(DialogInterface dialogInterface, int i) {
                                             Toast.makeText(MainActivity.this,"请选择酷安市场下载",Toast.LENGTH_SHORT).show();
+
                                             Uri uri = Uri.parse("market://details?id="+getPackageName());
                                             Intent intent = new Intent(Intent.ACTION_VIEW,uri);
                                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -251,27 +308,160 @@ public class MainActivity extends BaseActivity {
         }).start();
 
     }
-
-
-    public static boolean ignoreBatteryOptimization(Activity activity) {
-        boolean isIgnored=false;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PowerManager powerManager = (PowerManager) activity.getSystemService(POWER_SERVICE);
-
-            boolean hasIgnored = powerManager.isIgnoringBatteryOptimizations(activity.getPackageName());
-            isIgnored=hasIgnored;
-            //  判断当前APP是否有加入电池优化的白名单，如果没有，弹出加入电池优化的白名单的设置对话框。
-            if (!hasIgnored) {
-                Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                intent.setData(Uri.parse("package:"+activity.getPackageName()));
-                activity.startActivityForResult(intent,12);
-            } else {
+    public void refreshLoginV1(){
+        View headview=navigationView1.getHeaderView(0);
+        if (headview==null){
+            headview=navigationView1.inflateHeaderView(R.layout.header);
+        }
+        headview.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!(Boolean)Preference.getBoolean(MainActivity.this,"cloud")){
+                    final CloudLoginDialog dialog=new CloudLoginDialog(MainActivity.this,R.style.AppDialog);
+                    dialog.setOnLoginClick(new CloudLoginDialog.OnLoginClick() {
+                        @Override
+                        public void onclick(String user, String password) {
+                            WebUtil.login(user.trim(),password.trim(),dialog,MainActivity.this,false);
+                        }
+                    });
+                    dialog.setOnRegistClick(new CloudLoginDialog.OnRegistClick() {
+                        @Override
+                        public void onregist() {
+                            Intent intent2 = new Intent();
+                            intent2.setAction("android.intent.action.VIEW");
+                            Uri content_url1 = Uri.parse("https://www.jianguoyun.com/d/login");//此处填链接
+                            intent2.setData(content_url1);
+                            startActivity(intent2);
+                        }
+                    });
+                    dialog.setView(new EditText(MainActivity.this));
+                    dialog.show();
+                }else {
+                    new AlertDialog.Builder(MainActivity.this,R.style.AppDialog)
+                            .setTitle("账号信息")
+                            .setMessage("账号："+Preference.getString(MainActivity.this,"username")+"\n状态："+(SystemInfo.isDonated?"已捐赠":"未捐赠"))
+                            .setPositiveButton("注销", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    Preference.saveBoolean(MainActivity.this,"cloud",false);
+                                    Preference.saveString(MainActivity.this,"username","");
+                                    Preference.saveString(MainActivity.this,"password","");
+                                    refreshLogin();
+                                    refreshLoginV1();
+                                }
+                            })
+                            .setNegativeButton("刷新", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    refreshLoginV1();
+                                    refreshLogin();
+                                }
+                            })
+                            .create().show();
+                }
+            }
+        });
+        TextView version=(TextView)headview.findViewById(R.id.donationVersion);
+        TextView email=(TextView)headview.findViewById(R.id.email);
+        String username=(String)Preference.getString(this,"username");
+        email.setText(username.isEmpty()?"点击登录":username);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Boolean isDonated=WebUtil.isDonation(MainActivity.this);
+                    Log.d("dodo",isDonated+"");
+                    new Handler(Looper.getMainLooper())
+                            .post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    version.setText((Boolean)isDonated?"捐赠版":"普通版");
+                                }
+                            });
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
 
             }
-        }else {
-            return true;
+        }).start();
+    }
+
+    public void refreshLogin(){
+
+        View headview=navigationView.getHeaderView(0);
+        if (headview==null){
+            headview=navigationView.inflateHeaderView(R.layout.header);
         }
-        return isIgnored;
+        headview.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!(Boolean)Preference.getBoolean(MainActivity.this,"cloud")){
+                    final CloudLoginDialog dialog=new CloudLoginDialog(MainActivity.this,R.style.AppDialog);
+                    dialog.setOnLoginClick(new CloudLoginDialog.OnLoginClick() {
+                        @Override
+                        public void onclick(String user, String password) {
+                            WebUtil.login(user.trim(),password.trim(),dialog,MainActivity.this,false);
+                        }
+                    });
+                    dialog.setOnRegistClick(new CloudLoginDialog.OnRegistClick() {
+                        @Override
+                        public void onregist() {
+                            Intent intent2 = new Intent();
+                            intent2.setAction("android.intent.action.VIEW");
+                            Uri content_url1 = Uri.parse("https://www.jianguoyun.com/d/login");//此处填链接
+                            intent2.setData(content_url1);
+                            startActivity(intent2);
+                        }
+                    });
+                    dialog.setView(new EditText(MainActivity.this));
+                    dialog.show();
+                }else {
+                    new AlertDialog.Builder(MainActivity.this,R.style.AppDialog)
+                            .setTitle("账号信息")
+                            .setMessage("账号："+Preference.getString(MainActivity.this,"username")+"\n状态："+(SystemInfo.isDonated?"已捐赠":"未捐赠"))
+                            .setPositiveButton("注销", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    Preference.saveBoolean(MainActivity.this,"cloud",false);
+                                    Preference.saveString(MainActivity.this,"username","");
+                                    Preference.saveString(MainActivity.this,"password","");
+                                    refreshLogin();
+                                    refreshLoginV1();
+                                }
+                            })
+                            .setNegativeButton("刷新", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    refreshLogin();
+                                    refreshLoginV1();
+                                }
+                            })
+                            .create().show();
+                }
+            }
+        });
+        TextView version=(TextView)headview.findViewById(R.id.donationVersion);
+        TextView email=(TextView)headview.findViewById(R.id.email);
+        String username=(String)Preference.getString(this,"username");
+        email.setText(username.isEmpty()?"点击登录":username);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Boolean isDonated=WebUtil.isDonation(MainActivity.this);
+                    new Handler(Looper.getMainLooper())
+                            .post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    version.setText((Boolean)isDonated?"捐赠版":"普通版");
+                                }
+                            });
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+        }).start();
     }
     private void initToolbar() {
         mNormalToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
@@ -282,51 +472,210 @@ public class MainActivity extends BaseActivity {
             }
         });
         setSupportActionBar(mNormalToolbar);
-        actionmenuview = (ActionMenuView) findViewById(R.id.actionmenuview);
         mNormalToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MainActivity.this,"s",Toast.LENGTH_SHORT).show();
+                Configuration mConfiguration = MainActivity.this.getResources().getConfiguration();
+                int ori = mConfiguration.orientation; //获取屏幕方向
+                if (ori == mConfiguration.ORIENTATION_LANDSCAPE) {
+                    drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED,GravityCompat.START);
+                    if(drawerLayout.isDrawerOpen(GravityCompat.START)){
+                        drawerLayout.closeDrawer(GravityCompat.START);
+                    }
+                    if (linearLayout0.getVisibility()==View.INVISIBLE){
+                        openDrawer(true);
+                    }else {
+                        closeDrawer(true);
+                    }
+                }else if (ori == mConfiguration.ORIENTATION_PORTRAIT){
+                    drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED,GravityCompat.START);
+                    if(drawerLayout.isDrawerOpen(GravityCompat.START)){
+                        drawerLayout.closeDrawer(GravityCompat.START);
+                    }else {
+                        drawerLayout.openDrawer(GravityCompat.START);
+                    }
+                }
+
+
             }
         });
-        drawerLayout=findViewById(R.id.drawer);
-        mActionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, mNormalToolbar,R.string.app_name,R.string.app_name);
-        mActionBarDrawerToggle.setDrawerIndicatorEnabled(true);
-        mActionBarDrawerToggle.setHomeAsUpIndicator(R.mipmap.ic_launcher);//channge the icon,改变图标
-        mActionBarDrawerToggle.syncState();////show the default icon and sync the DrawerToggle state,如果你想改变图标的话，这句话要去掉。这个会使用默认的三杠图标
-        drawerLayout.setDrawerListener(mActionBarDrawerToggle);//关联 drawerlayout
-        NavigationView view=findViewById(R.id.navigationView);
-        view.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+        Configuration mConfiguration = MainActivity.this.getResources().getConfiguration();
+        int ori = mConfiguration.orientation;
+        if (ori == mConfiguration.ORIENTATION_LANDSCAPE) {
+            openDrawer(true);
+        }else if (ori == mConfiguration.ORIENTATION_PORTRAIT){
+            closeDrawer(true);
+        }
+        navigationView.getMenu().getItem(0).setCheckable(true);
+        navigationView1.getMenu().getItem(0).setCheckable(true);
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
                 int ID=menuItem.getItemId();
+                menuItem.setCheckable(false);
                 switch (ID){
                     case R.id.main:
-                        switchPage(0);
+                        switchPage(0,true);
+                        menuItem.setCheckable(true);
                         break;
                     case R.id.setting:
-                        switchPage(1);
+                        startActivity(new Intent(MainActivity.this,SettingActivity.class));
                         break;
                     case R.id.lab:
-                        switchPage(4);
+                        menuItem.setCheckable(true);
+                        switchPage(3,true);
                         break;
                     case R.id.about:
-                        switchPage(6);
+                        startActivity(new Intent(MainActivity.this,AboutActivity.class));
                         break;
                     case R.id.custom:
-                        switchPage(2);
+                        menuItem.setCheckable(true);
+                        switchPage(1,true);
                         break;
                     case R.id.powercfg:
-                        switchPage(3);
+                        menuItem.setCheckable(true);
+                        switchPage(2,true);
                         break;
                     case R.id.lock:
-                        switchPage(5);
+                        menuItem.setCheckable(true);
+                        switchPage(4,true);
                         break;
                     case R.id.cloud:
+                        //startActivity(new Intent(MainActivity.this,WebViewActivity.class));
                         getOnCloud();
                         break;
                     case R.id.donation:
                         AboutFragment.donation(MainActivity.this);
+                        break;
+                    case R.id.processor:
+                        Intent intent=new Intent(MainActivity.this, CpuManagerActivity.class);
+                        intent.setAction("setting");
+                        startActivity(intent);
+                        break;
+                    case R.id.processor_advanced:
+                        startActivity(new Intent(MainActivity.this,CpuAdvancedManagerActivity.class));
+                        break;
+                    case R.id.unlock:
+                        if (SystemInfo.getIsDonated()){
+                            Toast.makeText(MainActivity.this,"登你已经解锁了捐赠版(-_-)",Toast.LENGTH_SHORT).show();
+
+                            break;
+                        }
+                        if (!(Boolean)Preference.getBoolean(MainActivity.this,"cloud")){
+                            Toast.makeText(MainActivity.this,"请先登录",Toast.LENGTH_SHORT).show();
+
+                            getOnCloud();
+                            break;
+                        }
+                        AlertDialog dialog=new AlertDialog.Builder(MainActivity.this,R.style.AppDialog)
+                                .setTitle("捐赠版解锁")
+                                .setMessage("捐赠版可以解锁一些高级功能：\n自定义调度--自适应生成调度\n自定义调度--克隆当前调度\n自定义调度--定制调度\n云同步--无限制全局备份" +
+                                        "\nps:这些功能也不是黑科技，请先在相应功能区域体验。")
+                                .setPositiveButton("立即解锁", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        new AlertDialog.Builder(MainActivity.this,R.style.AppDialog)
+                                                .setTitle("请仔细阅读注意事项")
+                                                .setMessage("请选择任意方式捐赠3元以上，尤其是需要备注你登录的坚果云账号，否则你的付款没有效果。捐赠版的注册操作在1-2个工作日完成，请耐心等待或者酷安私信、qq群私信我。")
+                                                .setPositiveButton("我已知晓", new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                                        AboutFragment.donation(MainActivity.this);
+                                                    }
+                                                })
+                                                .show();
+                                    }
+                                })
+                                .setNegativeButton("暂不需要",null)
+                                .show();
+                        break;
+                    default:break;
+
+                }
+
+                return true;
+            }
+        });
+        navigationView1.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                int ID=menuItem.getItemId();
+                menuItem.setCheckable(false);
+                switch (ID){
+                    case R.id.main:
+                        switchPage(0,false);
+                        menuItem.setCheckable(true);
+                        break;
+                    case R.id.setting:
+                        startActivity(new Intent(MainActivity.this,SettingActivity.class));
+                        break;
+                    case R.id.lab:
+                        menuItem.setCheckable(true);
+                        switchPage(3,false);
+                        break;
+                    case R.id.about:
+                        startActivity(new Intent(MainActivity.this,AboutActivity.class));
+                        break;
+                    case R.id.custom:
+                        menuItem.setCheckable(true);
+                        switchPage(1,false);
+                        break;
+                    case R.id.powercfg:
+                        menuItem.setCheckable(true);
+                        switchPage(2,false);
+                        break;
+                    case R.id.lock:
+                        menuItem.setCheckable(true);
+                        switchPage(4,false);
+                        break;
+                    case R.id.cloud:
+                        //startActivity(new Intent(MainActivity.this,WebViewActivity.class));
+                        getOnCloud();
+                        break;
+                    case R.id.donation:
+                        AboutFragment.donation(MainActivity.this);
+                        break;
+                    case R.id.processor:
+                        Intent intent=new Intent(MainActivity.this, CpuManagerActivity.class);
+                        intent.setAction("setting");
+                        startActivity(intent);
+                        break;
+                    case R.id.processor_advanced:
+                        startActivity(new Intent(MainActivity.this,CpuAdvancedManagerActivity.class));
+                        break;
+                    case R.id.unlock:
+                        if (SystemInfo.getIsDonated()){
+                            Toast.makeText(MainActivity.this,"你已经解锁了捐赠版(-_-)",Toast.LENGTH_SHORT).show();
+                            break;
+                        }
+                        if (!(Boolean)Preference.getBoolean(MainActivity.this,"cloud")){
+                            Toast.makeText(MainActivity.this,"请先登录",Toast.LENGTH_SHORT).show();
+                            getOnCloud();
+                            break;
+                        }
+                        AlertDialog dialog=new AlertDialog.Builder(MainActivity.this,R.style.AppDialog)
+                                .setTitle("捐赠版解锁")
+                                .setMessage("捐赠版可以解锁一些高级功能：\n自定义调度--自适应生成调度\n自定义调度--克隆当前调度\n自定义调度--定制调度\n云同步--无限制全局备份" +
+                                        "\nps:这些功能也不是黑科技，请先在相应功能区域体验。")
+                                .setPositiveButton("立即解锁", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        new AlertDialog.Builder(MainActivity.this,R.style.AppDialog)
+                                                .setTitle("请仔细阅读注意事项")
+                                                .setMessage("请选择任意方式捐赠3元以上，尤其是需要备注你登录的坚果云账号，否则你的付款没有效果。捐赠版的注册操作在1-2个工作日完成，请耐心等待或者酷安私信、qq群私信我。")
+                                                .setPositiveButton("我已知晓", new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                                        AboutFragment.donation(MainActivity.this);
+                                                    }
+                                                })
+                                                .show();
+
+                                    }
+                                })
+                                .setNegativeButton("暂不需要",null)
+                                .show();
+                        break;
                     default:break;
 
                 }
@@ -335,9 +684,11 @@ public class MainActivity extends BaseActivity {
             }
         });
 
+        refreshLogin();
+        refreshLoginV1();
     }
     private void getOnCloud(){
-        boolean isLogin=(Boolean)Preference.get(MainActivity.this,"cloud",false);
+        boolean isLogin=(Boolean)Preference.getBoolean(MainActivity.this,"cloud",false);
         if (isLogin){
             WebUtil.list(MainActivity.this);
         }else {
@@ -345,7 +696,7 @@ public class MainActivity extends BaseActivity {
             dialog.setOnLoginClick(new CloudLoginDialog.OnLoginClick() {
                 @Override
                 public void onclick(String user, String password) {
-                   WebUtil.login(user,password,dialog,MainActivity.this);
+                   WebUtil.login(user,password,dialog,MainActivity.this,true);
                 }
             });
             dialog.setOnRegistClick(new CloudLoginDialog.OnRegistClick() {
@@ -363,87 +714,101 @@ public class MainActivity extends BaseActivity {
         }
 
     }
-
-    private void initDownloadDialog(){
-        dialog=new ProgressDialog(this,R.style.AppDialog);
-        dialog.setMessage("正在下载");
-    }
     public void refreshProp(){
         MainFragment fragment=(MainFragment)fragments.get(0);
-        fragment.readProp(false);
+        fragment.readProp();
     }
     public MyFragment getFragment(int i){
         return fragments.get(i);
     }
     private void downloadPowercfg(final String url) throws Exception{
-        final String sdcard=Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/powercfg/";
+        final String sdcard=Sdcard.getPath(MainActivity.this)+"/lktMode/powercfg/";
+        File dir=new File(sdcard);
+        if (!dir.exists())
+            dir.mkdirs();
+        DownloadDialog downloadDialog=new DownloadDialog.Builder(MainActivity.this)
+                .setParentDic(sdcard)
+                .setProgressEnable(false)
+                .setDownloadUrl(url)
+                .setFileName("powercfg.sh")
+                .build();
+        downloadDialog.setOnTaskSuccess(new DownloadDialog.OnTaskSuccess() {
+            @Override
+            public void onSuccess() {
+                Preference.saveBoolean(MainActivity.this,"custom",true);
+                Preference.saveString(MainActivity.this,"code1","sh "+sdcard+"powercfg.sh powersave");
+                Preference.saveString(MainActivity.this,"code2","sh "+sdcard+"powercfg.sh balance");
+                Preference.saveString(MainActivity.this,"code3","sh "+sdcard+"powercfg.sh performance");
+                Preference.saveString(MainActivity.this,"code4","sh "+sdcard+"powercfg.sh fast");
+                getFragment(2).Refresh();
+                getFragment(1).Refresh();
+                refreshProp();
+                Toast.makeText(MainActivity.this,"导入成功",Toast.LENGTH_SHORT).show();
+            }
+        });
+        downloadDialog.show();
+    }
+    public void pickPowercfg(){
+        ProgressDialog progressDialog=new ProgressDialog(MainActivity.this);
+        progressDialog.setCancelable(false);
+        progressDialog.setMessage("正在从网络获取配置");
+        progressDialog.show();
         new Thread(new Runnable() {
             @Override
             public void run() {
-                DownloadUtil.get().download(url, sdcard, "powercfg.sh",
-                        new DownloadUtil.OnDownloadListener() {
-                            @Override
-                            public void onDownloadSuccess(File file) {
-                                runOnUiThread(new Runnable() {
+                List<String> types=CpuModel.getLastestTypes(MainActivity.this);
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressDialog.cancel();
+                        try {
+                            if (types.contains("yc")){
+                                Toast.makeText(MainActivity.this,"已经默认为你的设备选择了脚本",Toast.LENGTH_SHORT).show();
+                                downloadPowercfg("https://www.lanzous.com/tp/"+
+                                        CpuModel.getYcUrl(MainActivity.this));
+
+                            }else if (types.contains("855tune")){
+                                Toast.makeText(MainActivity.this,"已经默认为你的eas设备选择了脚本,但是需要你手动安装magisk模块",Toast.LENGTH_SHORT).show();
+                                downloadPowercfg("https://www.lanzous.com/tp/i66muxc");
+                            }else {
+                                Toast.makeText(MainActivity.this,"自动检测暂未适配你的设备，请自行选择",Toast.LENGTH_SHORT).show();
+                                OptionsPickerView pvOptions = new  OptionsPickerBuilder(MainActivity.this, new OnOptionsSelectListener() {
                                     @Override
-                                    public void run() {
-                                        dialog.dismiss();
-                                        Preference.save(MainActivity.this,"custom",true);
-                                        Toast.makeText(MainActivity.this,"导入成功",Toast.LENGTH_SHORT).show();
-                                        Preference.save(MainActivity.this,"code1","sh "+sdcard+"powercfg.sh powersave");
-                                        Preference.save(MainActivity.this,"code2","sh "+sdcard+"powercfg.sh balance");
-                                        Preference.save(MainActivity.this,"code3","sh "+sdcard+"powercfg.sh performance");
-                                        Preference.save(MainActivity.this,"code4","sh "+sdcard+"powercfg.sh fast");
-                                        getFragment(3).Refresh();
-                                        getFragment(2).Refresh();
-                                        refreshProp();
+                                    public void onOptionsSelect(int options1, int options2, int options3, View v) {
+                                        String url="https://www.lanzous.com/tp/"+downloadSites[options1][options2];
+                                        try {
+                                            Log.d("sss",url);
+                                            downloadPowercfg(url);
+                                        }catch (Exception e){
+                                            e.printStackTrace();
+                                        }
+
                                     }
-                                });
+                                })
+                                        .setSubmitText("确定")//确定按钮文字
+                                        .setCancelText("取消")//取消按钮文字
+                                        .setTitleText("选择机型")//标题
+                                        .setSubCalSize(18)//确定和取消文字大小
+                                        .setTitleSize(20)//标题文字大小
+                                        .setCyclic(false, false, false)//循环与否
+                                        .setSelectOptions(0, 0)  //设置默认选中项
+                                        .setOutSideCancelable(false)//点击外部dismiss default true
+                                        .build();
+                                pvOptions.setPicker(Arrays.asList(options1Items), options2Items);
+                                pvOptions.show();
+
                             }
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
 
-                            @Override
-                            public void onDownloading(final int progress) {
+                    }
+                });
 
-                            }
-
-                            @Override
-                            public void onDownloadFailed(Exception e) {
-
-                            }
-                        });
             }
         }).start();
 
-    }
-    public void pickPowercfg(){
-        OptionsPickerView pvOptions = new  OptionsPickerBuilder(this, new OnOptionsSelectListener() {
-            @Override
-            public void onOptionsSelect(int options1, int options2, int options3, View v) {
-                dialog.setMessage("下载中");
-                dialog.setCancelable(false);
-                dialog.show();
-                String url="http://puq8bljed.bkt.clouddn.com/"+downloadSites[options1][options2]+".sh";
-                try {
-                    Log.d("sss",url);
-                    downloadPowercfg(url);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
 
-            }
-        })
-                .setSubmitText("确定")//确定按钮文字
-                .setCancelText("取消")//取消按钮文字
-                .setTitleText("选择机型")//标题
-                .setSubCalSize(18)//确定和取消文字大小
-                .setTitleSize(20)//标题文字大小
-                .setCyclic(false, false, false)//循环与否
-                .setSelectOptions(0, 0)  //设置默认选中项
-                .setOutSideCancelable(false)//点击外部dismiss default true
-                .build();
-
-        pvOptions.setPicker(Arrays.asList(options1Items), options2Items);
-        pvOptions.show();
     }
     public static void backupCustom(final Activity context){
         new Thread(new Runnable() {
@@ -451,12 +816,12 @@ public class MainActivity extends BaseActivity {
             public void run() {
                 for (int i=1;i<5;i++){
                     try {
-                        File file=new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/backup/");
+                        File file=new File(Sdcard.getPath(context)+"/lktMode/backup/");
                         if (!file.mkdirs()&&!file.exists()){
                             return;
                         }
-                        BufferedWriter writer=new BufferedWriter(new FileWriter(Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/backup/"+"code"+i+".sh"));
-                        writer.write((String) Preference.get(context,"code"+i,"String"));
+                        BufferedWriter writer=new BufferedWriter(new FileWriter(Sdcard.getPath(context)+"/lktMode/backup/"+"code"+i+".sh"));
+                        writer.write((String) Preference.getString(context,"code"+i));
                         writer.flush();
                         writer.close();
                         context.runOnUiThread(new Runnable() {
@@ -497,14 +862,14 @@ public class MainActivity extends BaseActivity {
     public static void restore(final Context context,final String key,final String name){
         try {
             String code="";
-            File file=new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/backup/"+name);
+            File file=new File(Sdcard.getPath(context)+"/lktMode/backup/"+name);
             BufferedReader reader=new BufferedReader(new FileReader(file));
             String line=null;
             while ((line=reader.readLine())!=null){
                 code+=line+"\n";
             }
             reader.close();
-            Preference.save(context,key,code);
+            Preference.saveString(context,key,code);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -536,7 +901,8 @@ public class MainActivity extends BaseActivity {
         if (actionmenuview.getMenu().size()==1){
             actionmenuview.getMenu().getItem(0).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         }if (actionmenuview.getMenu().size()>1){
-            if (actionmenuview.getMenu().getItem(1).getTitle().equals("从网络导入")||actionmenuview.getMenu().getItem(1).getTitle().equals("反馈群")){
+            String title=actionmenuview.getMenu().getItem(1).getTitle().toString();
+            if (title.equals("从网络导入")||title.equals("反馈群")||title.equals("一键生成")||title.equals("支持作者")||title.equals("异常反馈")){
                 actionmenuview.getMenu().getItem(1).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
             }
 
@@ -544,22 +910,75 @@ public class MainActivity extends BaseActivity {
 
         //actionmenuview.showOverflowMenu();
     }
-    public void switchPage(int i){
-        if (drawerLayout!=null){
-            drawerLayout.closeDrawers();
+    public void switchPage(int i,boolean enableSwitch){
+        if (enableSwitch){
+            if (drawerLayout!=null){
+                drawerLayout.closeDrawers();
+            }
+            viewPager.setCurrentItem(i,true);
         }
-        viewPager.setCurrentItem(i,true);
         switch (i){
             case 0:
-                setToolbar("首页", new String[]{"支持作者","反馈群"}, new ActionMenuView.OnMenuItemClickListener() {
+                setToolbar("首页", new String[]{"支持作者","异常反馈","恢复官方状态"}, new ActionMenuView.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
                         switch (item.getTitle().toString()){
+                            case "异常反馈":
+                                AboutFragment.startQQGroup(MainActivity.this);
+                                break;
                             case "支持作者":
                                 AboutFragment.donation(MainActivity.this);
                                 break;
-                            case "反馈群":
-                                AboutFragment.startQQGroup(MainActivity.this);
+                            case "恢复官方状态":
+                                new AlertDialog.Builder(MainActivity.this,R.style.AppDialog)
+                                        .setTitle("提示")
+                                        .setMessage("软件初始化时会备份一次官方处理器状态，包括文件所有者，读写权限，内容，当你因为错误调校导致处理器异常时可以尝试恢复，你也手动备份你认为较好的处理器状态。")
+                                        .setNegativeButton("备份", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                ProgressDialog dialog=new ProgressDialog(MainActivity.this,R.style.AppDialog);
+                                                dialog.setCancelable(false);
+                                                dialog.setMessage("正在备份处理器信息");
+                                                new Thread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        Preference.saveString(MainActivity.this,"offical",new CpuManager().backup());
+                                                        runOnUiThread(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                dialog.dismiss();
+                                                                Toast.makeText(MainActivity.this,"备份完成",Toast.LENGTH_SHORT).show();
+                                                            }
+                                                        });
+                                                    }
+                                                }).start();
+                                                dialog.show();
+                                            }
+                                        })
+                                        .setPositiveButton("恢复", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                ProgressDialog dialog=new ProgressDialog(MainActivity.this,R.style.AppDialog);
+                                                dialog.setCancelable(false);
+                                                dialog.setMessage("正在恢复处理器信息");
+                                                dialog.show();
+                                                new Thread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        RootUtils.runCommand((String) Preference.getString(MainActivity.this,"offical"));
+                                                        runOnUiThread(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                dialog.dismiss();
+                                                                Toast.makeText(MainActivity.this,"恢复成功",Toast.LENGTH_SHORT).show();
+                                                            }
+                                                        });
+                                                    }
+                                                }).start();
+
+                                            }
+                                        })
+                                        .show();
                                 break;
                         }
                         return true;
@@ -567,42 +986,102 @@ public class MainActivity extends BaseActivity {
                 });
                 break;
             case 1:
-                MainFragment m=(MainFragment)fragments.get(0);
-                final Bundle bundle=new Bundle();
-                //bundle.putString("passage",m.getPassage());
-                setToolbar("设置", "使用说明", new ActionMenuView.OnMenuItemClickListener() {
+                setToolbar("自定义调度", new String[]{"保存","一键生成","备份","还原"}, new ActionMenuView.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
-                        if (item.getOrder()==0){
-                            showDialog(MainActivity.this,
-                                    "开机自启:\n每次开机会自动切换到你所选定的默认模式\n\n默认模式:\n选择你最常用的模式，在开机自启或其他辅助功能中作为默认的模式",
-                                    new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-
-                                        }
-                                    });
-                        }
-                        return true;
-                    }
-                });
-                break;
-            case 2:
-                setToolbar("自定义调度", new String[]{"保存","备份","还原"}, new ActionMenuView.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
+                        CustomFragment fragment=(CustomFragment)fragments.get(1);
                         switch (item.getTitle().toString()){
                             case "保存":
-                                CustomFragment fragment=(CustomFragment)fragments.get(2);
                                 fragment.saveAll();
                                 Toast.makeText(MainActivity.this,"已保存",Toast.LENGTH_SHORT).show();
                                 break;
                             case "备份":
                                 backupCustom(MainActivity.this);
                                 break;
+                            case "一键生成":
+                                new File(Sdcard.getPath(MainActivity.this)+"/lktMode/powercfg/powercfg.sh").delete();
+                                ProgressDialog progressDialog=new ProgressDialog(MainActivity.this,R.style.AppDialog);
+                                progressDialog.setCancelable(false);
+                                progressDialog.setMessage("生成调度中");
+                                progressDialog.show();
+                                if (!SystemInfo.getIsDonated()){
+                                    Toast.makeText(MainActivity.this,"该功能需要捐赠版支持，非捐赠版仅能生成均衡模式",Toast.LENGTH_SHORT).show();
+                                    if (!new CpuManager().isEasKernel()){
+                                        Toast.makeText(MainActivity.this,"非eas内核暂未支持",Toast.LENGTH_SHORT).show();
+                                        progressDialog.dismiss();
+                                    }else {
+                                        try {
+                                            Preference.saveString(MainActivity.this,"code2",fragment.easTune(3,CpuBoost.isAddition()));
+                                        }catch (Exception e){
+                                            e.printStackTrace();
+                                            Toast.makeText(MainActivity.this,"生成失败，请稍后重试",Toast.LENGTH_SHORT).show();
+                                        }finally {
+                                            fragment.refresh();
+                                            progressDialog.dismiss();
+                                        }
+
+                                    }
+                                    break;
+                                }
+                                if (!new CpuManager().isEasKernel()){
+                                    Toast.makeText(MainActivity.this,"非eas内核暂未支持",Toast.LENGTH_SHORT).show();
+                                    progressDialog.dismiss();
+                                    break;
+                                }
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            boolean isAddition=CpuBoost.isAddition();
+                                            int[] indexs= Tune.getindexs(MainActivity.this);
+                                            String code1=fragment.easTune(indexs[0],isAddition);
+                                            String code2=fragment.easTune(indexs[1],isAddition);
+                                            String code3=fragment.easTune(indexs[2],isAddition);
+                                            String code4=fragment.easTune(indexs[3],isAddition);
+                                            Preference.saveString(MainActivity.this,"code1",code1);
+                                            Preference.saveString(MainActivity.this,"code2",code2);
+                                            Preference.saveString(MainActivity.this,"code3",code3);
+                                            Preference.saveString(MainActivity.this,"code4",code4);
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    progressDialog.cancel();
+                                                    fragment.refresh();
+                                                    Toast.makeText(MainActivity.this,"生成成功",Toast.LENGTH_SHORT).show();
+
+                                                }
+                                            });
+                                        }catch (Exception e){
+                                            e.printStackTrace();
+                                            progressDialog.cancel();
+                                            Toast.makeText(MainActivity.this,"生成失败，请稍后重试",Toast.LENGTH_SHORT).show();
+                                        }
+
+                                    }
+                                }).start();
+
+
+
+
+                                break;
                             case "还原":
-                                CustomFragment fragment1=(CustomFragment) fragments.get(2);
-                                restoreCustom(MainActivity.this,fragment1);
+                                restoreCustom(MainActivity.this,fragment);
+                                break;
+                        }
+                        return true;
+                    }
+                });
+                break;
+            case 2:
+                setToolbar("动态脚本", new String[]{"从网络导入","使用说明"}, new ActionMenuView.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        switch (item.getTitle().toString()){
+                            case "从网络导入":
+                                pickPowercfg();
+                                break;
+                            case "使用说明":
+                                showDialog(MainActivity.this,"动态脚本\n动态脚本是自定义调度的附属功能，为了防止出现冲突，所以启动动态脚本后自定义调度将处于不可编辑状态，你需要在省电、均衡、游戏、极限四个挡中输入参数，powersave、balance、performance、turbo、level 0-6来合理调整系统cpu功耗。",null);
                                 break;
                         }
                         return true;
@@ -610,27 +1089,6 @@ public class MainActivity extends BaseActivity {
                 });
                 break;
             case 3:
-                setToolbar("动态脚本", new String[]{"保存","从网络导入","使用说明"}, new ActionMenuView.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        switch (item.getTitle().toString()){
-                            case "保存":
-                                PowercfgFragment fragment=(PowercfgFragment) fragments.get(3);
-                                fragment.saveAll();
-                                Toast.makeText(MainActivity.this,"已保存",Toast.LENGTH_SHORT).show();
-                                break;
-                            case "从网络导入":
-                                pickPowercfg();
-                                break;
-                            case "使用说明":
-                                showDialog(MainActivity.this,"动态脚本\n动态脚本是自定义调度的附属功能，为了反正出现冲突，所以启动动态脚本后自定义调度将处于不可编辑状态，你需要在省电、均衡、游戏、极限四个挡中输入参数，powersave、balance、performance、turbo、level 0-6来合理调整系统cpu功耗。",null);
-                                break;
-                        }
-                        return true;
-                    }
-                });
-                break;
-            case 4:
                 setToolbar("游戏加速", new String[]{"设置","使用说明"},new ActionMenuView.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
@@ -647,7 +1105,7 @@ public class MainActivity extends BaseActivity {
                     }
                 });
                 break;
-            case 5:
+            case 4:
 
                 setToolbar("锁屏清理", new String[]{"设置", "使用说明"}, new ActionMenuView.OnMenuItemClickListener() {
                     @Override
@@ -664,9 +1122,7 @@ public class MainActivity extends BaseActivity {
                     }
                 });
                 break;
-            case 6:
-                setToolbar("关于", "",null);
-                break;
+
         }
 
     }
@@ -682,7 +1138,141 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode== RESULT_OK){
+             if (requestCode==11){
+                List<String> list = data.getStringArrayListExtra(Constant.RESULT_INFO);
+                if (MainActivity.copyFile(list.get(0),Sdcard.getPath(MainActivity.this)+"/lktMode/powercfg/powercfg.sh")){
+                    PowercfgFragment fragment=(PowercfgFragment)getFragment(2);
+                    fragment.change();
+                }else {
+                    Toast.makeText(MainActivity.this,"导入失败",Toast.LENGTH_SHORT).show();
+                }
+            }
+            if (requestCode==12){
+                Uri uri=data.getData();
+                grantUriPermission(getPackageName(),uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                if (copyFileQ(data.getData(), Sdcard.getPath(MainActivity.this) +"/lktMode/powercfg/powercfg.sh")){
+                    PowercfgFragment fragment=(PowercfgFragment)getFragment(2);
+                    fragment.change();
+                    Toast.makeText(MainActivity.this,"导入成功",Toast.LENGTH_SHORT).show();
 
+                }else {
+                    Toast.makeText(MainActivity.this,"导入失败",Toast.LENGTH_SHORT).show();
+
+                }
+            }
+        }
+    }
+    public static boolean isContentUriExists(Context context, Uri uri){
+        if (null == context) {
+            return false;
+        }
+        ContentResolver cr = context.getContentResolver();
+        try {
+            AssetFileDescriptor afd = cr.openAssetFileDescriptor(uri, "r");
+            if (null == afd) {
+                return false;
+            } else {
+                try {
+                    afd.close();
+                } catch (IOException e) {
+                }
+            }
+        } catch (FileNotFoundException e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static FileDescriptor getInputStream(Context context, Uri uri){
+        ContentResolver cr = context.getContentResolver();
+        try {
+            AssetFileDescriptor afd = cr.openAssetFileDescriptor(uri, "r");
+            if (null == afd) {
+                return afd.getFileDescriptor();
+            } else {
+                try {
+                    afd.close();
+                } catch (IOException e) {
+                }
+            }
+        } catch (ParcelFormatException|FileNotFoundException e) {
+            return null;
+        }
+        return null;
+    }
+    public boolean copyFileQ(Uri oldPath$Name, String newPath$Name) {
+        Log.d("uri",oldPath$Name.toString());
+        File dist=new File(newPath$Name.substring(0,newPath$Name.lastIndexOf("/")));
+
+        if (!dist.exists()){
+            dist.mkdirs();
+        }
+        if (!isContentUriExists(MainActivity.this,oldPath$Name)){
+            return false;
+        }
+        try {
+            copy(getContentResolver().openInputStream(oldPath$Name),new FileOutputStream(new File(newPath$Name)));
+            return true;
+        }catch (Exception e){
+            //Log.d("exc",e.toString());
+            e.printStackTrace();
+            return false;
+        }
+
+
+    }
+    public static void copy(File src, ParcelFileDescriptor parcelFileDescriptor) throws IOException {
+        FileInputStream istream = new FileInputStream(src);
+        try {
+            FileOutputStream ostream = new FileOutputStream(parcelFileDescriptor.getFileDescriptor());
+            try {
+                copy(istream, ostream);
+            } finally {
+                ostream.close();
+            }
+        } finally {
+            istream.close();
+        }
+    }
+
+    public static void copy(FileDescriptor parcelFileDescriptor, File dst) throws IOException {
+        FileInputStream istream = new FileInputStream(parcelFileDescriptor);
+        try {
+            FileOutputStream ostream = new FileOutputStream(dst);
+            try {
+                copy(istream, ostream);
+            } finally {
+                ostream.close();
+            }
+        } finally {
+            istream.close();
+        }
+    }
+
+    public static void copy(ParcelFileDescriptor parcelFileDescriptor, File dst) throws IOException {
+        FileInputStream istream = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
+        try {
+            FileOutputStream ostream = new FileOutputStream(dst);
+            try {
+                copy(istream, ostream);
+            } finally {
+                ostream.close();
+            }
+        } finally {
+            istream.close();
+        }
+    }
+
+
+    public static void copy(InputStream ist, OutputStream ost) throws IOException {
+        byte[] buffer = new byte[4096];
+        int byteCount = 0;
+        while ((byteCount = ist.read(buffer)) != -1) {  // 循环从输入流读取 buffer字节
+            Log.d("buffer",buffer+"");
+            ost.write(buffer, 0, byteCount);        // 将读取的输入流写入到输出流
+        }
     }
 
     public static boolean copyFile(String oldPath$Name, String newPath$Name) {
@@ -733,24 +1323,75 @@ public class MainActivity extends BaseActivity {
             drawerLayout.closeDrawers();
             if (currentItem!=0){
                 viewPager.setCurrentItem(0,false);
-                setToolbar("首页", new String[]{"支持作者","反馈群"}, new ActionMenuView.OnMenuItemClickListener() {
+                setToolbar("首页", new String[]{"支持作者","异常反馈","恢复官方状态"}, new ActionMenuView.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
                         switch (item.getTitle().toString()){
                             case "支持作者":
                                 AboutFragment.donation(MainActivity.this);
                                 break;
-                            case "反馈群":
+                            case "异常反馈":
                                 AboutFragment.startQQGroup(MainActivity.this);
+                                break;
+                            case "恢复官方状态":
+                                new AlertDialog.Builder(MainActivity.this,R.style.AppDialog)
+                                        .setTitle("提示")
+                                        .setMessage("软件初始化时会备份一次官方处理器状态，包括文件所有者，读写权限，内容，当你因为错误调校导致处理器异常时可以尝试恢复，你也手动备份你认为较好的处理器状态。")
+                                        .setNegativeButton("备份", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                ProgressDialog dialog=new ProgressDialog(MainActivity.this,R.style.AppDialog);
+                                                dialog.setCancelable(false);
+                                                dialog.setMessage("正在备份处理器信息");
+                                                new Thread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        Preference.saveString(MainActivity.this,"offical",new CpuManager().backup());
+                                                        runOnUiThread(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                dialog.dismiss();
+                                                                Toast.makeText(MainActivity.this,"备份完成",Toast.LENGTH_SHORT).show();
+                                                            }
+                                                        });
+                                                    }
+                                                }).start();
+                                                dialog.show();
+                                            }
+                                        })
+                                        .setPositiveButton("恢复", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                ProgressDialog dialog=new ProgressDialog(MainActivity.this,R.style.AppDialog);
+                                                dialog.setMessage("正在恢复处理器信息");
+                                                dialog.show();
+                                                new Thread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        RootUtils.runCommand((String) Preference.getString(MainActivity.this,"offical","String"));
+                                                        runOnUiThread(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                dialog.dismiss();
+                                                                Toast.makeText(MainActivity.this,"恢复完成",Toast.LENGTH_SHORT).show();
+                                                            }
+                                                        });
+                                                    }
+                                                }).start();
+
+                                            }
+                                        })
+                                        .show();
                                 break;
                         }
                         return true;
                     }
                 });
+
                 return false;
             }
             if(!mBackKeyPressed){
-                Toast.makeText(this, "再按一次退出程序", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this,"再按一次退出程序",Toast.LENGTH_SHORT).show();
                 mBackKeyPressed = true;
                 new Timer().schedule(new TimerTask() {//延时两秒，如果超出则擦错第一次按键记录
                     @Override
@@ -778,4 +1419,50 @@ public class MainActivity extends BaseActivity {
     }
 
 
+    public void closeDrawer(boolean isLand){
+        ValueAnimator animator=ValueAnimator.ofFloat(1,0);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                Float value=(Float)animator.getAnimatedValue();
+                linearLayout0.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT,value));
+                if (value==0){
+                    linearLayout0.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
+        animator.setDuration(500);
+        animator.start();
+    }
+    public void openDrawer(boolean island){
+
+        linearLayout0.setVisibility(View.VISIBLE);
+        ValueAnimator animator=ValueAnimator.ofFloat(0,1);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                Float value=(Float)animator.getAnimatedValue();
+                linearLayout0.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT,value));
+            }
+        });
+        animator.setDuration(500);
+        animator.start();
+    }
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        switch (newConfig.orientation) {
+            case Configuration.ORIENTATION_LANDSCAPE :// 横屏
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED,GravityCompat.START);
+                if(drawerLayout.isDrawerOpen(GravityCompat.START)){
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                }
+                openDrawer(true);
+                break;
+            case Configuration.ORIENTATION_PORTRAIT :// 竖屏
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED,GravityCompat.START);
+                closeDrawer(true);
+                break;
+        }
+    }
 }

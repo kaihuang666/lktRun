@@ -1,0 +1,324 @@
+[
+  {
+    "board": "sm8150-ac",
+    "model": "sd_855+",
+    "model_name": "855plus",
+    "tune": "lkt|855tune|diy"
+  },
+  {
+    "board": "sm8150",
+    "model": "sd_855",
+    "model_name": "855",
+    "tune": "lkt|855tune|diy"
+  },
+  {
+    "board": "sdm845",
+    "model": "sd_845",
+    "model_name": "845",
+    "tune": "lkt|855tune|diy",
+    "yc_url": "i5lds5c"
+  },
+  {
+    "board": "msm8998",
+    "model": "sd_835",
+    "model_name": "835(L)",
+    "tune": "lkt|yc|ycv2|diy",
+    "yc_url": "i5lds4b"
+  },
+  {
+    "board": "msm8098",
+    "model": "sd_835",
+    "model_name": "835(M)",
+    "tune": "lkt|yc|ycv2|diy",
+    "yc_url": "i5lds4b"
+  },
+  {
+    "board": "msm8996",
+    "model": "sd_820",
+    "model_name": "820",
+    "tune": "lkt|yc|ycv2|diy",
+    "yc_url": "i5lds3a"
+  },
+  {
+    "board": "msm8996pro",
+    "model": "sd_821",
+    "model_name": "821",
+    "tune": "lkt|yc|ycv2|diy",
+    "yc_url": "i5lds3a"
+  },
+  {
+    "board": "msm8674",
+    "model": "sd_800",
+    "model_name": "800",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5ldwkb"
+  },
+  {
+    "board": "msm8974",
+    "model": "sd_800",
+    "model_name": "800(L)",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5ldwkb"
+  },
+  {
+    "board": "msm8074",
+    "model": "sd_800",
+    "model_name": "800(S)",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5ldwkb"
+  },
+  {
+    "board": "msm8274",
+    "model": "sd_800",
+    "model_name": "800(M)",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5ldwkb"
+  },
+  {
+    "board": "msm8974 v3",
+    "model": "sd_801",
+    "model_name": "801(M)",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5ldwkb"
+  },
+  {
+    "board": "msm8974pro-ac",
+    "model": "sd_801",
+    "model_name": "801(L)",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5ldwkb"
+  },
+  {
+    "board": "apq8084",
+    "model": "sd_805",
+    "model_name": "805",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5ldwkb"
+  },
+  {
+    "board": "msm8992",
+    "model": "sd_808",
+    "model_name": "808",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5lds2j"
+  },
+  {
+    "board": "msm8994",
+    "model": "sd_810",
+    "model_name": "810",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5lds2j"
+  },
+  {
+    "board":"sm7150-ab",
+    "model": "sd_730g",
+    "model_name": "730G",
+    "tune": "lkt|855tune|diy"
+  },
+
+  {
+    "board":"sm7150-aa",
+    "model": "sd_730",
+    "model_name": "730",
+    "tune": "lkt|855tune|diy"
+  },
+  {
+    "board": "sdm712",
+    "model": "sd_712",
+    "model_name": "712",
+    "tune": "lkt|855tune|diy"
+  },
+  {
+    "board": "sdm710",
+    "model": "sd_710",
+    "model_name": "710",
+    "tune": "lkt|855tune|diy"
+  },
+
+  {
+    "board": "msm8064t",
+    "model": "sd_600",
+    "model_name": "600(S)",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "msm8064 fusion 3",
+    "model": "sd_600(L)",
+    "model_name": "600",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "msm8064m",
+    "model": "sd_600(M)",
+    "model_name": "600",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "msm8936",
+    "model": "sd_610",
+    "model_name": "610",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "msm8939",
+    "model": "sd_615",
+    "model_name": "615/616",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "msm8953",
+    "model": "sd_625",
+    "model_name": "625",
+    "tune": "lkt|yc|ycv2|diy",
+    "yc_url": "i5ldrxe"
+  },
+  {
+    "board": "msm8953Pro",
+    "model": "sd_626",
+    "model_name": "626",
+    "tune": "lkt|yc|ycv2|diy",
+    "yc_url": "i5ldrxe"
+  },
+  {
+    "board": "msm8952",
+    "model": "sd_617",
+    "model_name": "617",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "sm6150",
+    "model": "sd_675",
+    "model_name": "675",
+    "tune": "lkt|tune855|diy"
+  },
+  {
+    "board": "sdm670",
+    "model": "sd_670",
+    "model_name": "670",
+    "tune": "tune855|diy"
+  },
+  {
+    "board": "sdm660",
+    "model": "sd_660",
+    "model_name": "660",
+    "tune": "lkt|yc|ycv2|diy",
+    "yc_url": "i5lds0h"
+  },
+  {
+    "board": "sdm636",
+    "model": "sd_636",
+    "model_name": "636",
+    "tune": "lkt|yc|ycv2|diy",
+    "yc_url": "i5ldryf"
+  },
+  {
+    "board": "sdm630",
+    "model": "sd_630",
+    "model_name": "630",
+    "tune": "lkt|tune855|diy"
+  },
+  {
+    "board": "sdm632",
+    "model": "sd_632",
+    "model_name": "632",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "msm8976Pro",
+    "model": "sd_653",
+    "model_name": "653",
+    "tune": "lkt|yc|ycv2|diy"
+  },
+  {
+    "board": "msm8976",
+    "model": "sd_652",
+    "model_name": "652",
+    "tune": "lkt|yc|ycv2|diy",
+    "yc_url": "i5ldrzg"
+  },
+  {
+    "board": "msm8956",
+    "model": "sd_650",
+    "model_name": "650",
+    "tune": "lkt|yc|ycv2|diy",
+    "yc_url": "i5ldrzg"
+  },
+  {
+    "board": "msm8226",
+    "model": "sd_400",
+    "model_name": "400(M)",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "msm8228",
+    "model": "sd_400",
+    "model_name": "400(L)",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "msm8917",
+    "model": "sd_425",
+    "model_name": "425",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "msm8920",
+    "model": "sd_427",
+    "model_name": "427",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "sdm429",
+    "model": "sd_429",
+    "model_name": "429",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "msm8937",
+    "model": "sd_430",
+    "model_name": "430",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "msm8940",
+    "model": "sd_435",
+    "model_name": "435",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "sdm439",
+    "model": "sd_439",
+    "model_name": "439",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "sdm450",
+    "model": "sd_450",
+    "model_name": "450",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "msm8610",
+    "model": "sd_200",
+    "model_name": "200",
+    "tune":"diy"
+  },
+  {
+    "board": "msm8916",
+    "model": "sd_410",
+    "model_name": "410",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "msm8960",
+    "model": "sd_s4",
+    "model_name": "s4 plus",
+    "tune":"diy"
+  },
+  {
+    "board": "unknown",
+    "model": "unknown",
+    "model_name": "其他",
+    "tune": "diy"
+  }
+]

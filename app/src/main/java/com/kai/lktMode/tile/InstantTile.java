@@ -20,6 +20,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.kai.lktMode.R;
+import com.kai.lktMode.root.RootUtils;
 import com.kai.lktMode.tool.ServiceStatusUtils;
 import com.kai.lktMode.service.AutoService;
 import com.kai.lktMode.service.CommandService;
@@ -69,7 +70,7 @@ public class InstantTile extends TileService{
     @Override
     public void onCreate() {
         super.onCreate();
-        if ((Boolean) Preference.get(getApplicationContext(),"autoLock","Boolean")||(Boolean) Preference.get(getApplicationContext(),"gameMode","Boolean")){
+        if ( Preference.getBoolean(getApplicationContext(),"autoLock")|| Preference.getBoolean(getApplicationContext(),"gameMode")){
             if(!ServiceStatusUtils.isServiceRunning(getApplicationContext(), AutoService.class)){
                 Intent service=new Intent(getApplicationContext(),AutoService.class);
                 startService(service);
@@ -112,8 +113,8 @@ public class InstantTile extends TileService{
 
     }
     private void readMode(){
-        if ((Boolean) Preference.get(getApplicationContext(),"custom","Boolean")){
-            int customMode=(int)Preference.get(this,"customMode","int")-1;
+        if ((Boolean) Preference.getBoolean(getApplicationContext(),"custom")){
+            int customMode=(int)Preference.getInt(this,"customMode")-1;
             if (customMode<0){
                 customMode=0;
             }if (customMode>3){
@@ -124,32 +125,15 @@ public class InstantTile extends TileService{
             return;
         }
         try{
-            Shell shell=RootTools.getShell(true);
-            shell.add(new Command(1,"grep PROFILE /data/LKT.prop"){
-                @Override
-                public void commandOutput(int id, String line) {
-                    super.commandOutput(id, line);
-                    //Toast.makeText(getBaseContext(),line,Toast.LENGTH_SHORT).show();
-                    cutMode(line);
-                }
-
-                @Override
-                public void commandCompleted(int id, int exitcode) {
-                    super.commandCompleted(id, exitcode);
-                    if (exitcode!=0){
-                        showIcon(tileLabels[4],lalelIds[4]);
-                    }
-                }
-            });
-
-        }catch (IOException| TimeoutException| RootDeniedException e){
+            cutMode(RootUtils.runCommand("grep PROFILE /data/LKT.prop"));
+        }catch (Exception e){
             e.printStackTrace();
             showIcon(tileLabels[4],lalelIds[4]);
         }
     }
 
     private void cutMode(String line){
-        int mode=(int)Preference.get(getApplicationContext(),"default","int");
+        int mode=Preference.getInt(getApplicationContext(),"default");
         String pattern = "PROFILE\\s:\\s(\\S+)";
         Pattern r = Pattern.compile(pattern);
 
@@ -220,9 +204,9 @@ public class InstantTile extends TileService{
     }
     private void switchMode(int mode){
         Intent serviceIntent;
-        if ((Boolean) Preference.get(getApplicationContext(),"custom","Boolean")){
+        if ((Boolean) Preference.getBoolean(getApplicationContext(),"custom")){
             serviceIntent = new Intent(getApplicationContext(), CustomCommandService.class);
-            Preference.save(getApplicationContext(),"customMode",mode+1);
+            Preference.saveInt(getApplicationContext(),"customMode",mode+1);
         }else
             serviceIntent=new Intent(getApplicationContext(), CommandService.class);
         serviceIntent.putExtra("mode",mode+1);

@@ -1,9 +1,14 @@
 package com.kai.lktMode.fragment;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -23,21 +28,22 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.github.angads25.filepicker.controller.DialogSelectionListener;
-import com.github.angads25.filepicker.model.DialogConfigs;
-import com.github.angads25.filepicker.model.DialogProperties;
-import com.github.angads25.filepicker.view.FilePickerDialog;
 import com.kai.lktMode.bean.Item;
 import com.kai.lktMode.activity.MainActivity;
 import com.kai.lktMode.adapter.PowercfgAdapter;
+import com.kai.lktMode.bean.Sdcard;
+import com.kai.lktMode.root.RootUtils;
 import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.R;
-import com.stericson.RootShell.execution.Command;
-import com.stericson.RootTools.RootTools;
+import com.leon.lfilepickerlibrary.LFilePicker;
+import com.leon.lfilepickerlibrary.utils.Constant;
+
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PowercfgFragment extends MyFragment {
     private List<Item> items=new ArrayList<>();
@@ -58,7 +64,6 @@ public class PowercfgFragment extends MyFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
         initList();
 
@@ -68,10 +73,15 @@ public class PowercfgFragment extends MyFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        sdcard=Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/powercfg/powercfg.sh";
+        sdcard= Sdcard.getPath(getContext()) +"/lktMode/powercfg/powercfg.sh";
     }
 
     public void saveAll(){
+        if (adapter==null){
+            Toast.makeText(getContext(),"正在刷新数据，请稍后重试",Toast.LENGTH_SHORT).show();
+            Refresh();
+            return;
+        }
         adapter.saveAll();
     }
     private void initList(){
@@ -130,6 +140,8 @@ public class PowercfgFragment extends MyFragment {
                                 break;
 
                         }
+                        Preference.saveString(getContext(),"code"+(i+1),"sh "+sdcard+" "+e.getText().toString());
+                        getMain().getFragment(1).Refresh();
                         return true;
                     }
                 });
@@ -140,27 +152,22 @@ public class PowercfgFragment extends MyFragment {
             @Override
             public void onClick(View view) {
                 if (change.getText().equals("导入")){
-                    DialogProperties properties = new DialogProperties();
-                    properties.selection_mode = DialogConfigs.SINGLE_MODE;
-                    properties.selection_type = DialogConfigs.FILE_SELECT;
-                    properties.root = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
-                    properties.error_dir = new File(DialogConfigs.DEFAULT_DIR);
-                    properties.offset = new File(DialogConfigs.DEFAULT_DIR);
-                    properties.extensions = null;
-                    FilePickerDialog dialog = new FilePickerDialog(getContext(),properties,R.style.AppDialog);
-                    dialog.setTitle("选择一个调度文件");
-                    dialog.setDialogSelectionListener(new DialogSelectionListener() {
-                        @Override
-                        public void onSelectedFilePaths(String[] files) {
-                            Log.d("sss",files[0]);
-                            if (MainActivity.copyFile(files[0],Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/powercfg/powercfg.sh")){
-                                change();
-                            }else {
-                                Toast.makeText(getContext(),"导入失败",Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
-                    dialog.show();
+                    if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.Q){
+                        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                        intent.addCategory(Intent.CATEGORY_OPENABLE);
+                        intent.setType("*/*");
+                        startActivityForResult(intent,12);
+                        return;
+                    }
+                    new LFilePicker()
+                            .withActivity(getActivity())
+                            .withRequestCode(11)
+                            .withIconStyle(Constant.ICON_STYLE_BLUE)
+                            .withMutilyMode(false)
+                            .withStartPath(Sdcard.getPath(getContext()))
+                            .withIsGreater(false)
+                            .withFileSize(500 * 1024)
+                            .start();
 
                 }else {
                     try {
@@ -190,7 +197,9 @@ public class PowercfgFragment extends MyFragment {
 
     public boolean  isImported(){
         boolean imported=false;
+        Log.d("sdcard",sdcard);
         File shell=new File(sdcard);
+        shell.getParentFile().mkdirs();
         if (!shell.exists()){
             change.setText("导入");
             title.setText("动态脚本：未导入");
@@ -205,43 +214,63 @@ public class PowercfgFragment extends MyFragment {
 
         return imported;
     }
-    private void change(){
+    public void change(){
         if (change.getText().equals("移除")){
             change.setText("导入");
             title.setText("动态脚本：未导入");
             for (int i=1;i<=4;i++){
-                Preference.save(getContext(),"code"+i,"");
+                Preference.saveString(getContext(),"code"+i,"");
             }
-            Preference.save(getContext(),"custom",false);
+            Preference.saveBoolean(getContext(),"custom",false);
             updateList();
         }else {
             Toast.makeText(getContext(),"导入成功",Toast.LENGTH_SHORT).show();
-            Preference.save(getContext(),"code1","sh "+sdcard+" powersave");
-            Preference.save(getContext(),"code2","sh "+sdcard+" balance");
-            Preference.save(getContext(),"code3","sh "+sdcard+" performance");
-            Preference.save(getContext(),"code4","sh "+sdcard+" fast");
+            Preference.saveString(getContext(),"code1","sh "+sdcard+" powersave");
+            Preference.saveString(getContext(),"code2","sh "+sdcard+" balance");
+            Preference.saveString(getContext(),"code3","sh "+sdcard+" performance");
+            Preference.saveString(getContext(),"code4","sh "+sdcard+" fast");
             change.setText("移除");
             title.setText("动态脚本：已导入");
-            Preference.save(getContext(),"custom",true);
+            Preference.saveBoolean(getContext(),"custom",true);
             updateList();
         }
-        getMain().getFragment(2).Refresh();
+        getMain().getFragment(1).Refresh();
         getMain().refreshProp();
 
     }
 
-
-
+    private String getParam(String str){
+        Pattern pattern=Pattern.compile("powercfg.sh\\s+(.*)");
+        Matcher m=pattern.matcher(str);
+        if (m.find()){
+            return m.group(1);
+        }else {
+            return "";
+        }
+    }
     public void updateList(){
-        String code1=(String) Preference.get(getContext(),"code1","String");
-        items.get(0).setSubtitle(code1.substring(code1.lastIndexOf(" ")+1));
-        String code2=(String) Preference.get(getContext(),"code2","String");
-        items.get(1).setSubtitle(code2.substring(code2.lastIndexOf(" ")+1));
-        String code3=(String) Preference.get(getContext(),"code3","String");
-        items.get(2).setSubtitle(code3.substring(code3.lastIndexOf(" ")+1));
-        String code4=(String) Preference.get(getContext(),"code4","String");
-        items.get(3).setSubtitle(code4.substring(code4.lastIndexOf(" ")+1));;
-        adapter.notifyDataSetChanged();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String code1=(String) Preference.getString(getContext(),"code1");
+                String code2=(String) Preference.getString(getContext(),"code2");
+                String code3=(String) Preference.getString(getContext(),"code3");
+                String code4=(String) Preference.getString(getContext(),"code4");
+                items.get(0).setSubtitle(getParam(code1));
+                items.get(1).setSubtitle(getParam(code2));
+                items.get(2).setSubtitle(getParam(code3));
+                items.get(3).setSubtitle(getParam(code4));
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        adapter.notifyDataSetChanged();
+                    }
+                });
+            }
+        }).start();
+
+
+
     }
 
     @Override
@@ -264,33 +293,45 @@ public class PowercfgFragment extends MyFragment {
                 .create();
         alertDialog.show();
         try{
-            RootTools.getShell(true).add(new Command(2,"sh "+Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/powercfg/powercfg.sh "+str){
+            new Thread(new Runnable() {
                 @Override
-                public void commandOutput(int id, String line) {
-                    super.commandOutput(id, line);
-                    if (line.contains("No such file or directory")){
-                        line="内核不支持该命令";
-                    }if (line.contains("Permission denied")){
-                        line="命令无法执行，内核正在被其他调度占用";
-                    }
-                    output+=line+"\n";
-                    Log.d("output",line);
-                    alertDialog.setMessage(output);
-                    alertDialog.show();
-                }
+                public void run() {
+                    RootUtils.runCommand("sh " + Sdcard.getPath(getContext()) + "/lktMode/powercfg/powercfg.sh " + str, new RootUtils.onCommandComplete() {
+                        @Override
+                        public void onComplete() {
 
-                @Override
-                public void commandCompleted(int id, int exitcode) {
-                    super.commandCompleted(id, exitcode);
-                    Log.d("output",exitcode+"");
-                    output+="脚本运行完成";
-                    alertDialog.setMessage(output);
-                    alertDialog.show();
+                        }
+
+                        @Override
+                        public void onCrash(String error) {
+
+                        }
+
+                        @Override
+                        public void onOutput(String line) {
+                            if (line.contains("No such file or directory")){
+                                line="内核不支持该命令";
+                            }if (line.contains("Permission denied")){
+                                line="命令无法执行，内核正在被其他调度占用";
+                            }
+                            output+=line+"\n";
+                            Log.d("output",line);
+                            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    alertDialog.setMessage(output);
+                                    alertDialog.show();
+                                }
+                            });
+
+                        }
+                    }, true);
                 }
-            });
+            }).start();
         }catch (Exception e){
             e.printStackTrace();
         }
     }
+
 
 }

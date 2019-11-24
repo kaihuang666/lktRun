@@ -1,6 +1,8 @@
 package com.kai.lktMode.adapter;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +16,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.kai.lktMode.bean.App;
+import com.kai.lktMode.bean.SystemInfo;
+import com.kai.lktMode.tool.Mode;
 import com.kai.lktMode.tool.util.local.AppUtils;
 import com.kai.lktMode.bean.Item;
 import com.kai.lktMode.tool.Preference;
@@ -21,12 +26,18 @@ import com.kai.lktMode.R;
 
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableEmitter;
+import io.reactivex.rxjava3.core.ObservableOnSubscribe;
+import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.disposables.Disposable;
+
 public class ListGameAdapter extends RecyclerView.Adapter<ListGameAdapter.ViewHolder> {
     private OnItemClick onItemClick=null;
     private OnItemRemoveClick removeClick=null;
     private OnCheckBoxChangListener changListener=null;
     private OnBottomClick bottomClick;
-    private List<Item> items;
+    private List<App> items;
     private Context context;
     private int TYPE;
     private int checked_sum=0;
@@ -44,7 +55,7 @@ public class ListGameAdapter extends RecyclerView.Adapter<ListGameAdapter.ViewHo
             checkBox=v.findViewById(R.id.checkbox);
         }
     }
-    public ListGameAdapter(Context context,List<Item> items,int TYPE,boolean limit){
+    public ListGameAdapter(Context context,List<App> items,int TYPE,boolean limit){
         this.items=items;
         this.context=context;
         this.TYPE=TYPE;
@@ -95,12 +106,37 @@ public class ListGameAdapter extends RecyclerView.Adapter<ListGameAdapter.ViewHo
                 }
             });
         }else {
-            final Item item=items.get(position);
+            final App item=items.get(position);
+            holder.name.setText(item.getName());
+            Log.d("app",item.getName());
+            Observable.create(new ObservableOnSubscribe<Object>() {
+                @Override
+                public void subscribe(ObservableEmitter<Object> emitter) throws Throwable {
+                    Drawable drawable=item.getIcon();
+                    emitter.onNext(drawable);
+                    emitter.onComplete();
+                }
+            }).subscribe(new Observer<Object>() {
+                @Override
+                public void onNext(Object o) {
+                    holder.icon.setImageDrawable((Drawable)o);
+                }
+                @Override
+                public void onError(Throwable e) {
 
-            holder.name.setText(AppUtils.getAppName(context, item.getTitle()));
-            holder.icon.setImageDrawable(AppUtils.getDrawable(context,item.getTitle()));
-            if (item.getTitle().equals("com.tencent.mobileqq")||item.getTitle().equals("com.tencent.mm")){
-                holder.name.setText(AppUtils.getAppName(context, item.getTitle())+"(后台服务保留)");
+                }
+                @Override
+                public void onComplete() {
+
+                }
+                @Override
+                public void onSubscribe(Disposable d) {
+
+                }
+            });
+            //holder.icon.setImageDrawable(item.getIcon());
+            if (item.getPackage_name().equals("com.tencent.mobileqq")||item.getPackage_name().equals("com.tencent.mm")||item.getPackage_name().equals("com.tencent.tim")){
+                holder.name.setText(item.getName()+"(后台服务保留)");
             }
             holder.remove.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -110,8 +146,15 @@ public class ListGameAdapter extends RecyclerView.Adapter<ListGameAdapter.ViewHo
             });
             if(TYPE==1){
                 holder.checkBox.setVisibility(View.VISIBLE);
-                holder.checkBox.setChecked(item.getChecked());
+                holder.checkBox.setChecked(item.isChecked());
                 holder.checkBox.setTag(items.get(position));
+                holder.itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Boolean b=!holder.checkBox.isChecked();
+                        holder.checkBox.setChecked(b);
+                    }
+                });
                 holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -134,6 +177,14 @@ public class ListGameAdapter extends RecyclerView.Adapter<ListGameAdapter.ViewHo
                 });
                 holder.remove.setVisibility(View.INVISIBLE);
             }
+        }
+        if (position==0){
+            holder.itemView.setBackgroundResource(R.drawable.item_selector_top);
+        }
+        else if (position==getItemCount()-1){
+            holder.itemView.setBackgroundResource(R.drawable.item_selector_bottom);
+        }else {
+            holder.itemView.setBackgroundResource(R.drawable.item_normal_none);
         }
     }
 

@@ -2,22 +2,31 @@ package com.kai.lktMode.tool.util.net;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.github.lzyzsd.circleprogress.DonutProgress;
 import com.kai.lktMode.BuildConfig;
 import com.kai.lktMode.R;
 import com.kai.lktMode.activity.MainActivity;
+import com.kai.lktMode.bean.Sdcard;
+import com.kai.lktMode.bean.SystemInfo;
 import com.kai.lktMode.widget.CloudLoginDialog;
 import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.tool.ZipUtils;
 import com.kai.lktMode.webdav.WebDavFile;
 import com.kai.lktMode.webdav.http.HttpAuth;
 
+
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.BufferedWriter;
@@ -31,7 +40,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Properties;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class WebUtil {
@@ -52,10 +62,35 @@ public class WebUtil {
 
     }
 
+    public static String getRealUrl(String url){
+        try {
+            Document document = Jsoup.connect(url)
+                    .header("User-Agent","Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0")
+                    .get();
+            String js=document.getElementsByTag("script").get(0).html();
+            Log.d("js",js);
+            return extractUrl(js);
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        return "";
+    }
+    public static String extractUrl(String js){
+        String urlheader=match("(https?://[^']+)",js);
+        String urltail=match("(\\?[^\"]+)",js);
+        return (urlheader+urltail);
+    }
+    public static String match(String m,String p){
+        Pattern pattern=Pattern.compile(m);
+        Matcher matcher=pattern.matcher(p);
+        if (matcher.find()){
+            return matcher.group(1);
+        }
+        return "";
+    }
     public String getVersionName() {
         return versionName;
     }
-
     public String getVersionLog() {
         return versionLog;
     }
@@ -82,6 +117,8 @@ public class WebUtil {
     }
     public boolean isToUpdate(){
         boolean update=false;
+        if (BuildConfig.BUILD_TYPE.equals("debug"))
+            return false;
         int[] codes_web=getCodes(getVersionName());
         if (codes_web==null){
             return false;
@@ -102,7 +139,22 @@ public class WebUtil {
         }
         return update;
     }
-    public static void login(final String user, final String password, final CloudLoginDialog dialog, final Activity context){
+    public static boolean isDonation(Context context) throws Exception{
+        final String website="https://dav.jianguoyun.com/dav/donation/";
+        HttpAuth.setAuth("1354268264@qq.com", "kai20134548");
+        String username=Preference.getString(context,"username");
+        WebDavFile webDavFiles = new WebDavFile(website+username+".txt");
+        if (webDavFiles.exists()){
+            SystemInfo.setIsDonated(true);
+            return true;
+        }
+        else{
+            SystemInfo.setIsDonated(false);
+            return false;
+        }
+
+    }
+    public static void login(final String user, final String password, final CloudLoginDialog dialog, final Activity context,boolean list){
         final String website="https://dav.jianguoyun.com/dav/";
         new Thread(new Runnable() {
             @Override
@@ -111,22 +163,29 @@ public class WebUtil {
                     HttpAuth.setAuth(user, password);
                     WebDavFile webDavFiles = new WebDavFile(website+"lktMode");
                     if (webDavFiles.makeAsDir()){
-                        Preference.save(context,"username",user);
-                        Preference.save(context,"password",password);
-                        Preference.save(context,"cloud",true);
+                        Preference.saveString(context,"username",user);
+                        Preference.saveString(context,"password",password);
+                        Preference.saveBoolean(context,"cloud",true);
                         context.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 Toast.makeText(context,"登录成功",Toast.LENGTH_SHORT).show();
-                                list(context);
+                                MainActivity activity=(MainActivity)context;
+                                activity.refreshLogin();
+                                activity.refreshLoginV1();
+                                if (list)
+                                    list(context);
                             }
                         });
-                        dialog.dismiss();
+                        if (dialog!=null)
+                            dialog.dismiss();
                     }else {
                         context.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(context,"登录失败，请检查邮箱密码是否正确",Toast.LENGTH_SHORT).show();
+                                Toast.makeText(context,"登录失败",Toast.LENGTH_SHORT).show();
+
+
                             }
                         });
                     }
@@ -136,6 +195,8 @@ public class WebUtil {
                         @Override
                         public void run() {
                             Toast.makeText(context,e.toString(),Toast.LENGTH_SHORT).show();
+
+
                         }
                     });
 
@@ -145,21 +206,22 @@ public class WebUtil {
         }).start();
 
     }
-    public static Object getPrefrence(Activity activity,String key,String type){
-        return Preference.get(activity,key,type);
 
-    }
     public static void list(final Activity activity){
+        ProgressDialog progressDialog=new ProgressDialog(activity,R.style.AppDialog);
+        progressDialog.setMessage("加载中");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
         new Thread(new Runnable() {
-            String filesPath=Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode";
+            String filesPath= Sdcard.getPath(activity) +"/lktMode";
             List<String> items=new ArrayList<>();
             List<String> selected=new ArrayList<>();
             @Override
             public void run() {
                 try {
                     String website="https://dav.jianguoyun.com/dav";
-                    String user=(String)Preference.get(activity,"username","String");
-                    String password=(String)Preference.get(activity,"password","String");
+                    String user=(String)Preference.getString(activity,"username");
+                    String password=(String)Preference.getString(activity,"password");
                     HttpAuth.setAuth(user, password);
                     List<WebDavFile> webDavFiles = new WebDavFile(website+"/lktMode").listFiles();
                     for (WebDavFile f:webDavFiles){
@@ -168,7 +230,6 @@ public class WebUtil {
                         items.add(f.getDisplayName());
                     }
 
-
                 }catch (Exception e){
                     e.printStackTrace();
                 }finally {
@@ -176,23 +237,30 @@ public class WebUtil {
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            progressDialog.dismiss();
                             final AlertDialog dialog=new AlertDialog.Builder(activity, R.style.AppDialog)
                                     .setItems(items.toArray(new String[items.size()]), new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialogInterface, int i) {
                                             int last=items.size()-1;
                                             if (i==last){
+                                                if (i>=1&&!SystemInfo.getIsDonated()){
+                                                    Toast.makeText(activity,"非捐贈版只支持1个备份",Toast.LENGTH_SHORT).show();
+
+
+                                                    return;
+                                                }
                                                 try {
                                                     delFolder(filesPath+"/backup");
                                                     //将自定义调度的所有代码备份到本地
                                                     for (int index=1;index<=6;index++){
                                                         try {
-                                                            File file=new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/backup/");
+                                                            File file=new File(Sdcard.getPath(activity)+"/lktMode/backup/");
                                                             if (!file.mkdirs()&&!file.exists()){
                                                                 return;
                                                             }
-                                                            BufferedWriter writer=new BufferedWriter(new FileWriter(Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/backup/"+"code"+index+".sh"));
-                                                            writer.write((String) Preference.get(activity,"code"+index,"String"));
+                                                            BufferedWriter writer=new BufferedWriter(new FileWriter(Sdcard.getPath(activity)+"/lktMode/backup/"+"code"+index+".sh"));
+                                                            writer.write((String) Preference.getString(activity,"code"+index));
                                                             writer.flush();
                                                             writer.close();
 
@@ -203,15 +271,15 @@ public class WebUtil {
                                                     }
                                                     //将不需要权限的所有参数都备份到本地
                                                     Properties properties=new Properties();
-                                                    properties.setProperty("autoBoot",String.valueOf(getPrefrence(activity,"autoBoot","Boolean")));
-                                                    properties.setProperty("autoLock",String.valueOf(getPrefrence(activity,"autoLock","Boolean")));
-                                                    properties.setProperty("custom",String.valueOf(getPrefrence(activity,"custom","Boolean")));
-                                                    properties.setProperty("autoClean",String.valueOf(getPrefrence(activity,"autoClean","Boolean")));
-                                                    properties.setProperty("gameMode",String.valueOf(getPrefrence(activity,"gameMode","Boolean")));
-                                                    properties.setProperty("imClean",String.valueOf(getPrefrence(activity,"imClean","Boolean")));
-                                                    properties.setProperty("games",String.valueOf(getPrefrence(activity,"games","StringSet")));
-                                                    properties.setProperty("softwares",String.valueOf(getPrefrence(activity,"softwares","StringSet")));
-                                                    properties.setProperty("default",String.valueOf(getPrefrence(activity,"default","int")));
+                                                    properties.setProperty("autoBoot",String.valueOf(Preference.getBoolean(activity,"autoBoot")));
+                                                    properties.setProperty("autoLock",String.valueOf(Preference.getBoolean(activity,"autoLock")));
+                                                    properties.setProperty("custom",String.valueOf(Preference.getBoolean(activity,"custom")));
+                                                    properties.setProperty("autoClean",String.valueOf(Preference.getBoolean(activity,"autoClean")));
+                                                    properties.setProperty("gameMode",String.valueOf(Preference.getBoolean(activity,"gameMode")));
+                                                    properties.setProperty("imClean",String.valueOf(Preference.getBoolean(activity,"imClean")));
+                                                    properties.setProperty("games",String.valueOf(Preference.getStringSet(activity,"games")));
+                                                    properties.setProperty("softwares",String.valueOf(Preference.getStringSet(activity,"softwares")));
+                                                    properties.setProperty("default",String.valueOf(Preference.getInt(activity,"default")));
                                                     //将自定义调度备份到备份文件夹内
                                                     try {
                                                         MainActivity.copyFile(filesPath+"/powercfg/powercfg.sh",filesPath+"/backup/powercfg.sh");
@@ -269,7 +337,12 @@ public class WebUtil {
                                     .setPositiveButton("注销账号", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialogInterface, int i) {
-                                            Preference.save(activity,"cloud",false);
+                                            Preference.saveBoolean(activity,"cloud",false);
+                                            Preference.saveString(activity,"username","");
+                                            Preference.saveString(activity,"password","");
+                                            MainActivity mainActivity=(MainActivity)activity;
+                                            ((MainActivity) activity).refreshLogin();
+                                            ((MainActivity) activity).refreshLoginV1();
                                         }
                                     })
                                     .setTitle("选择备份")
@@ -322,12 +395,16 @@ public class WebUtil {
         }
     }
     public static void restore(final String webpath, final Activity activity){
-        final String filesPath=Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode";
+        final String filesPath=Sdcard.getPath(activity)+"/lktMode";
+        ProgressDialog dialog=new ProgressDialog(activity,R.style.AppDialog);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.setMessage("正在恢复");
+        dialog.show();
         new Thread(new Runnable() {
             @Override
             public void run() {
-                String user=(String)Preference.get(activity,"username","String");
-                String password=(String)Preference.get(activity,"password","String");
+                String user=Preference.getString(activity,"username");
+                String password=Preference.getString(activity,"password");
                 String website="https://dav.jianguoyun.com/dav";
                 try {
                     //准备好本地用来接受的文件夹
@@ -341,12 +418,15 @@ public class WebUtil {
                     boolean isSuccess=webDavFile.download(filesPath+"/restore.zip",true);
                     if (isSuccess) {
                         ZipUtils.unZip(filesPath+"/restore.zip",filesPath+"/restore/");
-                        restoreProp(activity);
+                        restoreProp(activity,dialog);
                     }else {
+
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                dialog.dismiss();
                                 Toast.makeText(activity,"下载备份失败，请检查网络",Toast.LENGTH_SHORT).show();
+
                             }
                         });
                     }
@@ -358,8 +438,8 @@ public class WebUtil {
         }).start();
 
     }
-    public static void restoreProp(final Activity activity){
-        final String filesPath=Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode";
+    public static void restoreProp(final Activity activity,ProgressDialog dialog) throws Exception{
+        final String filesPath=Sdcard.getPath(activity)+"/lktMode";
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -368,31 +448,32 @@ public class WebUtil {
                     FileInputStream in=new FileInputStream(new File(filesPath+"/restore/backup.properties"));
                     properties.load(in);
                     in.close();
-                    Preference.save(activity,"autoBoot",Boolean.valueOf(properties.getProperty("autoBoot","false")));
-                    Preference.save(activity,"custom",Boolean.valueOf(properties.getProperty("custom","false")));
-                    Preference.save(activity,"autoLock",Boolean.valueOf(properties.getProperty("autoLock","false")));
-                    Preference.save(activity,"autoClean",Boolean.valueOf(properties.getProperty("autoClean","false")));
-                    Preference.save(activity,"imClean",Boolean.valueOf(properties.getProperty("imClean","false")));
-                    Preference.save(activity,"gameMode",Boolean.valueOf(properties.getProperty("gameMode","false")));
+                    Preference.saveBoolean(activity,"autoBoot",Boolean.valueOf(properties.getProperty("autoBoot","false")));
+                    Preference.saveBoolean(activity,"custom",Boolean.valueOf(properties.getProperty("custom","false")));
+                    Preference.saveBoolean(activity,"autoLock",Boolean.valueOf(properties.getProperty("autoLock","false")));
+                    Preference.saveBoolean(activity,"autoClean",Boolean.valueOf(properties.getProperty("autoClean","false")));
+                    Preference.saveBoolean(activity,"imClean",Boolean.valueOf(properties.getProperty("imClean","false")));
+                    Preference.saveBoolean(activity,"gameMode",Boolean.valueOf(properties.getProperty("gameMode","false")));
                     String[] games=properties.getProperty("games").replaceAll("\\[|\\]","").split(", ");
-                    Preference.save(activity,"games",Arrays.asList(games));
+                    Preference.saveList(activity,"games",Arrays.asList(games));
                     String[] softwares=properties.getProperty("softwares").replaceAll("\\[|\\]","").split(", ");
-                    Preference.save(activity,"softwares",Arrays.asList(softwares));
-                    Preference.save(activity,"default",Integer.valueOf(properties.getProperty("default","0")));
+                    Preference.saveList(activity,"softwares",Arrays.asList(softwares));
+                    Preference.saveInt(activity,"default",Integer.valueOf(properties.getProperty("default","0")));
                     for (int i=1;i<=6;i++){
                         MainActivity.restore(activity,"code"+i,"code"+i+".sh");
                     }
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            dialog.dismiss();
                             Toast.makeText(activity,"恢复完成",Toast.LENGTH_SHORT).show();
+
                             MainActivity activity1=(MainActivity)activity;
                             activity1.getFragment(0).Refresh();
                             activity1.getFragment(1).Refresh();
                             activity1.getFragment(2).Refresh();
                             activity1.getFragment(3).Refresh();
                             activity1.getFragment(4).Refresh();
-                            activity1.getFragment(5).Refresh();
                         }
                     });
                 }catch (Exception e){
@@ -404,11 +485,15 @@ public class WebUtil {
 
     }
     public static void delete(final String[] paths, final Activity activity){
+        ProgressDialog dialog=new ProgressDialog(activity,R.style.AppDialog);
+        dialog.setCancelable(false);
+        dialog.setMessage("正在从云端删除");
+        dialog.show();
         new Thread(new Runnable() {
             @Override
             public void run() {
-                String user=(String)Preference.get(activity,"username","String");
-                String password=(String)Preference.get(activity,"password","String");
+                String user=Preference.getString(activity,"username");
+                String password=(String)Preference.getString(activity,"password");
                 String website="https://dav.jianguoyun.com/dav";
                 try {
                     HttpAuth.setAuth(user, password);
@@ -419,7 +504,9 @@ public class WebUtil {
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            dialog.cancel();
                             Toast.makeText(activity,"删除完成",Toast.LENGTH_SHORT).show();
+
                         }
                     });
                 }catch (Exception e){
@@ -430,12 +517,16 @@ public class WebUtil {
 
     }
     public static void backup(final String filePath, final Activity context){
+        ProgressDialog dialog=new ProgressDialog(context,R.style.AppDialog);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.setMessage("备份中");
+        dialog.show();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 String website="https://dav.jianguoyun.com/dav";
-                String user=(String)Preference.get(context,"username","String");
-                String password=(String)Preference.get(context,"password","String");
+                String user=Preference.getString(context,"username");
+                String password=(String)Preference.getString(context,"password");
                 HttpAuth.setAuth(user, password);
                 try {
                     Calendar calendar = Calendar.getInstance();
@@ -450,14 +541,18 @@ public class WebUtil {
                         context.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                dialog.dismiss();
                                 Toast.makeText(context,"已备份到云端",Toast.LENGTH_SHORT).show();
+
                             }
                         });
                     }else {
                         context.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                dialog.dismiss();
                                 Toast.makeText(context,"备份失败，请检查网络",Toast.LENGTH_SHORT).show();
+
                             }
                         });
                     }

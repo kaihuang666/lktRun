@@ -1,12 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerview"
+    android:orientation="vertical"
+    tools:context=".activity.SettingActivity">
+    <androidx.appcompat.widget.Toolbar
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:paddingTop="20dp"
+        android:id="@+id/simple_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-    </androidx.recyclerview.widget.RecyclerView>
+        android:layout_height="wrap_content"
+        android:background="@drawable/background_gradient"
+        app:title="设置"
+        app:navigationIcon="@mipmap/back">
+        <androidx.appcompat.widget.ActionMenuView
+            android:layout_gravity="end"
+            android:id="@+id/actionmenuview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        </androidx.appcompat.widget.ActionMenuView>
+    </androidx.appcompat.widget.Toolbar>
+    <fragment
+        android:id="@+id/fragment"
+        android:name="com.kai.lktMode.fragment.SettingFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 </LinearLayout>

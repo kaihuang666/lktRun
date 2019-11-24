@@ -1,0 +1,99 @@
+[
+  {
+    "board": "810",
+    "model": "810",
+    "model_name": "810",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "980",
+    "model": "980",
+    "model_name": "980",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "970",
+    "model": "970",
+    "model_name": "970",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5ldrwd"
+  },
+  {
+    "board": "960",
+    "model": "960",
+    "model_name": "960",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5ldrvc"
+  },
+  {
+    "board": "960s",
+    "model": "960s",
+    "model_name": "960s",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5ldrvc"
+  },
+  {
+    "board": "955",
+    "model": "955",
+    "model_name": "955",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5ldrub"
+  },
+  {
+    "board": "950",
+    "model": "950",
+    "model_name": "950",
+    "tune": "lkt|yc|diy",
+    "yc_url": "i5ldrub"
+  },
+  {
+    "board": "710",
+    "model": "710",
+    "model_name": "710",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "659",
+    "model": "659",
+    "model_name": "659",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "658",
+    "model": "658",
+    "model_name": "658",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "655",
+    "model": "655",
+    "model_name": "655",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "935",
+    "model": "935",
+    "model_name": "935",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "930",
+    "model": "930",
+    "model_name": "930",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "650",
+    "model": "650",
+    "model_name": "650",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "unknown",
+    "model": "unknown",
+    "model_name": "其他",
+    "tune": "diy"
+  }
+
+
+]

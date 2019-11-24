@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <LinearLayout
+            android:elevation="2dp"
+            android:layout_width="match_parent"
+            android:background="@drawable/bc"
+            android:layout_margin="8dp"
+            android:layout_height="wrap_content">
+            <RadioGroup
+                android:layout_marginStart="10dp"
+                android:layout_marginLeft="10dp"
+                android:id="@+id/radioGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+            </RadioGroup>
+        </LinearLayout>
+        <TextView
+            android:elevation="1dp"
+            android:background="@drawable/bc"
+            android:layout_margin="8dp"
+            android:padding="10dp"
+            android:text="友情提示：\n\nLKT调度模块：\n需要安装magisk模块，切换速度较慢，但是支持处理器相当多,如果你只是简单需要一个切换工具，请前往LKT XDA首页下载官方切换工具。\n\nYC调度：\n由YC大神开发的调度合集，支持主流的处理器，强大的功耗模型可以合理调节处理器运行。但是受限于不同内核环境，效果可能不一致。\n\n自定义调度：\n由app作者开发的调度生成工具，你直接通过对处理器参数的可视化调节生成专属自己的调度；捐赠版也提供作者预设的一键生成调度工具，根据你的内核和处理器状况生成可靠的调度。\n"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+
+    </LinearLayout>
+</ScrollView>

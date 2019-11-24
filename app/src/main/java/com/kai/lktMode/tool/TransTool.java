@@ -30,7 +30,7 @@ public class TransTool {
         return  dictionary.get(str);
     }
     public static void run(Context context){
-        Set<String> strings=(Set<String>)Preference.get(context,"gameSettings","StringSet");
+        Set<String> strings=Preference.getStringSet(context,"gameSettings");
         for (String s:strings){
             String[] args=s.split(":");
             switch (args[0]){
@@ -41,14 +41,14 @@ public class TransTool {
         }
     }
     public static void restore(Context context){
-        Set<String> strings=(Set<String>)Preference.get(context,"gameSettings","StringSet");
+        Set<String> strings=Preference.getStringSet(context,"gameSettings");
         for (String s:strings){
             String[] args=s.split(":");
             switch (args[0]){
-                case "brightness":Settings.System.putInt(context.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS,(int)Preference.get(context,"brightness",125));break;
-                case "autoBright":Settings.System.putInt(context.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE,(int)Preference.get(context,"autoBright",1));break;
+                case "brightness":Settings.System.putInt(context.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS,(int)Preference.getInt(context,"brightness",125));break;
+                case "autoBright":Settings.System.putInt(context.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE,(int)Preference.getInt(context,"autoBright",1));break;
                 case "volume":AudioManager audio=(AudioManager) context.getSystemService(Service.AUDIO_SERVICE);
-                    audio.setStreamVolume(AudioManager.STREAM_MUSIC,(int)Preference.get(context,"volume",15),0);
+                    audio.setStreamVolume(AudioManager.STREAM_MUSIC,(int)Preference.getInt(context,"volume",15),0);
                 break;
             }
         }
@@ -59,14 +59,14 @@ public class TransTool {
         AudioManager audio = (AudioManager) context.getSystemService(Service.AUDIO_SERVICE);
         int currentVolume =audio.getStreamVolume(AudioManager.STREAM_MUSIC);
         audio.setStreamVolume(AudioManager.STREAM_MUSIC,(int)(30*Integer.parseInt(sub)*0.01),0);
-        Preference.save(context,"volume",currentVolume);
+        Preference.saveInt(context,"volume",currentVolume);
         Log.d("ss",currentVolume+"");
     }
     private static void tuneBrightness(String str,String sub,Context context){
 
         if (str.equals("brightness")){
             try {
-                Preference.save(context,"brightness",Settings.System.getInt(context.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS));
+                Preference.saveInt(context,"brightness",Settings.System.getInt(context.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS));
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -74,7 +74,7 @@ public class TransTool {
             return;
         }else {
             try {
-                Preference.save(context,"autoBright",Settings.System.getInt(context.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE));
+                Preference.saveInt(context,"autoBright",Settings.System.getInt(context.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE));
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -123,6 +123,6 @@ public class TransTool {
                 all.add(getKey(item.getTitle())+":"+item.getSubtitle());
             }
         }
-        Preference.save(context,"gameSettings",all);
+        Preference.saveStringSet(context,"gameSettings",all);
     }
 }

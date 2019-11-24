@@ -62,6 +62,17 @@ public class ListLabAdapter extends RecyclerView.Adapter<ListLabAdapter.ViewHold
                 onItemCheck.onCheck(position,b);
             }
         });
+        if (getItemCount()==1){
+            holder.itemView.setBackgroundResource(R.drawable.item_selector);
+        }
+        else if (position==0){
+            holder.itemView.setBackgroundResource(R.drawable.item_selector_top);
+        }
+        else if (position==getItemCount()-1){
+            holder.itemView.setBackgroundResource(R.drawable.item_selector_bottom);
+        }else {
+            holder.itemView.setBackgroundResource(R.drawable.item_selector_none);
+        }
     }
 
     @Override

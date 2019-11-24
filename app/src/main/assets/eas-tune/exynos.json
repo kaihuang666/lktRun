@@ -1,0 +1,138 @@
+[
+  {
+    "name": "持久续航",
+    "governor":{
+      "small": "schedutil",
+      "large": "schedutil",
+      "huge": "schedutil"
+    },
+    "freqs":{
+      "small-max": 0.6,
+      "small-min": 0,
+      "large-max": 0.6,
+      "large-min": 0,
+      "huge-max": 0.7,
+      "huge-min": 0
+    },
+    "top-app": {
+      "prefer": true,
+      "boost": "0"
+    }
+  },
+  {
+    "name": "智能省电",
+    "governor":{
+      "small": "schedutil",
+      "large": "schedutil",
+      "huge": "schedutil"
+    },
+    "freqs":{
+      "small-max": 0.6,
+      "small-min": 0,
+      "large-max": 0.6,
+      "large-min": 0,
+      "huge-max": 0.7,
+      "huge-min": 0
+    },
+    "top-app": {
+      "prefer": true,
+      "boost": "0"
+    }
+  },
+  {
+    "name": "智能均衡",
+    "governor":{
+      "small": "schedutil",
+      "large": "schedutil",
+      "huge": "schedutil"
+    },
+    "freqs":{
+      "small-max": 0.7,
+      "small-min": 0.2,
+      "large-max": 0.6,
+      "large-min": 0,
+      "huge-max": 0.7,
+      "huge-min": 0
+    },
+    "top-app": {
+      "prefer": true,
+      "boost": "110"
+    }
+  },
+  {
+    "name": "轻度游戏",
+    "governor":{
+      "small": "schedutil",
+      "large": "schedutil",
+      "huge": "schedutil"
+    },
+    "freqs":{
+      "small-max": 0.6,
+      "small-min": 0.4,
+      "large-max": 1,
+      "large-min": 0.4,
+      "huge-max": 1,
+      "huge-min": 0.7
+    },
+    "top-app": {
+      "prefer": true,
+      "boost": "40"
+    }
+  },
+  {
+    "name": "适度游戏",
+    "governor":{
+      "small": "schedutil",
+      "large": "schedutil",
+      "huge": "schedutil"
+    },
+    "freqs":{
+      "small-max": 1,
+      "small-min": 0,
+      "large-max": 0.66,
+      "large-min": 0.5,
+      "huge-max": 0.94,
+      "huge-min": 0.38
+    },
+    "top-app": {
+      "prefer": true,
+      "boost": "60"
+    }
+  },
+  {
+    "name": "重度游戏",
+    "governor":{
+      "small": "schedutil",
+      "large": "schedutil",
+      "huge": "schedutil"
+    },
+    "freqs":{
+      "small-max": 1,
+      "small-min": 0,
+      "large-max": 0.7,
+      "large-min": 0.5,
+      "huge-max": 1,
+      "huge-min": 0.45
+    },
+    "top-app": {
+      "prefer": true,
+      "boost": "70"
+    }
+  },
+  {
+    "name": "发烧极限",
+    "governor":{
+      "small": "performance",
+      "large": "performance",
+      "huge": "performance"
+    },
+    "freqs":{
+      "small-max": 1,
+      "small-min": 0.4,
+      "large-max": 1,
+      "large-min": 0.6,
+      "huge-max": 1,
+      "huge-min": 0.7
+    }
+  }
+]

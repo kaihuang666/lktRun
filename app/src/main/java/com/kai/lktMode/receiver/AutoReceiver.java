@@ -7,6 +7,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.kai.lktMode.fragment.MainFragment;
+import com.kai.lktMode.root.RootUtils;
 import com.kai.lktMode.tool.Preference;
 
 public class AutoReceiver extends BroadcastReceiver {
@@ -21,7 +22,7 @@ public class AutoReceiver extends BroadcastReceiver {
                     try {
                         Thread.sleep(1000);
                     }catch (Exception e){
-                        MainFragment.cmd("su -c am startservice -n com.kai.lktMode/.AutoService");
+                        RootUtils.runCommand("am startservice -n com.kai.lktMode/.AutoService");
                     }
 
                 }

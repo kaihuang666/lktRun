@@ -10,46 +10,65 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public class Preference {
-    public static void save(Context context,String key, Object value){
+    public static void saveBoolean(Context context,String key,Boolean value){
         SharedPreferences.Editor editor=context.getSharedPreferences("db",Context.MODE_PRIVATE).edit();
-        if (value instanceof Boolean){
-            editor.putBoolean(key, ((Boolean) value).booleanValue());
-        }else if(value instanceof String){
-            editor.putString(key,(String)value);
-        }else if(value instanceof Integer){
-            editor.putInt(key,((Integer) value).intValue());
-        }else if (value instanceof List){
-            editor.putStringSet(key,new TreeSet((List<String>) value));
-        }else if (value instanceof Set){
-            editor.putStringSet(key,(Set<String>) value);
-        }
+        editor.putBoolean(key,value);
         editor.apply();
     }
-    public static Object get(Context context,String key,String type){
-        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_PRIVATE);
-        switch (type){
-            case "int":return preferences.getInt(key,0);
-            case "Boolean":return preferences.getBoolean(key,false);
-            case "String":return preferences.getString(key,"");
-            case "StringSet":return preferences.getStringSet(key,new TreeSet<String>());
-            default:return null;
-        }
-
+    public static void saveString(Context context,String key,String value){
+        SharedPreferences.Editor editor=context.getSharedPreferences("db",Context.MODE_PRIVATE).edit();
+        editor.putString(key,value);
+        editor.apply();
     }
-    public static Object get(Context context,String key,Object defaultValue){
-        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_PRIVATE);
-        if (defaultValue instanceof Boolean){
-            return preferences.getBoolean(key,(Boolean) defaultValue);
-        }else if(defaultValue instanceof String){
-            return preferences.getString(key,String.valueOf(defaultValue));
-        }else if(defaultValue instanceof Integer){
-            return preferences.getInt(key,(int)defaultValue);
-        }else if (defaultValue instanceof List){
-            return preferences.getStringSet(key,new TreeSet<String>());
-        }
-        return null;
-
+    public static void saveInt(Context context,String key,int value){
+        SharedPreferences.Editor editor=context.getSharedPreferences("db",Context.MODE_PRIVATE).edit();
+        editor.putInt(key,value);
+        editor.apply();
     }
+    public static void saveStringSet(Context context,String key,Set<String> value){
+        SharedPreferences.Editor editor=context.getSharedPreferences("db",Context.MODE_PRIVATE).edit();
+        editor.putStringSet(key,value);
+        editor.apply();
+    }
+    public static void saveList(Context context,String key,List<String> value){
+        SharedPreferences.Editor editor=context.getSharedPreferences("db",Context.MODE_PRIVATE).edit();
+        editor.putStringSet(key,new TreeSet<>(value));
+        editor.apply();
+    }
+    public static Boolean getBoolean(Context context,String key){
+        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_PRIVATE);
+        return preferences.getBoolean(key,false);
+    }
+    public static String getString(Context context,String key){
+        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_PRIVATE);
+        return preferences.getString(key,"");
+    }
+    public static int getInt(Context context,String key){
+        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_PRIVATE);
+        return preferences.getInt(key,0);
+    }
+    public static Boolean getBoolean(Context context,String key,Boolean defaultValue){
+        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_PRIVATE);
+        return preferences.getBoolean(key,defaultValue);
+    }
+    public static String getString(Context context,String key,String defaultValue){
+        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_PRIVATE);
+        return preferences.getString(key,defaultValue);
+    }
+    public static int getInt(Context context,String key,int defaultValue){
+        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_PRIVATE);
+        return preferences.getInt(key,defaultValue);
+    }
+    public static Set<String> getStringSet(Context context,String key){
+        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_PRIVATE);
+        return preferences.getStringSet(key,new TreeSet<>());
+    }
+    public static List<String> getList(Context context,String key){
+        SharedPreferences preferences=context.getSharedPreferences("db",Context.MODE_PRIVATE);
+        return new ArrayList<>(preferences.getStringSet(key,new TreeSet<>()));
+    }
+
+
     public static void clearAll(Context context){
         SharedPreferences.Editor editor=context.getSharedPreferences("db",Context.MODE_PRIVATE).edit();
         editor.putBoolean("version",false);
@@ -57,29 +76,29 @@ public class Preference {
         editor.apply();
     }
     public static void gameRemove(Context context,String packageName){
-        List<String> list = new ArrayList((Set)get(context,"games","StringSet"));
+        List<String> list = getList(context,"games");
         list.remove(packageName);
-        save(context,"games",list);
+        saveList(context,"games",list);
     }
     public static void softwareRemove(Context context,String packageName){
-        List<String> list = new ArrayList((Set)get(context,"softwares","StringSet"));
+        List<String> list = getList(context,"softwares");
         list.remove(packageName);
-        save(context,"softwares",list);
+        saveList(context,"softwares",list);
     }
     public static void gameAdd(Context context,String packageName){
-        List<String> list = new ArrayList((Set)get(context,"games","StringSet"));
+        List<String> list = getList(context,"games");
         list.add(packageName);
-        save(context,"games",list);
+        saveList(context,"games",list);
     }
     public static void softwareAdd(Context context,String packageName){
-        List<String> list = new ArrayList((Set)get(context,"softwares","StringSet"));
+        List<String> list = getList(context,"softwares");
         list.add(packageName);
-        save(context,"softwares",list);
+        saveList(context,"softwares",list);
     }
     public static List<String> getGames(Context context){
-        return new ArrayList((Set)get(context,"games","StringSet"));
+        return getList(context,"games");
     }
     public static List<String> getSoftwares(Context context){
-        return new ArrayList((Set)get(context,"softwares","StringSet"));
+        return getList(context,"softwares");
     }
 }

@@ -4,18 +4,32 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="windowNoTitle">true</item>
+        <item name="colorControlNormal">@color/colorBack</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorPrimaryDark</item>
-        <item name="android:windowTranslucentStatus">false</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-        <!--Android 5.x开始需要把颜色设置透明，否则导航栏会呈现系统默认的浅灰色-->
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/colorBack</item>
     </style>
+    <style name="translucent" parent="Theme.AppCompat">
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowBackground">@color/transparent</item>
+
+        <item name="android:windowIsTranslucent">true</item>
+
+        <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
+
+    </style>
+    <style name="ApplicationTheme" parent="AppTheme">
+        <item name="android:windowBackground">@drawable/splash</item>
+    </style>
+    <style name="ActivityTheme" parent="AppTheme">
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+
     <style name="AppDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="colorPrimaryDark">#1868A7</item>
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="dialogCornerRadius">12dp</item>
+        <item name="dialogCornerRadius">6dp</item>
         <item name="colorAccent">@color/colorPrimaryDark</item>
     </style>
     <style name="AppDialogRun" parent="AppDialog">

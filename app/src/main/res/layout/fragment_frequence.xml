@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:background="@drawable/bc"
+        android:elevation="2dp"
+        android:layout_marginTop="5dp"
+        android:padding="10dp"
+        android:text="请仔细阅读\n\n限制频率是较为直接地进行限制手机性能，限制最高频率会减弱设备的综合性能，如果不希望手机性能减弱，请不要作限制；限制最低性能会重新设定设备的基础性能，游戏时提高最低频率会让游戏更加流畅，但在待机时最低频率越低越好。\n\n合理分配核心集群的频率非常重要，核心组成不同的集群"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <com.kai.lktMode.widget.AnimatedExpandableListView
+        android:fastScrollEnabled="true"
+        android:paddingBottom="2dp"
+        android:layout_marginBottom="10dp"
+        android:groupIndicator="@null"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:footerDividersEnabled="false"
+        android:divider="@color/transparent"
+        android:childDivider="@color/transparent"
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </com.kai.lktMode.widget.AnimatedExpandableListView>
+</LinearLayout>

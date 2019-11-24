@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:elevation="2dp"
+    android:background="@drawable/item_selector_none"
+    android:layout_height="40dp">
+    <TextView
+        android:id="@+id/kernel_name"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="20dp"
+        android:textSize="16dp"
+        android:text="核心"
+        android:layout_centerVertical="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:layout_centerVertical="true"
+        android:layout_toRightOf="@+id/kernel_name"
+        android:id="@+id/title"
+        android:layout_gravity="center_vertical"
+        android:textSize="16dp"
+        android:text="1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:layout_toRightOf="@+id/title"
+        android:layout_centerVertical="true"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="10dp"
+        android:textSize="16dp"
+        android:text="- "
+        android:id="@+id/divide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:layout_centerVertical="true"
+        android:layout_toRightOf="@+id/divide"
+        android:id="@+id/freq"
+        android:layout_marginStart="10dp"
+        android:layout_gravity="center_vertical"
+        android:textSize="16dp"
+        android:text="200MHz"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <Switch
+        style="@style/Theme.AppCompat.Light"
+        android:thumb="@drawable/swicth"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:id="@+id/swicth"
+        android:layout_marginEnd="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</RelativeLayout>

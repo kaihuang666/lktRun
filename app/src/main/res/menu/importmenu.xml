@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/importPowercfg"
-        android:title="高级编辑" />
-    <item android:id="@+id/importFile"
-        android:title="文件导入" />
+        android:title="创建调度" />
+    <item android:id="@+id/edit"
+        android:title="编辑调度"/>
+    <item android:id="@+id/clone"
+        android:title="克隆当前调度"/>
+    <item android:id="@+id/fit"
+        android:title="自适应生成调度"/>
+    <item android:id="@+id/custom"
+        android:title="按需求定制"/>
 </menu>

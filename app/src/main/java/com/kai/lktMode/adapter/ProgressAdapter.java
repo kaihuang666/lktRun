@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.github.lzyzsd.circleprogress.ArcProgress;
 import com.kai.lktMode.R;
 import com.kai.lktMode.fragment.MainFragment;
+import com.kai.lktMode.tool.util.local.CpuUtil;
 import com.kai.lktMode.tool.util.local.ShellUtil;
 
 import java.io.InputStream;
@@ -19,10 +20,8 @@ import java.util.List;
 
 public class ProgressAdapter extends RecyclerView.Adapter<ProgressAdapter.ViewHolder> {
     private List<String> items=new ArrayList<>();
-    private int[] freq=new int[MainFragment.getCpuAmount()];
-    public int[] progress=new int[MainFragment.getCpuAmount()];
-    private int sum=0;
-    private ShellUtil shellUtil;
+    private int[] freq=new int[CpuUtil.getCpuAmount()];
+    public int[] progress=new int[CpuUtil.getCpuAmount()];
     static class ViewHolder extends RecyclerView.ViewHolder{
         ArcProgress progress;
         public ViewHolder(View v){
@@ -49,42 +48,28 @@ public class ProgressAdapter extends RecyclerView.Adapter<ProgressAdapter.ViewHo
     }
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
-        if (freq==null){
+        if (freq==null||freq.length==0){
             return;
         }
-        holder.progress.setBottomText(freq[position]+"mhz");
+        if (freq[position]==0){
+            holder.progress.setBottomText("离线");
+        }else {
+            holder.progress.setBottomText(freq[position]+"mhz");
+        }
+
         if (freq[position]==0){
             holder.progress.setProgress(0);
             return;
         }
-        holder.progress.setProgress(progress[position]);
+        int now=progress[position];
+        holder.progress.setProgress(now);
+
     }
 
     @Override
     public int getItemCount() {
         return items.size();
     }
-    public static int getMinCpuFreq(String cpu,ProcessBuilder cmd){
-        String result = "0";
-        try {
-            String[] args = {"/system/bin/cat", "/sys/devices/system/cpu/"+cpu+"/cpufreq/cpuinfo_min_freq"};
-            //cmd = new ProcessBuilder();
-            cmd.command(args);
-            Process process = cmd.start();
-            InputStream in = process.getInputStream();
-            byte[] re = new byte[24];
-            while (in.read(re) != -1) {
-                result = new String(re);
-            }
-            in.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            result = "10";
-        }
-        Log.d("cpuMin",Integer.parseInt(result.trim())/1000+"");
-        return Integer.parseInt(result.trim())/1000;
-    }
-
 
 }
 

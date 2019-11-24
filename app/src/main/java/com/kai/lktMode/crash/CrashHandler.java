@@ -21,6 +21,8 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.kai.lktMode.tool.util.local.AppUtils;
+
 /**
  * UncaughtException处理类,当程序发生Uncaught异常的时候,有该类来接管程序,并记录发送错误报告.
  *
@@ -126,6 +128,7 @@ public class CrashHandler implements UncaughtExceptionHandler {
                 String versionCode = pi.versionCode + "";
                 infos.put("versionName", versionName);
                 infos.put("versionCode", versionCode);
+                infos.put("version", AppUtils.isApkInDebug(ctx)?"debug":"release");
             }
         } catch (NameNotFoundException e) {
             Log.e(TAG, "an error occured when collect package info", e);

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@mipmap/battery_tile"
+        android:shortcutDisabledMessage="@string/add_widget"
+        android:shortcutId="@string/add_widget"
+        android:shortcutLongLabel="@string/tile_name_1"
+        android:shortcutShortLabel="@string/appwidget_text">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="com.kai.lktMode.activity.MainActivity"
+            android:targetPackage="com.kai.lktMode" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>

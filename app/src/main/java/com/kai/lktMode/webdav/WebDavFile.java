@@ -1,5 +1,7 @@
 package com.kai.lktMode.webdav;
 
+import android.util.Log;
+
 import com.kai.lktMode.webdav.http.Handler;
 import com.kai.lktMode.webdav.http.HttpAuth;
 import com.kai.lktMode.webdav.http.OkHttp;
@@ -47,15 +49,16 @@ public class WebDavFile {
     private long lastModified;
     private long size;
     private boolean isDirectory = true;
-    private boolean exists = false;
+    private boolean exists = true;
     private String parent = "";
     private String urlName = "";
 
     private OkHttpClient okHttpClient;
 
-    public WebDavFile(String url) throws MalformedURLException {
+    public WebDavFile(String url) throws Exception {
         this.url = new URL(null, url, Handler.HANDLER);
         okHttpClient = OkHttp.getInstance().client();
+        indexFileInfo();
     }
 
     public String getUrl() {
@@ -96,7 +99,7 @@ public class WebDavFile {
         }
 
 
-        return false;
+        return true;
     }
 
     /**
@@ -172,7 +175,7 @@ public class WebDavFile {
                     webDavFile.setDisplayName(fileName);
                     webDavFile.setUrlName(href);
                     list.add(webDavFile);
-                } catch (MalformedURLException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -210,7 +213,12 @@ public class WebDavFile {
                 .method("MKCOL", null);
         return execRequest(request);
     }
-
+    public String makeAsDiri() throws IOException {
+        Request.Builder request = new Request.Builder()
+                .url(getUrl())
+                .method("MKCOL", null);
+        return execRequestStatus(request);
+    }
     /**
      * 下载到本地
      *
@@ -295,8 +303,19 @@ public class WebDavFile {
         }
 
         Response response = okHttpClient.newCall(requestBuilder.build()).execute();
+        Log.d("ssss",response.code()+"");
         return response.isSuccessful();
     }
+    private String execRequestStatus(Request.Builder requestBuilder) throws IOException {
+        HttpAuth.Auth auth = HttpAuth.getAuth();
+        if (auth != null) {
+            requestBuilder.header("Authorization", Credentials.basic(auth.getUser(), auth.getPass()));
+        }
+
+        Response response = okHttpClient.newCall(requestBuilder.build()).execute();
+        return response.code()+"";
+    }
+
 
     /**
      * 打印对象内的所有属性

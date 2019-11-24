@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:background="@color/colorBack"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".activity.MainActivity">
@@ -14,6 +15,7 @@
             android:orientation="vertical">
 
             <LinearLayout
+                android:elevation="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -84,6 +86,7 @@
 
             </LinearLayout>
             <LinearLayout
+                android:elevation="1dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginLeft="5dp"
                 android:layout_marginStart="5dp"
@@ -91,68 +94,86 @@
                 android:layout_marginEnd="5dp"
                 android:background="@drawable/bc"
                 android:layout_width="match_parent"
-                android:layout_height="120dp"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="horizontal">
                 <LinearLayout
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginTop="10dp"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
                     android:gravity="center_vertical">
                     <TextView
+                        android:gravity="center_vertical"
                         android:id="@+id/battery_current"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginLeft="5dp"
-                        android:layout_marginBottom="3dp"
-                        android:text="电流：0mA"
+                        android:layout_marginStart="15dp"
+                        android:layout_marginLeft="15dp"
+                        android:text="瞬时电流：0mA"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="0dp"
+                        android:layout_weight="1"/>
                     <TextView
+                        android:gravity="center_vertical"
                         android:id="@+id/battery_temp"
-                        android:layout_marginTop="3dp"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginLeft="5dp"
+                        android:layout_marginStart="15dp"
+                        android:layout_marginLeft="15dp"
                         android:text="电池温度：0°C"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+                    <TextView
+                        android:gravity="center_vertical"
+                        android:layout_marginStart="15dp"
+                        android:layout_marginLeft="15dp"
+                        android:id="@+id/cpu_temp"
+                        android:text="cpu温度：0°C"
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+                    <TextView
+                        android:gravity="center_vertical"
+                        android:layout_marginStart="15dp"
+                        android:layout_marginLeft="15dp"
+                        android:id="@+id/cpu_info"
+                        android:text="cpu型号："
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
                 </LinearLayout>
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="100dp"
                     android:gravity="center"
-                    android:layout_height="match_parent">
-                    <com.github.lzyzsd.circleprogress.CircleProgress
+                    android:layout_height="120dp">
+                    <com.github.lzyzsd.circleprogress.DonutProgress
+                        app:donut_text_size="14dp"
+                        app:donut_finished_stroke_width="7dp"
+                        app:donut_unfinished_stroke_width="7dp"
+                        app:donut_text="CPU"
                         android:id="@+id/circle"
-                        android:layout_margin="8dp"
-                        android:layout_width="90dp"
-                        android:layout_height="90dp"
-                        app:circle_progress="0"/>
+                        android:layout_width="80dp"
+                        android:layout_height="80dp" />
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
+                    android:layout_width="100dp"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:gravity="center_vertical">
-                    <TextView
-                        android:id="@+id/cpu_temp"
-                        android:layout_marginEnd="5dp"
-                        android:layout_marginRight="5dp"
-                        android:text="cpu温度：0°C"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                    <TextView
-                        android:id="@+id/cpu_info"
-                        android:layout_marginEnd="5dp"
-                        android:layout_marginRight="5dp"
-                        android:text="cpu型号："
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                    android:gravity="center">
+                    <com.github.lzyzsd.circleprogress.DonutProgress
+                        app:donut_finished_stroke_width="7dp"
+                        app:donut_unfinished_stroke_width="7dp"
+                        app:donut_text_size="14dp"
+                        app:donut_text="GPU"
+                        android:id="@+id/gpu_progress"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp" />
                 </LinearLayout>
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
+                android:elevation="1dp"
                 android:paddingTop="5dp"
                 android:paddingBottom="5dp"
                 android:layout_marginTop="5dp"

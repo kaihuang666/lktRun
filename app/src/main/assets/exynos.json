@@ -1,0 +1,161 @@
+[
+  {
+    "board": "9825",
+    "model": "9825",
+    "model_name": "9825",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "9820",
+    "model": "9820",
+    "model_name": "9820",
+    "tune": "lkt|diy",
+    "diy": [
+      {
+        "min": 300,
+        "max": 1000
+      }
+    ]
+  },
+  {
+    "board": "9810",
+    "model": "9810",
+    "model_name": "9810",
+    "tune": "lkt|diy"
+  },
+  {
+    "board": "8895",
+    "model": "8895",
+    "model_name": "8895",
+    "tune": "lkt|diy",
+    "yc_url": "i5ldrri"
+  },
+  {
+    "board": "8890",
+    "model": "8890",
+    "model_name": "8890",
+    "tune": "lkt|diy",
+    "yc_url": "i5ldrpg"
+  },
+  {
+    "board": "7420",
+    "model": "7420",
+    "model_name": "7420",
+    "tune": "lkt|diy",
+    "yc_url": "i5ldrof"
+  },
+  {
+    "board": "7885",
+    "model": "7885",
+    "model_name": "7885",
+    "tune": "diy"
+  },
+  {
+    "board": "7872",
+    "model": "7872",
+    "model_name": "7872",
+    "tune": "diy"
+  },
+  {
+    "board": "9609",
+    "model": "9609",
+    "model_name": "9609",
+    "tune": "diy"
+  },
+  {
+    "board": "7270",
+    "model": "7270",
+    "model_name": "7270",
+    "tune": "diy"
+  },
+  {
+    "board": "7570",
+    "model": "7570",
+    "model_name": "7570",
+    "tune": "diy"
+  },
+  {
+    "board": "7870",
+    "model": "7870",
+    "model_name": "7870",
+    "tune": "diy"
+  },
+  {
+    "board": "7880",
+    "model": "7880",
+    "model_name": "7880",
+    "tune": "diy"
+  },
+  {
+    "board": "7904",
+    "model": "7904",
+    "model_name": "7904",
+    "tune": "diy"
+  },
+  {
+    "board": "9610",
+    "model": "9610",
+    "model_name": "9610",
+    "tune": "diy"
+  },
+  {
+    "board": "5250",
+    "model": "5250",
+    "model_name": "5250",
+    "tune": "diy"
+  },
+  {
+    "board": "5260",
+    "model": "5260",
+    "model_name": "5260",
+    "tune": "diy"
+  },
+  {
+    "board": "5410",
+    "model": "5410",
+    "model_name": "5410",
+    "tune": "diy"
+  },
+  {
+    "board": "5410",
+    "model": "5410",
+    "model_name": "5410",
+    "tune": "diy"
+  },
+  {
+    "board": "5420",
+    "model": "5420",
+    "model_name": "5420",
+    "tune": "diy"
+  },
+  {
+    "board": "5422",
+    "model": "5422",
+    "model_name": "5422",
+    "tune": "diy"
+  },
+  {
+    "board": "5430",
+    "model": "5430",
+    "model_name": "5430",
+    "tune": "diy"
+  },
+  {
+    "board": "5433",
+    "model": "5433",
+    "model_name": "5433",
+    "tune": "diy"
+  },
+  {
+    "board": "5800",
+    "model": "5800",
+    "model_name": "5800",
+    "tune": "diy"
+  },
+  {
+    "board": "unknown",
+    "model": "unknown",
+    "model_name": "其他",
+    "tune": "diy"
+  }
+]

@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#79CFF7</color>
-    <color name="colorPrimaryDark">#158EF7</color>
+    <color name="colorPrimary">#6ABCFD</color>
+    <color name="colorPrimaryDark">#0089FF</color>
     <color name="colorAccent">#D81B60</color>
     <color name="colorBattery">#4FDF56</color>
     <color name="colorBalance">#03A9F4</color>
     <color name="colorPerformance">#F8D567</color>
     <color name="colorTurbo">#FF5722</color>
     <color name="colorPress">#D1CFCF</color>
+    <color name="colorGray">#E0DFDF</color>
     <color name="colorWhite">#fff</color>
+    <color name="colorBack">#F7F6F6</color>
+    <color name="colorBack_night">#111111</color>
+    <color name="transparent">#00000000</color>
+    <color name="colorText">#B6B3B3</color>
 </resources>

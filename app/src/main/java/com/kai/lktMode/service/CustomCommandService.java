@@ -9,6 +9,11 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.kai.lktMode.activity.MainActivity;
+import com.kai.lktMode.base.MyApplication;
+import com.kai.lktMode.root.RootUtils;
 import com.kai.lktMode.tool.Preference;
 import com.stericson.RootShell.execution.Command;
 import com.stericson.RootTools.RootTools;
@@ -40,32 +45,33 @@ public class CustomCommandService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         final boolean isShow=intent.getBooleanExtra("isShow",true);
         int mode=intent.getIntExtra("mode",1);
-        Preference.save(getApplicationContext(),"customMode",mode);
+        if (mode<=4){
+            Preference.saveInt(getApplicationContext(),"customMode",mode);
+        }
+        if (mode==5){
+            Preference.saveInt(getApplicationContext(),"customMode",1);
+        }
+        if (mode==6){
+            Preference.saveInt(getApplicationContext(),"customMode",3);
+        }
         Log.d("switchTo:",mode+"");
         if (isShow)
         showToastByMsg(CustomCommandService.this,modes[mode-1]+"切换中",1000);
-        try{
-            RootTools.getShell(true).add(new Command(3,(String) Preference.get(getApplicationContext(),"code"+mode,"String")));
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+        RootUtils.runCommand((String) Preference.getString(getApplicationContext(),"code"+mode));
+        LocalBroadcastManager manager=LocalBroadcastManager.getInstance(CustomCommandService.this);
+        manager.sendBroadcast(new Intent("com.kai.lktMode.refresh"));
         TimerTask task= new TimerTask() {
             @Override
             public void run() {
-                if (isShow)
-                showToastByMsg(CustomCommandService.this,"切换完成",1000);
+                if (isShow){
+                    showToastByMsg(CustomCommandService.this,"切换完成",1000);
+                }
+
                 msgHandler.removeCallbacksAndMessages(Looper.getMainLooper());
             }
         };
         Timer timer=new Timer();
         timer.schedule(task,5000);
-    }
-    private void cmd(String[] str){
-        try{
-            Runtime.getRuntime().exec(str);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
     }
     private void showToastByMsg(final IntentService context, final CharSequence text, final int duration) {
         Bundle data = new Bundle();

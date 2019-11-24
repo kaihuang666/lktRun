@@ -10,35 +10,67 @@
         android:title="设置"
         android:icon="@mipmap/setting"
         app:showAsAction="ifRoom"/>
-    <item android:id="@+id/custom"
-        android:title="自定义调度"
-        android:icon="@mipmap/custom"
+    <item android:id="@+id/unlock"
+        android:title="解锁捐赠版"
+        android:icon="@mipmap/unlock"
         app:showAsAction="ifRoom"/>
-    <item android:id="@+id/powercfg"
-        android:title="动态脚本"
-        android:icon="@mipmap/powercfg"
-        app:showAsAction="ifRoom"/>
-    <item android:id="@+id/lab"
-        android:title="游戏加速"
-        android:icon="@mipmap/game"
-        app:showAsAction="ifRoom"/>
-    <item android:id="@+id/lock"
-        android:title="锁屏省电"
-        android:icon="@mipmap/battery_tile"
-        app:showAsAction="ifRoom"/>
+    <item android:title="调度">
 
-    <item android:id="@+id/about"
-        android:title="关于与反馈"
-        android:icon="@mipmap/about"
-        app:showAsAction="ifRoom"/>
-    <item android:id="@+id/cloud"
-        android:title="云同步"
-        android:icon="@mipmap/cloud"
-        app:showAsAction="ifRoom"/>
-    <item android:id="@+id/donation"
-        android:title="捐赠与支持"
-        android:icon="@mipmap/donation"
-        app:showAsAction="ifRoom"/>
+        <menu>
+            <item android:id="@+id/custom"
+                android:title="自定义调度"
+                android:icon="@mipmap/custom"
+                app:showAsAction="ifRoom"/>
+            <item android:id="@+id/powercfg"
+                android:title="动态脚本"
+                android:icon="@mipmap/powercfg"
+                app:showAsAction="ifRoom"/>
+        </menu>
+
+    </item>
+    <item android:title="处理器设置">
+        <menu>
+            <item android:id="@+id/processor"
+                android:title="常规设置"
+                android:icon="@mipmap/processor">
+            </item>
+            <item android:id="@+id/processor_advanced"
+                android:title="进阶设置"
+                android:icon="@mipmap/processor">
+            </item>
+        </menu>
+    </item>
+    <item android:title="辅助功能">
+        <menu>
+            <item android:id="@+id/lab"
+                android:title="游戏加速"
+                android:icon="@mipmap/game"
+                app:showAsAction="ifRoom"/>
+            <item android:id="@+id/lock"
+                android:title="锁屏省电"
+                android:icon="@mipmap/battery_tile"
+                app:showAsAction="ifRoom"/>
+            <item android:id="@+id/cloud"
+                android:title="云同步"
+                android:icon="@mipmap/cloud"
+                app:showAsAction="ifRoom"/>
+        </menu>
+    </item>
+
+    <item android:title="软件相关">
+        <menu>
+            <item android:id="@+id/donation"
+                android:title="捐赠与支持"
+                android:icon="@mipmap/donation"
+                app:showAsAction="ifRoom"/>
+            <item android:id="@+id/about"
+                android:title="关于与说明"
+                android:icon="@mipmap/about"
+                app:showAsAction="ifRoom"/>
+        </menu>
+    </item>
+
+
 
     <!--设置-->
 </menu>

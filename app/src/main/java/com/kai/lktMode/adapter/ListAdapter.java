@@ -52,6 +52,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return (RecyclerView.ViewHolder) new CheckViewHolder(view);
         }
 
+
     }
     public void setOnItemClick(OnItemClick click){
         onItemClick=click;
@@ -86,7 +87,17 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
             });
         }
-
+        if (getItemCount()==1){
+            h.itemView.setBackgroundResource(R.drawable.item_selector);
+        }
+        else if (position==0){
+            h.itemView.setBackgroundResource(R.drawable.item_selector_top);
+        }
+        else if (position==getItemCount()-1){
+            h.itemView.setBackgroundResource(R.drawable.item_selector_bottom);
+        }else {
+            h.itemView.setBackgroundResource(R.drawable.item_selector_none);
+        }
     }
 
     @Override

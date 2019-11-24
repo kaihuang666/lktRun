@@ -1,0 +1,319 @@
+[
+  {
+    "name": "持久续航",
+    "governor":{
+      "small": "powersave",
+      "large": "powersave",
+      "huge": "powersave"
+    },
+    "freqs":{
+      "small-max": 0.5,
+      "small-min": 0,
+      "large-max": 0.5,
+      "large-min": 0,
+      "huge-max": 0.5,
+      "huge-min": 0
+    },
+    "kernel-small": {
+
+    },
+    "kernel-large": {
+
+    },
+    "kernel-huge": {
+
+    },
+    "cpuboost": {
+      "small": "0",
+      "large": "0",
+      "huge": "0",
+      "ms": "0"
+    }
+  },
+  {
+    "name": "智能省电",
+    "governor":{
+      "small": "schedutil",
+      "large": "schedutil",
+      "huge": "schedutil"
+    },
+    "freqs":{
+      "small-max": 0.15,
+      "small-min": 0,
+      "large-max": 0.25,
+      "large-min": 0,
+      "huge-max": 0.4,
+      "huge-min": 0
+    },
+    "kernel-small": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "8000",
+      "down_rate_limit_us": "1000"
+    },
+    "kernel-large": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "6000",
+      "down_rate_limit_us": "1200"
+    },
+    "kernel-huge": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "8000",
+      "down_rate_limit_us": "1200"
+    },
+    "cpuboost": {
+      "small": "0",
+      "large": "0",
+      "huge": "0",
+      "ms": "0"
+    }
+  },
+  {
+    "name": "沉稳均衡",
+    "governor":{
+      "small": "schedutil",
+      "large": "schedutil",
+      "huge": "schedutil"
+    },
+    "freqs":{
+      "small-max": 0.25,
+      "small-min": 0,
+      "large-max": 0.33,
+      "large-min": 0,
+      "huge-max": 0.4,
+      "huge-min": 0
+    },
+    "kernel-small": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "4000",
+      "down_rate_limit_us": "1000"
+    },
+    "kernel-large": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "3000",
+      "down_rate_limit_us": "1000"
+    },
+    "kernel-huge": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "2000",
+      "down_rate_limit_us": "1200"
+    },
+    "cpuboost": {
+      "small": "0",
+      "large": "0",
+      "huge": "0"
+    }
+  },
+  {
+    "name": "智能均衡",
+    "governor":{
+      "small": "schedutil",
+      "large": "schedutil",
+      "huge": "schedutil"
+    },
+    "freqs":{
+      "small-max": 0.33,
+      "small-min": 0,
+      "large-max": 0.33,
+      "large-min": 0,
+      "huge-max": 0.4,
+      "huge-min": 0
+    },
+    "kernel-small": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "4000",
+      "down_rate_limit_us": "1000"
+    },
+    "kernel-large": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "1200",
+      "down_rate_limit_us": "1000"
+    },
+    "kernel-huge": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "3000",
+      "down_rate_limit_us": "1200"
+    },
+    "cpuboost": {
+      "small": "0",
+      "large": "0.1",
+      "huge": "0.1",
+      "ms": "1500"
+    }
+  },
+  {
+    "name": "活跃均衡",
+    "governor":{
+      "small": "schedutil",
+      "large": "schedutil",
+      "huge": "schedutil"
+    },
+    "freqs":{
+      "small-max": 0.33,
+      "small-min": 0.05,
+      "large-max": 0.42,
+      "large-min": 0.1,
+      "huge-max": 0.42,
+      "huge-min": 0.1
+    },
+    "kernel-small": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "4000",
+      "down_rate_limit_us": "1200"
+    },
+    "kernel-large": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "1200",
+      "down_rate_limit_us": "1200"
+    },
+    "kernel-huge": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "2000",
+      "down_rate_limit_us": "1200"
+    },
+    "cpuboost": {
+      "small": "0",
+      "large": "0.15",
+      "huge": "0.15",
+      "ms": "1500"
+    }
+  },
+  {
+    "name": "适度游戏",
+    "governor":{
+      "small": "schedutil",
+      "large": "schedutil",
+      "huge": "schedutil"
+    },
+    "freqs":{
+      "small-max": 0.6,
+      "small-min": 0.25,
+      "large-max": 0.8,
+      "large-min": 0.28,
+      "huge-max": 0.8,
+      "huge-min": 0.3
+    },
+    "kernel-small": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "1200",
+      "down_rate_limit_us": "3000"
+    },
+    "kernel-large": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "1200",
+      "down_rate_limit_us": "3000"
+    },
+    "kernel-huge": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "1200",
+      "down_rate_limit_us": "3000"
+    },
+    "cpuboost": {
+      "small": "0.42",
+      "large": "0.4",
+      "huge": "0.5",
+      "ms": "500"
+    }
+  },
+  {
+  "name": "重度游戏",
+  "governor":{
+    "small": "schedutil",
+    "large": "schedutil",
+    "huge": "schedutil"
+  },
+  "freqs":{
+    "small-max": 1,
+    "small-min": 0.4,
+    "large-max": 1,
+    "large-min": 0.5,
+    "huge-max": 1,
+    "huge-min": 0.5
+  },
+  "kernel-small": {
+    "iowait_boost_enable": "0",
+    "up_rate_limit_us": "1200",
+    "down_rate_limit_us": "3000"
+  },
+  "kernel-large": {
+    "iowait_boost_enable": "0",
+    "up_rate_limit_us": "800",
+    "down_rate_limit_us": "6000"
+  },
+  "kernel-huge": {
+    "iowait_boost_enable": "0",
+    "up_rate_limit_us": "800",
+    "down_rate_limit_us": "4000"
+  },
+  "cpuboost": {
+    "small": "0.42",
+    "large": "0.64",
+    "huge": "0.7",
+    "ms": "500"
+  }
+  },
+  {
+    "name": "智能极限",
+    "governor":{
+      "small": "schedutil",
+      "large": "performance",
+      "huge": "performance"
+    },
+    "freqs":{
+      "small-max": 1,
+      "small-min": 0.4,
+      "large-max": 1,
+      "large-min": 0.5,
+      "huge-max": 1,
+      "huge-min": 0.5
+    },
+    "kernel-small": {
+      "iowait_boost_enable": "0",
+      "up_rate_limit_us": "1200",
+      "down_rate_limit_us": "3000"
+    },
+    "kernel-large": {
+
+    },
+    "kernel-huge": {
+
+    },
+    "cpuboost": {
+      "small": "0.6",
+      "large": "0.7",
+      "huge": "0.72",
+      "ms": "500"
+    }
+  },
+  {
+    "name": "发烧极限",
+    "governor":{
+      "small": "performance",
+      "large": "performance",
+      "huge": "performance"
+    },
+    "freqs":{
+      "small-max": 1,
+      "small-min": 0.4,
+      "large-max": 1,
+      "large-min": 0.5,
+      "huge-max": 1,
+      "huge-min": 0.5
+    },
+    "kernel-small": {
+
+    },
+    "kernel-large": {
+
+    },
+    "kernel-huge": {
+
+    },
+    "cpuboost": {
+      "small": "0.7",
+      "large": "0.8",
+      "huge": "0.8",
+      "ms": "500"
+    }
+  }
+
+]

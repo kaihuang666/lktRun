@@ -3,10 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:background="@color/colorBack"
     android:layout_height="match_parent"
     tools:context=".activity.SleepSettingActivity"
     android:orientation="vertical">
     <androidx.appcompat.widget.Toolbar
+        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         android:paddingTop="20dp"
         android:id="@+id/simple_toolbar"
         android:layout_width="match_parent"
@@ -22,24 +24,106 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
-        <EditText
-            android:textSize="12dp"
-            android:id="@+id/edit"
-            android:gravity="top|start"
-            android:hint="请输入或者导入命令,不输入则默认为游戏模式命令"
-            android:background="@drawable/card_background"
-            android:paddingLeft="20dp"
-            android:paddingStart="20dp"
-            android:paddingBottom="10dp"
-            android:paddingEnd="20dp"
-            android:paddingRight="20dp"
-            android:paddingTop="10dp"
+        <LinearLayout
+            android:elevation="1dp"
+            android:layout_margin="5dp"
+            android:hint="请输入或者导入命令,不输入则默认为省电模式命令"
+            android:background="@drawable/bc"
+            android:padding="10dp"
             android:layout_width="match_parent"
-            android:layout_height="140dp" />
+            android:layout_height="140dp"
+            android:orientation="vertical">
+            <TextView
+                android:textSize="14dp"
+                android:text="命令将替代默认的游戏模式，在游戏启动后定时执行"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:padding="5dp"
+                android:layout_marginTop="10dp"
+                android:textSize="10dp"
+                android:id="@+id/edit"
+                android:gravity="top|start"
+                android:hint="请输入或者导入命令,不输入则默认为游戏模式命令"
+                android:background="@drawable/bc"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:elevation="2dp"
+            android:background="@drawable/bc"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp">
+            <TextView
+                android:gravity="center"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="进入游戏"
+                android:layout_height="match_parent" />
+            <EditText
+                android:inputType="number"
+                android:gravity="center"
+                android:id="@+id/open_delay"
+                android:textSize="9dp"
+                android:layout_margin="5dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/bg_edittext_selector"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:hint="默认5"
+                android:layout_height="match_parent" />
+            <TextView
+                android:gravity="center"
+                android:text="(秒) 自动执行"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_marginBottom="1dp"
+            android:elevation="1dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bc"
+            android:layout_width="match_parent"
+            android:layout_height="40dp">
+            <TextView
+                android:gravity="center"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="退出游戏"
+                android:layout_height="match_parent" />
+            <EditText
+                android:inputType="number"
+                android:gravity="center"
+                android:id="@+id/close_delay"
+                android:textSize="9dp"
+                android:layout_margin="5dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/bg_edittext_selector"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:hint="默认15"
+                android:layout_height="match_parent" />
+            <TextView
+                android:gravity="center"
+                android:text="(秒) 自动执行"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+
     </LinearLayout>
     <RelativeLayout
+        android:layout_marginTop="10dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="30dp">
         <TextView
             android:id="@+id/importMode"
             android:layout_alignParentRight="true"
@@ -50,7 +134,6 @@
             android:textSize="18dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:clickable="true"
             android:text="导入模式"/>
         <TextView
             android:id="@+id/add"
@@ -62,7 +145,6 @@
             android:layout_centerHorizontal="true"/>
         <TextView
             android:id="@+id/clear"
-            android:layout_alignParentRight="true"
             android:layout_alignParentStart="true"
             android:layout_marginTop="5dp"
             android:layout_marginLeft="20dp"
@@ -70,10 +152,10 @@
             android:textSize="18dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:clickable="true"
             android:text="清除"/>
     </RelativeLayout>
     <androidx.recyclerview.widget.RecyclerView
+        android:layout_marginTop="10dp"
         android:id="@+id/recyclerview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
