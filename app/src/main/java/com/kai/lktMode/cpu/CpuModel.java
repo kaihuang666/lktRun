@@ -40,7 +40,7 @@ public class CpuModel {
     private static HashMap<String,String> getMap(Context context,List<String> tune_type){
         List<String> tune_type_true=new ArrayList<>();
         //eas内核都应该支持LKT
-        boolean isEas=new CpuManager().isEasKernel();
+        boolean isEas=CpuManager.getInstance().isEasKernel();
         Log.d("tune",tune_type.size()+"");
         for (String type:tune_type){
             if (type.equals("lkt")&&!ShellUtil.isMagiskInstall()) {
@@ -60,7 +60,7 @@ public class CpuModel {
         List<String> tune_type_true=new ArrayList<>();
         String[] tune_type=getTuneTypes(context);
         //eas内核都应该支持LKT
-        boolean isEas=new CpuManager().isEasKernel();
+        boolean isEas=CpuManager.getInstance().isEasKernel();
         //Log.d("tune",tune_type.length()+"");
         for (String type:tune_type){
             if (type.equals("lkt")&&!ShellUtil.isMagiskInstall()) {
@@ -80,7 +80,7 @@ public class CpuModel {
         List<String> tune_type_true=new ArrayList<>();
         String[] tune_type=getTuneTypes(context);
         //eas内核都应该支持LKT
-        boolean isEas=new CpuManager().isEasKernel();
+        boolean isEas=CpuManager.getInstance().isEasKernel();
         //Log.d("tune",tune_type.length()+"");
         for (String type:tune_type){
             if (type.equals("lkt")&&!ShellUtil.isMagiskInstall()) {

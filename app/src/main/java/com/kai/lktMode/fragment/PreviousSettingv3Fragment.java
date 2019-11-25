@@ -59,7 +59,7 @@ import io.reactivex.rxjava3.disposables.Disposable;
 public class PreviousSettingv3Fragment extends MyFragment {
     List<String> tune_type=new ArrayList<>();
     List<String> tune_type_true=new ArrayList<>();
-    boolean isEas=new CpuManager().isEasKernel();
+    boolean isEas=CpuManager.getInstance().isEasKernel();
     int defealt=-1;
     @BindView(R.id.radioGroup)
     RadioGroup radioGroup;
@@ -167,7 +167,7 @@ public class PreviousSettingv3Fragment extends MyFragment {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Preference.saveString(getContext(),"offical",new CpuManager().backup());
+                Preference.saveString(getContext(),"offical",CpuManager.getInstance().backup());
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {

@@ -20,7 +20,7 @@ public class Tune {
     JSONObject governor;
     public Tune(Context context,int mode){
         this.context=context;
-        cpuManager=new CpuManager();
+        cpuManager=CpuManager.getInstance();
     }
     public String getCommand(boolean isAddition){
         return "";

@@ -35,21 +35,27 @@ public class LockFragment extends MyFragment {
     private ListLabAdapter adapter;
     private List<Item> items=new ArrayList<>();
     private List<App> gameItems=new ArrayList<>();
-    private ListGameAdapter gameAdapter;;
-    private View view;
+    private ListGameAdapter gameAdapter;
+    private View contentView;
     private String[] checks=new String[]{"autoLock","autoClean","imClean"};
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        view=inflater.inflate(R.layout.fragment_lock,null,false);
-        return view;
+        if (contentView == null) {
+            contentView = inflater.inflate(R.layout.fragment_lock, container, false);
+        }
+        ViewGroup parent = (ViewGroup) contentView.getParent();
+        if (parent != null) {
+            parent.removeView(contentView);
+        }
+        return contentView;
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        RecyclerView recyclerView=view.findViewById(R.id.recyclerview);
+    protected void onFragmentFirstVisible() {
+        super.onFragmentFirstVisible();
+        RecyclerView recyclerView=contentView.findViewById(R.id.recyclerview);
         initList();
         LinearLayoutManager manager=new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(manager);
@@ -94,6 +100,13 @@ public class LockFragment extends MyFragment {
             }
         });
     }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+    }
+
     private void updateList(){
         new Thread(new Runnable() {
             @Override
@@ -131,7 +144,7 @@ public class LockFragment extends MyFragment {
 
     private void initSoftwares(){
         gameItems=new ArrayList<>();
-        RecyclerView recyclerView=view.findViewById(R.id.gameList);
+        RecyclerView recyclerView=contentView.findViewById(R.id.gameList);
         for (String s:Preference.getSoftwares(getContext())){
             gameItems.add(new App(AppUtils.getAppName(getContext(),s),s,AppUtils.getDrawable(getContext(),s),false));
         }

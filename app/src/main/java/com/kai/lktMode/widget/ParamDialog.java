@@ -32,7 +32,7 @@ public class ParamDialog extends AlertDialog {
         this.context=context;
         this.titleS=title;
         this.governor=governor;
-        manager=new CpuManager();
+        manager=CpuManager.getInstance();
     }
 
     @Override

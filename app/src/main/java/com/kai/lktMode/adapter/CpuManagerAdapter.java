@@ -34,6 +34,7 @@ import com.kai.lktMode.root.RootUtils;
 import com.kai.lktMode.selinux.SElinux;
 import com.kai.lktMode.service.CommandService;
 import com.kai.lktMode.tool.Mode;
+import com.kai.lktMode.tool.ToastUtil;
 import com.kai.lktMode.tool.util.local.ShellUtil;
 import com.kai.lktMode.widget.AnimatedExpandableListView;
 import com.kai.lktMode.widget.ParamDialog;
@@ -54,7 +55,7 @@ public class CpuManagerAdapter extends AnimatedExpandableListView.AnimatedExpand
     private OnFinishListener onFinishListener=null;
     private LayoutInflater mInflater;
     private List<ParentItem> parentItems=new ArrayList<>();
-    private int[] freqs=new int[new CpuManager().getCounts()];
+    private int[] freqs=new int[CpuManager.getInstance().getCounts()];
     public CpuManagerAdapter(Context context,List<ParentItem> parentItems){
         this.context=context;
         this.parentItems=parentItems;
@@ -92,7 +93,7 @@ public class CpuManagerAdapter extends AnimatedExpandableListView.AnimatedExpand
     }
 
     public String getCommand(){
-        CpuManager manager=new CpuManager();
+        CpuManager manager=CpuManager.getInstance();
         StringBuilder builder=new StringBuilder("");
         CpuBoost cpuBoost=new CpuBoost();
         boolean isAddition=CpuBoost.isAddition();
@@ -265,10 +266,10 @@ public class CpuManagerAdapter extends AnimatedExpandableListView.AnimatedExpand
                         @Override
                         public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                             if (i1==0){
-                                Toast.makeText(context,"主核心无法离线",Toast.LENGTH_SHORT).show();
+                                ToastUtil.shortAlert(context,"主核心无法离线");
                                 return;
                             }
-                            CpuManager manager=new CpuManager();
+                            CpuManager manager=CpuManager.getInstance();
                             StringBuilder builder=new StringBuilder();
                             builder.append(manager.getKernel(counts[i1]).terminalOnline(b));
                             command(builder.toString());
@@ -474,9 +475,6 @@ public class CpuManagerAdapter extends AnimatedExpandableListView.AnimatedExpand
 
                     }
                 });
-
-
-               // CpuManager manager=new CpuManager();
                 view.setOnClickListener(null);
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -900,7 +898,7 @@ public class CpuManagerAdapter extends AnimatedExpandableListView.AnimatedExpand
             RootUtils.runCommand(args, new RootUtils.onCommandComplete() {
                 @Override
                 public void onComplete() {
-                    Toast.makeText(context,"ok",Toast.LENGTH_LONG).show();
+                    ToastUtil.shortShow(context,"完成");
                 }
 
                 @Override

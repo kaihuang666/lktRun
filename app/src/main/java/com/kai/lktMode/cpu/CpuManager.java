@@ -26,6 +26,14 @@ import java.util.regex.Pattern;
 public class CpuManager {
     private RootFile cpu=new RootFile(SystemInfo.cpuKernelPath);
     private List<Kernel> kernels=new ArrayList<>();
+    private static CpuManager cpuManager;
+
+    public static synchronized CpuManager getInstance(){
+        if (cpuManager==null){
+            cpuManager=new CpuManager();
+        }
+        return cpuManager;
+    }
     public CpuManager(){
         if (cpu.exists()){
             List<RootFile> cpus=cpu.listFiles();

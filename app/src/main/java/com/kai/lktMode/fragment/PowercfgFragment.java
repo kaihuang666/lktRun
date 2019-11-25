@@ -35,6 +35,7 @@ import com.kai.lktMode.bean.Sdcard;
 import com.kai.lktMode.root.RootUtils;
 import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.R;
+import com.kai.lktMode.tool.ToastUtil;
 import com.leon.lfilepickerlibrary.LFilePicker;
 import com.leon.lfilepickerlibrary.utils.Constant;
 
@@ -50,24 +51,28 @@ public class PowercfgFragment extends MyFragment {
     private int[] colors={R.color.colorBattery,R.color.colorBalance,R.color.colorPerformance,R.color.colorTurbo};
     private PowercfgAdapter adapter;
     private String output;
-    private View view;
     private TextView title;
     private Button change;
     private String sdcard;
+    private View contentView;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        view=inflater.inflate(R.layout.activity_powercfg,null,false);
-        return view;
+        if (contentView == null) {
+            contentView = inflater.inflate(R.layout.activity_powercfg, container, false);
+        }
+        ViewGroup parent = (ViewGroup) contentView.getParent();
+        if (parent != null) {
+            parent.removeView(contentView);
+        }
+        return contentView;
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    protected void onFragmentFirstVisible() {
+        super.onFragmentFirstVisible();
         getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
         initList();
-
-
     }
 
     @Override
@@ -76,23 +81,15 @@ public class PowercfgFragment extends MyFragment {
         sdcard= Sdcard.getPath(getContext()) +"/lktMode/powercfg/powercfg.sh";
     }
 
-    public void saveAll(){
-        if (adapter==null){
-            Toast.makeText(getContext(),"正在刷新数据，请稍后重试",Toast.LENGTH_SHORT).show();
-            Refresh();
-            return;
-        }
-        adapter.saveAll();
-    }
     private void initList(){
         items.clear();
-        title=view.findViewById(R.id.list_title);
-        change=view.findViewById(R.id.change);
+        title=contentView.findViewById(R.id.list_title);
+        change=contentView.findViewById(R.id.change);
         items.add(new Item("省电",""));
         items.add(new Item("均衡",""));
         items.add(new Item("游戏",""));
         items.add(new Item("极限",""));
-        RecyclerView recyclerView=view.findViewById(R.id.recyclerview);
+        RecyclerView recyclerView=contentView.findViewById(R.id.recyclerview);
         final LinearLayoutManager manager=new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(manager);
         adapter=new PowercfgAdapter(getContext(),items,colors);
@@ -224,7 +221,7 @@ public class PowercfgFragment extends MyFragment {
             Preference.saveBoolean(getContext(),"custom",false);
             updateList();
         }else {
-            Toast.makeText(getContext(),"导入成功",Toast.LENGTH_SHORT).show();
+            ToastUtil.shortAlert(getContext(),"导入成功");
             Preference.saveString(getContext(),"code1","sh "+sdcard+" powersave");
             Preference.saveString(getContext(),"code2","sh "+sdcard+" balance");
             Preference.saveString(getContext(),"code3","sh "+sdcard+" performance");

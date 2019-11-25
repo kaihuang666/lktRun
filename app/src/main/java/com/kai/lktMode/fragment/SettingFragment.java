@@ -35,6 +35,7 @@ import com.kai.lktMode.permission.FloatWindowManager;
 import com.kai.lktMode.root.RootFile;
 import com.kai.lktMode.root.RootUtils;
 import com.kai.lktMode.tool.LKTCommand;
+import com.kai.lktMode.tool.ToastUtil;
 import com.kai.lktMode.tool.util.net.DownloadUtil;
 import com.kai.lktMode.bean.Item;
 import com.kai.lktMode.tool.Preference;
@@ -109,12 +110,11 @@ public class SettingFragment extends Fragment {
             public void onCheck(int i, Boolean isChecked, CompoundButton compoundButton) {
                 if (i==0){
                     Preference.saveBoolean(getContext(),"autoBoot",isChecked);
-                    Toast.makeText(getContext(),"你还需要自行前往设置-电池-电池优化，取消手动调度的电池优化",Toast.LENGTH_SHORT).show();
+                    ToastUtil.longShow(getContext(),"你还需要自行前往设置-电池-电池优化，取消手动调度的电池优化");
                 }
                 if (i==4){
                     if (isChecked){
-                        Toast.makeText(getContext(),"你还需要自行前往设置-电池-电池优化，取消手动调度的电池优化",Toast.LENGTH_SHORT).show();
-
+                        ToastUtil.longShow(getContext(),"你还需要自行前往设置-电池-电池优化，取消手动调度的电池优化");
                         setting(compoundButton,getActivity());
                     }
 
@@ -259,7 +259,7 @@ public class SettingFragment extends Fragment {
                         Intent intent = new Intent(Intent.ACTION_VIEW,uri);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
-                        Toast.makeText(getContext(),"安装BusyBox应用，并打开安装脚本，完成后请重启手动挡",Toast.LENGTH_SHORT).show();
+                        ToastUtil.longAlert(getContext(),"安装BusyBox应用，并打开安装脚本，完成后请重启手动挡");
                     }
                 })
                 .setNegativeButton("模块安装", new DialogInterface.OnClickListener() {
@@ -289,7 +289,7 @@ public class SettingFragment extends Fragment {
                             @Override
                             public void onFail() {
                                 downloadDialog.dismiss();
-                                Toast.makeText(getContext(),"下载失败",Toast.LENGTH_SHORT).show();
+                                ToastUtil.shortAlert(getContext(),"下载失败");
                             }
                         });
                         downloadDialog.show();
@@ -310,7 +310,7 @@ public class SettingFragment extends Fragment {
                 //若没有权限，提示获取.
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:" + context.getPackageName()));
-                Toast.makeText(context,"需要取得权限以使用悬浮窗",Toast.LENGTH_SHORT).show();
+                ToastUtil.shortAlert(context,"需要取得权限以使用悬浮窗");
                 context.startActivityForResult(intent,13);
             }
 
@@ -353,7 +353,7 @@ public class SettingFragment extends Fragment {
             @Override
             public void onFail() {
                 downloadDialog.dismiss();
-                Toast.makeText(getContext(),"下载失败",Toast.LENGTH_SHORT).show();
+                ToastUtil.shortAlert(getContext(),"下载失败");
             }
         });
         downloadDialog.show();

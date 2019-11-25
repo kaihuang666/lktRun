@@ -69,7 +69,7 @@ public class PreviousSettingv2Fragment extends MyFragment {
         super.onCreate(savedInstanceState);
         cpuModel= CpuModel.getInstance(getContext());
         cpuModel.initialize();
-        cpuManager=new CpuManager();
+        cpuManager=CpuManager.getInstance();
         try {
             for (String vendor:vendors){
                 ArrayList<String> options2Item = new ArrayList<>();

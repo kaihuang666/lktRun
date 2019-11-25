@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,6 +41,7 @@ import com.kai.lktMode.activity.MainActivity;
 import com.kai.lktMode.activity.PreviousActivity;
 import com.kai.lktMode.bean.Device;
 import com.kai.lktMode.bean.SystemInfo;
+import com.kai.lktMode.cpu.CpuAmount;
 import com.kai.lktMode.cpu.CpuModel;
 import com.kai.lktMode.device.CurrentManager;
 import com.kai.lktMode.root.RootFile;
@@ -47,6 +49,7 @@ import com.kai.lktMode.root.RootUtils;
 import com.kai.lktMode.service.CommandService;
 import com.kai.lktMode.tool.LKTCommand;
 import com.kai.lktMode.tool.Mode;
+import com.kai.lktMode.tool.ToastUtil;
 import com.kai.lktMode.tool.util.local.CpuUtil;
 import com.kai.lktMode.tool.util.net.DownloadUtil;
 import com.kai.lktMode.tool.Preference;
@@ -91,8 +94,6 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
     String[] modes_name=ShellUtil.concat(new String[]{"未配置"},SystemInfo.modes);
     private String[] modestring={"unsure","Battery","Balanced","Performance","Turbo"};
     private int[] buttonID={R.id.battery,R.id.balance,R.id.performance,R.id.turbo};
-    private String[] permissions={Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.ACCESS_NETWORK_STATE,Manifest.permission.INTERNET};
-    private String passage;
     private List<String> cpus=new ArrayList<>();
     private ProgressAdapter adapter;
     private int cpuAmount=0;
@@ -113,9 +114,15 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view=inflater.inflate(R.layout.fragment_main,null,false);
-        contentView=view;
-        return view;
+
+        if (contentView == null) {
+            contentView = inflater.inflate(R.layout.fragment_main, container, false);
+        }
+        ViewGroup parent = (ViewGroup) contentView.getParent();
+        if (parent != null) {
+            parent.removeView(contentView);
+        }
+        return contentView;
     }
 
     @Override
@@ -124,12 +131,98 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
         model=CpuModel.getInstance(getContext());
         modeManager=Mode.getInstance(getContext());
     }
+    private void initElection(){
+        version.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ProgressDialog dialog=new ProgressDialog(getContext(),R.style.AppDialog);
+                dialog.setMessage("加载中");
+                dialog.setCanceledOnTouchOutside(false);
+                dialog.show();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<String> tune_type_true=CpuModel.getLastestTypes(getContext());
+                        List<String> items=CpuModel.getItem(getContext());
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            private int check;
+                            @Override
+                            public void run() {
+                                dialog.dismiss();
+                                new AlertDialog.Builder(getContext(),R.style.AppDialog)
+                                        .setCancelable(false)
+                                        .setSingleChoiceItems(items.toArray(new String[]{}), -1, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                check=i;
+                                            }
+                                        })
+                                        .setTitle("选择调度")
+                                        .setPositiveButton("选择", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                Log.d("diaodu ",i+"");
+                                                switch (tune_type_true.get(check)){
+                                                    case "ycv2":
+                                                        Preference.saveBoolean(getActivity(),"custom",true);
+                                                        Toast.makeText(getActivity(),"暂未获得yc调度(新版)授权，请参照网页教程自行导入",Toast.LENGTH_LONG).show();
+                                                        Intent intent2 = new Intent();
+                                                        intent2.setAction("android.intent.action.VIEW");
+                                                        Uri content_url1 = Uri.parse("https://www.jianshu.com/p/c5399a7e9bb3");//此处填链接
+                                                        intent2.setData(content_url1);
+                                                        startActivity(intent2);
+                                                        //pass=true;
+                                                        break;
+                                                    case "yc":
+                                                        try {
+                                                            downloadPowercfg("https://www.lanzous.com/tp/"+CpuModel.getYcUrl(getContext()),false);
+                                                        }catch (Exception e){
+                                                            e.printStackTrace();
+                                                        }
+                                                        getMain().getFragment(0).Refresh();
+                                                        getMain().getFragment(1).Refresh();
+                                                        getMain().getFragment(2).Refresh();
+                                                        break;
+                                                    case "855tune":
+                                                        Preference.saveBoolean(getContext(),"custom",true);
+                                                        try {
+                                                            downloadPowercfg("https://www.lanzous.com/tp/i66muxc",true);
+                                                        }catch (Exception e){
+                                                            e.printStackTrace();
+                                                        }
+                                                        break;
+                                                    case "lkt":
+                                                        Preference.saveBoolean(getContext(),"custom",false);
+                                                        installLKT();
+                                                        break;
+                                                    case "diy":
+                                                        Preference.saveBoolean(getContext(),"custom",true);
+                                                        getMain().getFragment(0).Refresh();
+                                                        getMain().getFragment(1).Refresh();
+                                                        getMain().getFragment(2).Refresh();
+                                                        break;
+                                                }
 
-    //碎片创建
+                                            }
+                                        })
+                                        .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                dialog.dismiss();
+                                            }
+                                        }).show();
+
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+    }
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        ButterKnife.bind(this,view);
+    protected void onFragmentFirstVisible() {
+        super.onFragmentFirstVisible();
+        ButterKnife.bind(this,contentView);
         try {
             if (getRoot()){
                 setBusyBox(cutBusyBox());
@@ -138,6 +231,7 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
         }catch (Exception e){
             e.printStackTrace();
         }
+        initElection();
         initButton();
         initCpuInfo();
         initDialog();
@@ -171,9 +265,19 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
         localBroadcastManager=LocalBroadcastManager.getInstance(getActivity());
         recevicer=new LocalRecevicer();
         localBroadcastManager.registerReceiver(recevicer,intentFilter);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+
 
         //耗时操作的子线程
     }
+
+    //碎片创建
+
 
     @Override
     public void onDestroy() {
@@ -212,11 +316,7 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
         recyclerView.setLayoutManager(manager);
         recyclerView.setAdapter(adapter);
         cpus.clear();
-        cpuAmount=(int)Preference.getInt(getContext(),"cpuAmount",0);
-        if (cpuAmount==0){
-            cpuAmount= CpuUtil.getCpuAmount();
-            Preference.saveInt(getContext(),"cpuAmount",cpuAmount);
-        }
+        cpuAmount= CpuAmount.getInstance(getContext()).getAmount();
         for (int i=0;i<cpuAmount;i++){
             cpus.add(i,"cpu"+i);
         }
@@ -234,7 +334,7 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
 
         }catch (Exception e){
             e.printStackTrace();
-            Toast.makeText(getContext(),"无法获取到ROOT权限",Toast.LENGTH_SHORT).show();
+            ToastUtil.shortAlert(getContext(),"无法获取到ROOT权限");
         }
         return isGranted;
     }
@@ -252,8 +352,12 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
 
 
     public void readProp(){
+        version.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
 
-
+            }
+        });
         Observable.create(new ObservableOnSubscribe<Object>() {
             @Override
             public void subscribe(ObservableEmitter<Object> emitter) throws Throwable {
@@ -331,7 +435,7 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
             public void onSuccess() {
                 //backupOffical();
                 if (add) {
-                    Toast.makeText(getContext(),"暂未获得yc调度(EAS专版)授权，仅导入了通用切换脚本，请参照网页教程自行刷入面具模块",Toast.LENGTH_SHORT).show();
+                    ToastUtil.shortAlert(getContext(),"暂未获得yc调度(EAS专版)授权，仅导入了通用切换脚本，请参照网页教程自行刷入面具模块");
                     Intent intent2 = new Intent();
                     intent2.setAction("android.intent.action.VIEW");
                     Uri content_url1 = Uri.parse("https://www.jianshu.com/p/c5399a7e9bb3");//此处填链接
@@ -401,7 +505,7 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
                         Intent intent = new Intent(Intent.ACTION_VIEW,uri);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
-                        Toast.makeText(getContext(),"安装BusyBox应用，并打开安装脚本，完成后请重启手动挡",Toast.LENGTH_SHORT).show();
+                        ToastUtil.shortShow(getContext(),"安装BusyBox应用，并打开安装脚本，完成后请重启手动挡");
                     }
                 })
                 .setNegativeButton("模块安装", new DialogInterface.OnClickListener() {
@@ -425,7 +529,7 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
                             @Override
                             public void onFail() {
                                 downloadDialog.dismiss();
-                                Toast.makeText(getContext(),"下载失败",Toast.LENGTH_SHORT).show();
+                                ToastUtil.shortAlert(getContext(),"下载失败");
                             }
                         });
                         downloadDialog.show();
@@ -438,7 +542,7 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
 
     private void installWithMagisk(String zip){
         if (!ShellUtil.isInstalled("magisk")){
-            Toast.makeText(getContext(),"设备未安装magisk，安装终止",Toast.LENGTH_SHORT).show();
+            ToastUtil.shortAlert(getContext(),"设备未安装magisk，安装终止");
             return;
         }
         final TerminalDialog dialog=new TerminalDialog(getContext());
@@ -491,7 +595,7 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
             @Override
             public void onFail() {
                 downloadDialog.dismiss();
-                Toast.makeText(getContext(),"下载失败",Toast.LENGTH_SHORT).show();
+                ToastUtil.shortAlert(getContext(),"下载失败");
             }
         });
         downloadDialog.show();
@@ -618,8 +722,7 @@ public class MainFragment extends MyFragment implements View.OnClickListener {
                     //readProp(true);
 
                 }else { //拒绝权限申请
-
-                    Toast.makeText(getContext(),"权限被拒绝了",Toast.LENGTH_SHORT).show();
+                    ToastUtil.shortAlert(getContext(),"权限被拒绝了");
                 }
                 break;
             default:

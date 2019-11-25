@@ -13,6 +13,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.kai.lktMode.cpu.CpuAmount;
 import com.kai.lktMode.tool.util.local.CpuUtil;
 import com.kai.lktMode.tool.util.local.ShellUtil;
 
@@ -20,7 +21,7 @@ import java.io.File;
 
 public class CpuMService extends Service {
     private CpuThread cpuThread;
-    private int cpuAmount= CpuUtil.getCpuAmount();//cpu核心数量
+    private int cpuAmount=CpuUtil.getCpuAmount();//cpu核心数量
     private CpuBinder binder=new CpuBinder();
     private LocalBroadcastManager localBroadcastManager;
     public CpuMService() {

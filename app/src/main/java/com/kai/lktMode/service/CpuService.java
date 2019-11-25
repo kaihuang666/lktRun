@@ -18,6 +18,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.kai.lktMode.bean.SystemInfo;
 import com.kai.lktMode.bean.Temperature;
+import com.kai.lktMode.cpu.CpuAmount;
 import com.kai.lktMode.cpu.CpuModel;
 import com.kai.lktMode.device.CurrentManager;
 import com.kai.lktMode.gpu.GPUFreq;
@@ -35,7 +36,7 @@ public class CpuService extends Service {
     private CpuThread cpuThread;
     private Temperature temperature;
     private CurrentManager currentManager;
-    private int cpuAmount= CpuUtil.getCpuAmount();//cpu核心数量
+    private int cpuAmount=CpuUtil.getCpuAmount();//cpu核心数量
     private CpuBinder binder=new CpuBinder();
     private LocalBroadcastManager localBroadcastManager;
     private int[] max=getMax();//获取每个核心的最高频率

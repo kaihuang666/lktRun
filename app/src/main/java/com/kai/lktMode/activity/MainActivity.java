@@ -70,6 +70,7 @@ import com.kai.lktMode.fragment.PowercfgFragment;
 import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.R;
 import com.kai.lktMode.tool.ServiceStatusUtils;
+import com.kai.lktMode.tool.ToastUtil;
 import com.kai.lktMode.tool.util.local.ShellUtil;
 import com.kai.lktMode.tool.util.net.WebUtil;
 import com.kai.lktMode.tune.Tune;
@@ -186,6 +187,7 @@ public class MainActivity extends BaseActivity {
         adapter=new FragmentStatePagerAdapter(fragmentManager) {
             @Override
             public Fragment getItem(int position) {
+                drawerLayout.closeDrawers();
                 MyFragment fragment=fragments.get(position);
                 if (fragment==null){
                     switch (position){
@@ -205,6 +207,7 @@ public class MainActivity extends BaseActivity {
                 return fragments.size();
             }
         };
+        viewPager.setOffscreenPageLimit(4);
         viewPager.setAdapter(adapter);
         switchPage(0,false);
     }
@@ -290,8 +293,7 @@ public class MainActivity extends BaseActivity {
                                     .setPositiveButton("更新", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialogInterface, int i) {
-                                            Toast.makeText(MainActivity.this,"请选择酷安市场下载",Toast.LENGTH_SHORT).show();
-
+                                            ToastUtil.longShow(MainActivity.this,"请选择酷安市场下载");
                                             Uri uri = Uri.parse("market://details?id="+getPackageName());
                                             Intent intent = new Intent(Intent.ACTION_VIEW,uri);
                                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -416,27 +418,51 @@ public class MainActivity extends BaseActivity {
                     dialog.setView(new EditText(MainActivity.this));
                     dialog.show();
                 }else {
-                    new AlertDialog.Builder(MainActivity.this,R.style.AppDialog)
-                            .setTitle("账号信息")
-                            .setMessage("账号："+Preference.getString(MainActivity.this,"username")+"\n状态："+(SystemInfo.isDonated?"已捐赠":"未捐赠"))
-                            .setPositiveButton("注销", new DialogInterface.OnClickListener() {
+                    ProgressDialog dialog=new ProgressDialog(MainActivity.this,R.style.AppDialog);
+                    dialog.setMessage("拉取信息中");
+                    dialog.setCanceledOnTouchOutside(false);
+                    dialog.show();
+                    new Thread(new Runnable() {
+                        String donated;
+                        String connectd;
+                        @Override
+                        public void run() {
+                            donated=SystemInfo.isDonated?"已捐赠":"未捐赠";
+                            boolean c=WebUtil.isNetworkAccess();
+                            String connected=c?"可用":"不可用";
+                            if (!c){
+                                donated="无法获取";
+                            }
+                            new Handler(Looper.getMainLooper()).post(new Runnable() {
                                 @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    Preference.saveBoolean(MainActivity.this,"cloud",false);
-                                    Preference.saveString(MainActivity.this,"username","");
-                                    Preference.saveString(MainActivity.this,"password","");
-                                    refreshLogin();
-                                    refreshLoginV1();
+                                public void run() {
+                                    dialog.dismiss();
+                                    new AlertDialog.Builder(MainActivity.this,R.style.AppDialog)
+                                            .setTitle("账号信息")
+                                            .setMessage("账号："+Preference.getString(MainActivity.this,"username")+"\n状态："+donated+"\n网络连接："+connected)
+                                            .setPositiveButton("注销", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                    Preference.saveBoolean(MainActivity.this,"cloud",false);
+                                                    Preference.saveString(MainActivity.this,"username","");
+                                                    Preference.saveString(MainActivity.this,"password","");
+                                                    refreshLogin();
+                                                    refreshLoginV1();
+                                                }
+                                            })
+                                            .setNegativeButton("刷新", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                    refreshLogin();
+                                                    refreshLoginV1();
+                                                }
+                                            })
+                                            .create().show();
+
                                 }
-                            })
-                            .setNegativeButton("刷新", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    refreshLogin();
-                                    refreshLoginV1();
-                                }
-                            })
-                            .create().show();
+                            });
+                        }
+                    }).start();
                 }
             }
         });
@@ -557,13 +583,11 @@ public class MainActivity extends BaseActivity {
                         break;
                     case R.id.unlock:
                         if (SystemInfo.getIsDonated()){
-                            Toast.makeText(MainActivity.this,"登你已经解锁了捐赠版(-_-)",Toast.LENGTH_SHORT).show();
-
+                            ToastUtil.shortShow(MainActivity.this,"你已经解锁了捐赠版(-_-)");
                             break;
                         }
                         if (!(Boolean)Preference.getBoolean(MainActivity.this,"cloud")){
-                            Toast.makeText(MainActivity.this,"请先登录",Toast.LENGTH_SHORT).show();
-
+                            ToastUtil.shortAlert(MainActivity.this,"请先登录");
                             getOnCloud();
                             break;
                         }
@@ -603,7 +627,7 @@ public class MainActivity extends BaseActivity {
                 menuItem.setCheckable(false);
                 switch (ID){
                     case R.id.main:
-                        switchPage(0,false);
+                        switchPage(0,true);
                         menuItem.setCheckable(true);
                         break;
                     case R.id.setting:
@@ -611,22 +635,22 @@ public class MainActivity extends BaseActivity {
                         break;
                     case R.id.lab:
                         menuItem.setCheckable(true);
-                        switchPage(3,false);
+                        switchPage(3,true);
                         break;
                     case R.id.about:
                         startActivity(new Intent(MainActivity.this,AboutActivity.class));
                         break;
                     case R.id.custom:
                         menuItem.setCheckable(true);
-                        switchPage(1,false);
+                        switchPage(1,true);
                         break;
                     case R.id.powercfg:
                         menuItem.setCheckable(true);
-                        switchPage(2,false);
+                        switchPage(2,true);
                         break;
                     case R.id.lock:
                         menuItem.setCheckable(true);
-                        switchPage(4,false);
+                        switchPage(4,true);
                         break;
                     case R.id.cloud:
                         //startActivity(new Intent(MainActivity.this,WebViewActivity.class));
@@ -645,11 +669,11 @@ public class MainActivity extends BaseActivity {
                         break;
                     case R.id.unlock:
                         if (SystemInfo.getIsDonated()){
-                            Toast.makeText(MainActivity.this,"你已经解锁了捐赠版(-_-)",Toast.LENGTH_SHORT).show();
+                            ToastUtil.shortShow(MainActivity.this,"你已经解锁了捐赠版(-_-)");
                             break;
                         }
-                        if (!(Boolean)Preference.getBoolean(MainActivity.this,"cloud")){
-                            Toast.makeText(MainActivity.this,"请先登录",Toast.LENGTH_SHORT).show();
+                        if (!Preference.getBoolean(MainActivity.this,"cloud")){
+                            ToastUtil.shortAlert(MainActivity.this,"请先登录");
                             getOnCloud();
                             break;
                         }
@@ -743,7 +767,7 @@ public class MainActivity extends BaseActivity {
                 getFragment(2).Refresh();
                 getFragment(1).Refresh();
                 refreshProp();
-                Toast.makeText(MainActivity.this,"导入成功",Toast.LENGTH_SHORT).show();
+                ToastUtil.shortShow(MainActivity.this,"导入成功");
             }
         });
         downloadDialog.show();
@@ -763,15 +787,15 @@ public class MainActivity extends BaseActivity {
                         progressDialog.cancel();
                         try {
                             if (types.contains("yc")){
-                                Toast.makeText(MainActivity.this,"已经默认为你的设备选择了脚本",Toast.LENGTH_SHORT).show();
+                                ToastUtil.shortShow(MainActivity.this,"已经默认为你的设备选择了脚本");
                                 downloadPowercfg("https://www.lanzous.com/tp/"+
                                         CpuModel.getYcUrl(MainActivity.this));
 
                             }else if (types.contains("855tune")){
-                                Toast.makeText(MainActivity.this,"已经默认为你的eas设备选择了脚本,但是需要你手动安装magisk模块",Toast.LENGTH_SHORT).show();
+                                ToastUtil.shortShow(MainActivity.this,"已经默认为你的eas设备选择了脚本,但是需要你手动安装magisk模块");
                                 downloadPowercfg("https://www.lanzous.com/tp/i66muxc");
                             }else {
-                                Toast.makeText(MainActivity.this,"自动检测暂未适配你的设备，请自行选择",Toast.LENGTH_SHORT).show();
+                                ToastUtil.shortShow(MainActivity.this,"自动检测暂未适配你的设备，请自行选择");
                                 OptionsPickerView pvOptions = new  OptionsPickerBuilder(MainActivity.this, new OnOptionsSelectListener() {
                                     @Override
                                     public void onOptionsSelect(int options1, int options2, int options3, View v) {
@@ -827,7 +851,7 @@ public class MainActivity extends BaseActivity {
                         context.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(context,"备份完成",Toast.LENGTH_SHORT).show();
+                                ToastUtil.shortShow(context,"备份完成");
                             }
                         });
                     }catch (Exception e){
@@ -850,7 +874,7 @@ public class MainActivity extends BaseActivity {
                 context.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(context,"恢复完成",Toast.LENGTH_SHORT).show();
+                        ToastUtil.shortShow(context,"恢复完成");
                         fragment.updateList();
                     }
                 });
@@ -942,12 +966,12 @@ public class MainActivity extends BaseActivity {
                                                 new Thread(new Runnable() {
                                                     @Override
                                                     public void run() {
-                                                        Preference.saveString(MainActivity.this,"offical",new CpuManager().backup());
+                                                        Preference.saveString(MainActivity.this,"offical",CpuManager.getInstance().backup());
                                                         runOnUiThread(new Runnable() {
                                                             @Override
                                                             public void run() {
                                                                 dialog.dismiss();
-                                                                Toast.makeText(MainActivity.this,"备份完成",Toast.LENGTH_SHORT).show();
+                                                                ToastUtil.shortShow(MainActivity.this,"备份完成").show();
                                                             }
                                                         });
                                                     }
@@ -970,7 +994,7 @@ public class MainActivity extends BaseActivity {
                                                             @Override
                                                             public void run() {
                                                                 dialog.dismiss();
-                                                                Toast.makeText(MainActivity.this,"恢复成功",Toast.LENGTH_SHORT).show();
+                                                                ToastUtil.shortShow(MainActivity.this,"恢复成功");
                                                             }
                                                         });
                                                     }
@@ -993,7 +1017,7 @@ public class MainActivity extends BaseActivity {
                         switch (item.getTitle().toString()){
                             case "保存":
                                 fragment.saveAll();
-                                Toast.makeText(MainActivity.this,"已保存",Toast.LENGTH_SHORT).show();
+                                ToastUtil.shortShow(MainActivity.this,"已保存");
                                 break;
                             case "备份":
                                 backupCustom(MainActivity.this);
@@ -1005,16 +1029,16 @@ public class MainActivity extends BaseActivity {
                                 progressDialog.setMessage("生成调度中");
                                 progressDialog.show();
                                 if (!SystemInfo.getIsDonated()){
-                                    Toast.makeText(MainActivity.this,"该功能需要捐赠版支持，非捐赠版仅能生成均衡模式",Toast.LENGTH_SHORT).show();
-                                    if (!new CpuManager().isEasKernel()){
-                                        Toast.makeText(MainActivity.this,"非eas内核暂未支持",Toast.LENGTH_SHORT).show();
+                                    ToastUtil.shortAlert(MainActivity.this,"该功能需要捐赠版支持，非捐赠版仅能生成均衡模式");
+                                    if (!CpuManager.getInstance().isEasKernel()){
+                                        ToastUtil.shortAlert(MainActivity.this,"非eas内核暂未支持");
                                         progressDialog.dismiss();
                                     }else {
                                         try {
                                             Preference.saveString(MainActivity.this,"code2",fragment.easTune(3,CpuBoost.isAddition()));
                                         }catch (Exception e){
                                             e.printStackTrace();
-                                            Toast.makeText(MainActivity.this,"生成失败，请稍后重试",Toast.LENGTH_SHORT).show();
+                                            ToastUtil.shortAlert(MainActivity.this,"生成失败，请稍后重试");
                                         }finally {
                                             fragment.refresh();
                                             progressDialog.dismiss();
@@ -1023,8 +1047,8 @@ public class MainActivity extends BaseActivity {
                                     }
                                     break;
                                 }
-                                if (!new CpuManager().isEasKernel()){
-                                    Toast.makeText(MainActivity.this,"非eas内核暂未支持",Toast.LENGTH_SHORT).show();
+                                if (!CpuManager.getInstance().isEasKernel()){
+                                    ToastUtil.shortAlert(MainActivity.this,"非eas内核暂未支持");
                                     progressDialog.dismiss();
                                     break;
                                 }
@@ -1047,14 +1071,13 @@ public class MainActivity extends BaseActivity {
                                                 public void run() {
                                                     progressDialog.cancel();
                                                     fragment.refresh();
-                                                    Toast.makeText(MainActivity.this,"生成成功",Toast.LENGTH_SHORT).show();
-
+                                                    ToastUtil.shortShow(MainActivity.this,"生成成功");
                                                 }
                                             });
                                         }catch (Exception e){
                                             e.printStackTrace();
                                             progressDialog.cancel();
-                                            Toast.makeText(MainActivity.this,"生成失败，请稍后重试",Toast.LENGTH_SHORT).show();
+                                            ToastUtil.shortAlert(MainActivity.this,"生成失败，请稍后重试");
                                         }
 
                                     }
@@ -1145,7 +1168,7 @@ public class MainActivity extends BaseActivity {
                     PowercfgFragment fragment=(PowercfgFragment)getFragment(2);
                     fragment.change();
                 }else {
-                    Toast.makeText(MainActivity.this,"导入失败",Toast.LENGTH_SHORT).show();
+                    ToastUtil.shortAlert(MainActivity.this,"导入失败");
                 }
             }
             if (requestCode==12){
@@ -1154,11 +1177,9 @@ public class MainActivity extends BaseActivity {
                 if (copyFileQ(data.getData(), Sdcard.getPath(MainActivity.this) +"/lktMode/powercfg/powercfg.sh")){
                     PowercfgFragment fragment=(PowercfgFragment)getFragment(2);
                     fragment.change();
-                    Toast.makeText(MainActivity.this,"导入成功",Toast.LENGTH_SHORT).show();
-
+                    ToastUtil.shortShow(MainActivity.this,"导入成功");
                 }else {
-                    Toast.makeText(MainActivity.this,"导入失败",Toast.LENGTH_SHORT).show();
-
+                    ToastUtil.shortAlert(MainActivity.this,"导入失败");
                 }
             }
         }
@@ -1346,12 +1367,12 @@ public class MainActivity extends BaseActivity {
                                                 new Thread(new Runnable() {
                                                     @Override
                                                     public void run() {
-                                                        Preference.saveString(MainActivity.this,"offical",new CpuManager().backup());
+                                                        Preference.saveString(MainActivity.this,"offical",CpuManager.getInstance().backup());
                                                         runOnUiThread(new Runnable() {
                                                             @Override
                                                             public void run() {
                                                                 dialog.dismiss();
-                                                                Toast.makeText(MainActivity.this,"备份完成",Toast.LENGTH_SHORT).show();
+                                                                ToastUtil.shortAlert(MainActivity.this,"备份完成");
                                                             }
                                                         });
                                                     }
@@ -1373,7 +1394,7 @@ public class MainActivity extends BaseActivity {
                                                             @Override
                                                             public void run() {
                                                                 dialog.dismiss();
-                                                                Toast.makeText(MainActivity.this,"恢复完成",Toast.LENGTH_SHORT).show();
+                                                                ToastUtil.shortAlert(MainActivity.this,"恢复完成");
                                                             }
                                                         });
                                                     }
@@ -1391,7 +1412,7 @@ public class MainActivity extends BaseActivity {
                 return false;
             }
             if(!mBackKeyPressed){
-                Toast.makeText(MainActivity.this,"再按一次退出程序",Toast.LENGTH_SHORT).show();
+                ToastUtil.shortShow(MainActivity.this,"再按一次退出程序");
                 mBackKeyPressed = true;
                 new Timer().schedule(new TimerTask() {//延时两秒，如果超出则擦错第一次按键记录
                     @Override

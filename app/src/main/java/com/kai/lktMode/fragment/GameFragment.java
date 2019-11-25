@@ -24,6 +24,7 @@ import com.kai.lktMode.activity.AddActivity;
 import com.kai.lktMode.adapter.ListGameAdapter;
 import com.kai.lktMode.adapter.ListLabAdapter;
 import com.kai.lktMode.bean.App;
+import com.kai.lktMode.tool.ToastUtil;
 import com.kai.lktMode.tool.util.local.AppUtils;
 import com.kai.lktMode.service.AutoService;
 import com.kai.lktMode.activity.GameBoostActivity;
@@ -41,18 +42,24 @@ public class GameFragment extends MyFragment {
     private List<App> gameItems=new ArrayList<>();
     private String[] checks={"gameMode"};
     private ListGameAdapter gameAdapter;;
-    private View view;
+    private View contentView;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        view=inflater.inflate(R.layout.activity_lab,null,false);
-        return view;
+        if (contentView == null) {
+            contentView = inflater.inflate(R.layout.activity_lab, container, false);
+        }
+        ViewGroup parent = (ViewGroup) contentView.getParent();
+        if (parent != null) {
+            parent.removeView(contentView);
+        }
+        return contentView;
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        RecyclerView recyclerView=view.findViewById(R.id.recyclerview);
+    protected void onFragmentFirstVisible() {
+        super.onFragmentFirstVisible();
+        RecyclerView recyclerView=contentView.findViewById(R.id.recyclerview);
         initList();
         LinearLayoutManager manager=new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(manager);
@@ -107,6 +114,18 @@ public class GameFragment extends MyFragment {
         updateList();
         initGame();
     }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+    }
     private boolean hasPermission() {
         AppOpsManager appOps = (AppOpsManager)
                 getActivity().getSystemService(Context.APP_OPS_SERVICE);
@@ -132,7 +151,7 @@ public class GameFragment extends MyFragment {
     }
     private void initGame(){
         gameItems.clear();
-        RecyclerView recyclerView=view.findViewById(R.id.gameList);
+        RecyclerView recyclerView=contentView.findViewById(R.id.gameList);
         for (String s:Preference.getGames(getContext())){
             gameItems.add(new App(AppUtils.getAppName(getContext(),s),s,AppUtils.getDrawable(getContext(),s),false));
         }
@@ -196,15 +215,16 @@ public class GameFragment extends MyFragment {
     @Override
     public void onResume() {
         super.onResume();
-        upcateGames();
+        //upcateGames();
     }
+
     public void closeGame(){
         if (hasPermission()){
             Intent intent=new Intent(getContext(), AutoService.class);
             intent.setAction("gameOn");
             getContext().startService(intent);
         }else {
-            Toast.makeText(getContext(),"需要使用情况访问权限！",Toast.LENGTH_LONG).show();
+            ToastUtil.longAlert(getContext(),"需要使用情况访问权限");
             items.get(0).setChecked(false);
             adapter.notifyItemChanged(0);
             Preference.saveBoolean(getContext(),checks[0],false);
@@ -221,20 +241,5 @@ public class GameFragment extends MyFragment {
         }
 
     }
-    /*
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode==10){
-            if (hasPermission()){
-                Intent intent=new Intent(getContext(), AutoService.class);
-                intent.setAction("gameOn");
-                getContext().startService(intent);
-            }else {
-                Toast.makeText(getContext(),"需要使用情况访问权限！",Toast.LENGTH_LONG).show();
-                items.get(2).setChecked(false);
-                adapter.notifyItemChanged(2);
-            }
-        }
-    }*/
+
 }

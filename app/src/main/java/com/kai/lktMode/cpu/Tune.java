@@ -13,7 +13,7 @@ public class Tune {
     private Tune(Context context){
         this.context=context;
         this.model=CpuModel.getInstance(context);
-        this.manager=new CpuManager();
+        this.manager=CpuManager.getInstance();
         isBoostSupport=CpuBoost.isSupport();
         isAddition=CpuBoost.isAddition();
     }

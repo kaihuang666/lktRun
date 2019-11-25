@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
 public class CpuAdvancedManagerAdapter extends AnimatedExpandableListView.AnimatedExpandableListAdapter {
     private Context context;
     private LayoutInflater mInflater;
-    private CpuManager manager=new CpuManager();
+    private CpuManager manager=CpuManager.getInstance();
     private List<ParentItem> parentItems=new ArrayList<>();
     public CpuAdvancedManagerAdapter(Context context, List<ParentItem> parentItems){
         this.context=context;

@@ -87,7 +87,7 @@ public class CpuManagerActivity extends BaseActivity {
         progressDialog.show();
         codeCount=intent.getIntExtra("code",0);
         ButterKnife.bind(this);
-        manager=new CpuManager();
+        manager=CpuManager.getInstance();
         adapter=new CpuManagerAdapter(this,parentItems);
         list.setAdapter(adapter);
         list.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
@@ -159,7 +159,7 @@ public class CpuManagerActivity extends BaseActivity {
         }).start();
     }
     private void getData(){
-        CpuManager manager=new CpuManager();
+        CpuManager manager=CpuManager.getInstance();
         //获取核心集群
         CpuManager.Kernel[][] groups=manager.getCpuGroup();
         int[][] counts=manager.getKernelCount();

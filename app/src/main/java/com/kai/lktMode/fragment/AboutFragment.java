@@ -34,6 +34,7 @@ import com.kai.lktMode.adapter.AboutAdapter;
 import com.kai.lktMode.bean.Item;
 import com.kai.lktMode.root.RootUtils;
 import com.kai.lktMode.tool.Preference;
+import com.kai.lktMode.tool.ToastUtil;
 import com.kai.lktMode.tool.util.net.AlipayUtil;
 import com.kai.lktMode.BuildConfig;
 import com.kai.lktMode.R;
@@ -70,7 +71,7 @@ public class AboutFragment extends Fragment {
                 switch (i){
                     case 1:
                         if (BuildConfig.BUILD_TYPE.equals("debug")){
-                            Toast.makeText(getContext(),"测试版不能接受正式版更新",Toast.LENGTH_SHORT).show();
+                            ToastUtil.shortAlert(getContext(),"测试版不能接受正式版更新");
                             return;
                         }
                         new Thread(new Runnable() {
@@ -96,7 +97,7 @@ public class AboutFragment extends Fragment {
                                                     .setNegativeButton("忽略",null)
                                                     .create().show();
                                         }else {
-                                            Toast.makeText(getContext(),"已经是最新版本",Toast.LENGTH_SHORT).show();
+                                            ToastUtil.safe(getContext(),"已经是最新版本");
                                         }
                                     }
                                 });
@@ -182,7 +183,7 @@ public class AboutFragment extends Fragment {
                                 break;
                             case 1:
                                 AlipayUtil.startAlipayClient(context,"fkx02459dc3qpqdxupmmz9b");
-                                Toast.makeText(context.getApplicationContext(),"你的账号已经复制到剪贴板，请粘贴到付款备注里",5000).show();
+                                ToastUtil.longShow(context,"你的账号已经复制到剪贴板，请粘贴到付款备注里");
                                 break;
                             case 2:new AlertDialog.Builder(context,R.style.AppDialog)
                                     .setView(R.layout.wxdialog)
@@ -255,21 +256,20 @@ public class AboutFragment extends Fragment {
                 Uri uri = Uri.parse("alipayqr://platformapi/startapp?saId=10000007");
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                 context.startActivity(intent);
-                Toast.makeText(context.getApplicationContext(),"你的账号已经复制到剪贴板，请粘贴到付款备注里",5000).show();
+                ToastUtil.longShow(context,"你的账号已经复制到剪贴板，请粘贴到付款备注里");
             } catch (Exception e) {
                 e.printStackTrace();
-                Toast.makeText(context,"请先安装支付宝",Toast.LENGTH_SHORT).show();
+                ToastUtil.shortAlert(context,"请先安装支付宝");
             }
 
         }else {
             try {
                 String cmd="am start -n com.tencent.mm/com.tencent.mm.plugin.scanner.ui.BaseScanUI";
                 RootUtils.runCommand(cmd);
-                Toast.makeText(context.getApplicationContext(),"你的账号已经复制到剪贴板，请粘贴到付款备注里",5000).show();
+                ToastUtil.longShow(context,"你的账号已经复制到剪贴板，请粘贴到付款备注里");
             } catch (Exception e) {
                 e.printStackTrace();
-                Toast.makeText(context,"请先安装微信",Toast.LENGTH_SHORT).show();
-
+                ToastUtil.shortAlert(context,"请先安装微信");
             }
         }
     }

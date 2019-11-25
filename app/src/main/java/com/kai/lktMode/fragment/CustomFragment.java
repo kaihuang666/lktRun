@@ -21,7 +21,6 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.Switch;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -40,6 +39,7 @@ import com.kai.lktMode.root.RootUtils;
 import com.kai.lktMode.selinux.SElinux;
 import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.R;
+import com.kai.lktMode.tool.ToastUtil;
 import com.kai.lktMode.tune.ExynosTune;
 import com.kai.lktMode.tune.UniversalTune;
 import com.kai.lktMode.widget.TerminalDialog;
@@ -55,22 +55,35 @@ public class CustomFragment extends MyFragment {
     private int[] colors={R.color.colorBattery,R.color.colorBalance,R.color.colorPerformance,R.color.colorTurbo};
     private CustomAdapter adapter=new CustomAdapter(getContext(),items,colors);;
     private String output;
-    private View view;
+    private View contentView;
     private CpuModel cpuModel;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        view=inflater.inflate(R.layout.activity_custom,null,false);
-        return view;
+        if (contentView == null) {
+            contentView = inflater.inflate(R.layout.activity_custom, container, false);
+        }
+        ViewGroup parent = (ViewGroup) contentView.getParent();
+        if (parent != null) {
+            parent.removeView(contentView);
+        }
+        return contentView;
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    protected void onFragmentFirstVisible() {
+        super.onFragmentFirstVisible();
         getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
         initList();
         cpuModel=CpuModel.getInstance(getContext());
     }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+    }
+
     public void saveAll(){
         //如果adapter未初始化，先初始化它
         if (adapter==null){
@@ -102,7 +115,7 @@ public class CustomFragment extends MyFragment {
     }
     private void initList(){
         items.clear();
-        Switch custom=(Switch)view.findViewById(R.id.swicth);
+        Switch custom=(Switch)contentView.findViewById(R.id.swicth);
         //prevent the excepe
         custom.setChecked((Boolean) Preference.getBoolean(getContext(),"custom"));
         custom.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -114,7 +127,7 @@ public class CustomFragment extends MyFragment {
                     String sdcard=Environment.getExternalStorageDirectory().getAbsolutePath()+"/lktMode/powercfg/powercfg.sh";
                     File shell=new File(sdcard);
                     if (shell.exists()){
-                        Toast.makeText(getContext(),"老铁，正在用动态脚本，不能关啊",Toast.LENGTH_LONG).show();
+                        ToastUtil.shortAlert(getContext(),"老铁，正在用动态脚本，不能关啊");
                         compoundButton.setChecked(true);
                     }else {
                         Preference.saveBoolean(getContext(),"custom",b);
@@ -127,7 +140,7 @@ public class CustomFragment extends MyFragment {
         items.add(new Item(SystemInfo.modes[1],""));
         items.add(new Item(SystemInfo.modes[2],""));
         items.add(new Item(SystemInfo.modes[3],""));
-        RecyclerView recyclerView=view.findViewById(R.id.recyclerview);
+        RecyclerView recyclerView=contentView.findViewById(R.id.recyclerview);
         final LinearLayoutManager manager=new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(manager);
         adapter=new CustomAdapter(getContext(),items,colors);
@@ -180,7 +193,7 @@ public class CustomFragment extends MyFragment {
                                             @Override
                                             public void onClick(DialogInterface dialogInterface, int i) {
                                                 if (!SystemInfo.getIsDonated()){
-                                                    Toast.makeText(getContext(),"该功能需要解锁捐赠版才能使用",Toast.LENGTH_SHORT).show();
+                                                    ToastUtil.shortAlert(getContext(),"该功能需要解锁捐赠版才能使用");
                                                     return;
                                                 }
                                                 getClone(e);
@@ -191,7 +204,7 @@ public class CustomFragment extends MyFragment {
                                 break;
                             case R.id.fit:
                                 if (!SystemInfo.getIsDonated()){
-                                    Toast.makeText(getContext(),"该功能需要捐赠版支持",Toast.LENGTH_SHORT).show();
+                                    ToastUtil.shortAlert(getContext(),"该功能需要解锁捐赠版才能使用");
                                     break;
                                 }
                                 List<String> items=new ArrayList<>();
@@ -204,8 +217,8 @@ public class CustomFragment extends MyFragment {
                                         .setItems(items.toArray(new String[]{}), new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialogInterface, int index) {
-                                                if (!new CpuManager().isEasKernel()){
-                                                    Toast.makeText(getContext(),"暂只支持eas内核",Toast.LENGTH_SHORT).show();
+                                                if (!CpuManager.getInstance().isEasKernel()){
+                                                    ToastUtil.shortAlert(getContext(),"暂只支持eas内核");
                                                     return;
                                                 }
                                                 ProgressDialog progressDialog=new ProgressDialog(getContext(),R.style.AppDialog);
@@ -278,7 +291,7 @@ public class CustomFragment extends MyFragment {
     }
     private String cloneCommand(){
         boolean isAddition= CpuBoost.isAddition();
-        CpuManager manager=new CpuManager();
+        CpuManager manager=CpuManager.getInstance();
         StringBuilder builder=new StringBuilder("");
         for (int i=0;i<manager.getCounts();i++){
             //dialog.addText("正在处理cpu"+i+"\n");
@@ -329,7 +342,7 @@ public class CustomFragment extends MyFragment {
 
     public void refresh(){
         //updateList();
-        Switch custom=(Switch)view.findViewById(R.id.swicth);
+        Switch custom=(Switch)contentView.findViewById(R.id.swicth);
         custom.setChecked((Boolean) Preference.getBoolean(getContext(),"custom"));
         updateList();
     }

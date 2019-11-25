@@ -16,6 +16,7 @@ import com.kai.lktMode.R;
 import com.kai.lktMode.activity.MainActivity;
 import com.kai.lktMode.bean.Sdcard;
 import com.kai.lktMode.bean.SystemInfo;
+import com.kai.lktMode.tool.ToastUtil;
 import com.kai.lktMode.widget.CloudLoginDialog;
 import com.kai.lktMode.tool.Preference;
 import com.kai.lktMode.tool.ZipUtils;
@@ -29,12 +30,15 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -61,7 +65,42 @@ public class WebUtil {
         }
 
     }
+    /* @author suncat
+     * @category 判断是否有外网连接（普通方法不能判断外网的网络是否连接，比如连接上局域网）
+     * @return
+     */
+    public static final boolean isNetworkAccess() {
 
+        String result = null;
+        try {
+            String ip = "www.baidu.com";// ping 的地址，可以换成任何一种可靠的外网
+            Process p = Runtime.getRuntime().exec("ping -c 3 -w 100 " + ip);// ping网址3次
+            // 读取ping的内容，可以不加
+            InputStream input = p.getInputStream();
+            BufferedReader in = new BufferedReader(new InputStreamReader(input));
+            StringBuffer stringBuffer = new StringBuffer();
+            String content = "";
+            while ((content = in.readLine()) != null) {
+                stringBuffer.append(content);
+            }
+            Log.d("------ping-----", "result content : " + stringBuffer.toString());
+            // ping的状态
+            int status = p.waitFor();
+            if (status == 0) {
+                result = "success";
+                return true;
+            } else {
+                result = "failed";
+            }
+        } catch (IOException e) {
+            result = "IOException";
+        } catch (InterruptedException e) {
+            result = "InterruptedException";
+        } finally {
+            Log.d("----result---", "result = " + result);
+        }
+        return false;
+    }
     public static String getRealUrl(String url){
         try {
             Document document = Jsoup.connect(url)
@@ -169,7 +208,7 @@ public class WebUtil {
                         context.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(context,"登录成功",Toast.LENGTH_SHORT).show();
+                                ToastUtil.shortShow(context,"登录成功");
                                 MainActivity activity=(MainActivity)context;
                                 activity.refreshLogin();
                                 activity.refreshLoginV1();
@@ -183,9 +222,7 @@ public class WebUtil {
                         context.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(context,"登录失败",Toast.LENGTH_SHORT).show();
-
-
+                                ToastUtil.shortShow(context,"登录失败");
                             }
                         });
                     }
@@ -194,9 +231,7 @@ public class WebUtil {
                     context.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(context,e.toString(),Toast.LENGTH_SHORT).show();
-
-
+                            ToastUtil.shortAlert(context,e.toString());
                         }
                     });
 
@@ -245,9 +280,7 @@ public class WebUtil {
                                             int last=items.size()-1;
                                             if (i==last){
                                                 if (i>=1&&!SystemInfo.getIsDonated()){
-                                                    Toast.makeText(activity,"非捐贈版只支持1个备份",Toast.LENGTH_SHORT).show();
-
-
+                                                    ToastUtil.shortAlert(activity,"非捐贈版只支持1个备份");
                                                     return;
                                                 }
                                                 try {
@@ -425,8 +458,7 @@ public class WebUtil {
                             @Override
                             public void run() {
                                 dialog.dismiss();
-                                Toast.makeText(activity,"下载备份失败，请检查网络",Toast.LENGTH_SHORT).show();
-
+                                ToastUtil.shortAlert(activity,"下载备份失败，请检查网络");
                             }
                         });
                     }
@@ -466,8 +498,7 @@ public class WebUtil {
                         @Override
                         public void run() {
                             dialog.dismiss();
-                            Toast.makeText(activity,"恢复完成",Toast.LENGTH_SHORT).show();
-
+                            ToastUtil.shortShow(activity,"恢复完成");
                             MainActivity activity1=(MainActivity)activity;
                             activity1.getFragment(0).Refresh();
                             activity1.getFragment(1).Refresh();
@@ -505,8 +536,7 @@ public class WebUtil {
                         @Override
                         public void run() {
                             dialog.cancel();
-                            Toast.makeText(activity,"删除完成",Toast.LENGTH_SHORT).show();
-
+                            ToastUtil.shortShow(activity,"删除完成");
                         }
                     });
                 }catch (Exception e){
@@ -542,8 +572,7 @@ public class WebUtil {
                             @Override
                             public void run() {
                                 dialog.dismiss();
-                                Toast.makeText(context,"已备份到云端",Toast.LENGTH_SHORT).show();
-
+                                ToastUtil.shortShow(context,"已备份到云端");
                             }
                         });
                     }else {
@@ -551,8 +580,7 @@ public class WebUtil {
                             @Override
                             public void run() {
                                 dialog.dismiss();
-                                Toast.makeText(context,"备份失败，请检查网络",Toast.LENGTH_SHORT).show();
-
+                                ToastUtil.shortShow(context,"备份失败，请检查网络");
                             }
                         });
                     }
