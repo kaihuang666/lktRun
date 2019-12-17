@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.view.Display;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -91,7 +92,12 @@ public class ToastUtil {
         View view = toast.getView();
         if(view!=null){
             TextView message=((TextView) view.findViewById(android.R.id.message));
-            view.getBackground().setColorFilter(backgroundColor, PorterDuff.Mode.DARKEN);
+            Drawable drawable=view.getBackground();
+            if (drawable!=null){
+                drawable.setColorFilter(backgroundColor, PorterDuff.Mode.DARKEN);
+            }else {
+                 view.setBackgroundColor(backgroundColor);
+            }
             message.setTextColor(messageColor);
         }
         return this;

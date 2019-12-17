@@ -177,8 +177,7 @@ public class DownloadDialog extends AlertDialog {
             mCookieManager.setAcceptThirdPartyCookies(webView, true);
         }
         Map<String,String> map=new HashMap<>();
-        map.put("User-Agent","Mozilla/5.0 (iPad; CPU iPhone OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) FxiOS/40.0 Mobile/12F69 Safari/600.1.4");
-        map.put("Browser","Safari /600.1.4");
+        map.put("User-Agent","Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0");
         webView.loadUrl(url,map);
     }
 

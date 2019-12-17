@@ -10,6 +10,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
+
 import com.github.lzyzsd.circleprogress.DonutProgress;
 import com.kai.lktMode.BuildConfig;
 import com.kai.lktMode.R;
@@ -39,6 +40,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.acl.LastOwnerException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -103,20 +105,22 @@ public class WebUtil {
     }
     public static String getRealUrl(String url){
         try {
+            Log.d("url",url);
             Document document = Jsoup.connect(url)
-                    .header("User-Agent","Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0")
+                    .userAgent("Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0")
                     .get();
             String js=document.getElementsByTag("script").get(0).html();
             Log.d("js",js);
             return extractUrl(js);
-        }catch (IOException e){
+
+        }catch (Exception e){
             e.printStackTrace();
         }
         return "";
     }
     public static String extractUrl(String js){
         String urlheader=match("(https?://[^']+)",js);
-        String urltail=match("(\\?[^\"]+)",js);
+        String urltail=match("'(\\?[^\"\']+)'",js);
         return (urlheader+urltail);
     }
     public static String match(String m,String p){
